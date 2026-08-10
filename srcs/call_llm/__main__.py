@@ -5,7 +5,8 @@ def main():
         api_url="https://openrouter.ai/api/v1/chat/completions",
         model_name="qwen/qwen3.5-flash-02-23"
     )
-    call.call()
+    response = call.call("hello what is your name")
+    print(response)
 
 
 if __name__ == "__main__":
