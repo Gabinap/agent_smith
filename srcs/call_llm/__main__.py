@@ -1,11 +1,12 @@
 from calling import LLM
 
+
 def main():
-    call = LLM(
-        api_url="https://openrouter.ai/api/v1/chat/completions",
-        model_name="qwen/qwen3.5-flash-02-23"
+    llm = LLM(
+        api_url="https://generativelanguage.googleapis.com/v1/interactions",
+        model_name="gemma-4-31b-it",
     )
-    response = call.call("hello what is your name")
+    response = llm.call("hello how are you")
     print(response)
 
 
