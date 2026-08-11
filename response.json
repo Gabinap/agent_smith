@@ -1,29 +1,29 @@
 {
-  "id": "v1_ChdSZUI2YXZiSkd2Nm5rZFVQX3VDS2lBMBIXUmVCNmF2YkpHdjZua2RVUF91Q0tpQTA",
+  "id": "v1_ChdyX1o2YXZhYkxLbTdrZFVQd3B1Q2lBcxIXcl9aNmF2YWJMS203a2RVUHdwdUNpQXM",
   "status": "completed",
   "usage": {
-    "total_tokens": 199,
-    "total_input_tokens": 6,
+    "total_tokens": 242,
+    "total_input_tokens": 5,
     "input_tokens_by_modality": [
       {
         "modality": "text",
-        "tokens": 6
+        "tokens": 5
       }
     ],
     "total_cached_tokens": 0,
     "total_output_tokens": 28,
     "total_tool_use_tokens": 0,
-    "total_thought_tokens": 165,
-    "raw_prompt_token": 19
+    "total_thought_tokens": 209,
+    "raw_prompt_token": 18
   },
-  "created": "2026-08-11T08:41:41Z",
-  "updated": "2026-08-11T08:41:41Z",
+  "created": "2026-08-11T10:17:19Z",
+  "updated": "2026-08-11T10:17:19Z",
   "steps": [
     {
       "signature": "EiYKJGUyNDgzMGE3LTVjZDYtNDJmZS05OThiLWVlNTM5ZTcyYjljMw==",
       "summary": [
         {
-          "text": "*   User says: \"hello what is your name\"\n    *   Intent: Greeting and identity inquiry.\n\n    *   I am a large language model trained by Google.\n    *   I don't have a personal name like a human (e.g., \"John\" or \"Sarah\").\n\n    *   *Option 1 (Simple):* Hello! I don't have a name. I'm an AI.\n    *   *Option 2 (Detailed):* Hi there! I am a large language model, trained by Google.\n    *   *Option 3 (Friendly):* Hello! I don't have a formal name, but you can think of me as your AI assistant.\n\n    *   Keep it friendly, clear, and accurate.",
+          "text": "The user said \"hello how are you\".\nGreeting (\"hello\") and an inquiry about well-being (\"how are you\").\n\n    *   Acknowledge the greeting.\n    *   State current status (as an AI, I don't have feelings, but I'm functioning well).\n    *   Reciprocate the question to engage the user.\n    *   Offer assistance.\n\n    *   *Option 1 (Simple):* I'm good, thanks! How are you?\n    *   *Option 2 (Detailed):* Hello! I'm doing great, thank you for asking. As an AI, I don't have feelings, but I'm functioning perfectly. How can I help you today?\n    *   *Option 3 (Friendly/Conversational):* Hi there! I'm doing well. How about yourself? Anything on your mind that I can help with?\nOption 3 is balanced\u2014friendly, helpful, and natural.",
           "type": "text"
         }
       ],
@@ -32,7 +32,7 @@
     {
       "content": [
         {
-          "text": "Hello! I don't have a name. I am a large language model, trained by Google. How can I help you today?",
+          "text": "Hello! I'm doing well, thank you for asking. How are you doing today? Is there anything I can help you with?",
           "type": "text"
         }
       ],
