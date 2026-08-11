@@ -22,28 +22,23 @@ class LLM:
         response = requests.post(
             url=self.api_url,
             headers={
-                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "x-goog-api-key": self.api_key,
             },
-            data=json.dumps({
+            json={
                 "model": self.model_name,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": input
-                    }
-                ],
-                "reasoning": {"enabled": False
-                              },
-            })
+                "input": input
+            }
         )
-        if response.status_code != 200:
-            raise ValueError(f"Call Error: {response.reason}")
 
+        print("STATUS:", response.status_code)
+        print("BODY:", response.text)
+        response.raise_for_status()
         response = response.json()
         self.save_response("response.json", response)
         return {
-            "input_tokens": response['usage']['prompt_tokens'],
-            "output_tokens": response['usage']['completion_tokens'],
+            "input_tokens": response['usage']['total_input_tokens'],
+            "output_tokens": response['usage']['total_output_tokens'],
             "model_name": self.model_name,
-            "llm_output": response['choices'][0]['message']['content'],
+            "llm_output": response['steps'][-1]['content'][0]['text'],
         }
