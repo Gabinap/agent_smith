@@ -1,11 +1,13 @@
-from srcs.agents.task_manager import Task
+from srcs.agents.agent_mbpp import Mbpp
 
 
 def main():
-    task_file = "moulinette/task.json"
-    task = Task(task_file)
-
-
+    agent = Mbpp(
+        task_file="moulinette/task.json",
+        api_url="https://generativelanguage.googleapis.com/v1/interactions",
+        model_name="gemma-4-31b-it"
+    )
+    agent.execute()
 
 
 if __name__ == "__main__":

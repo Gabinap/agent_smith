@@ -16,7 +16,7 @@ class LLM:
         """
         self.api_url = api_url
         self.model_name = model_name
-        self.api_key = self._get_from_env("API_KEY")
+        self._api_key = self._get_from_env("API_KEY")
 
     def _get_from_env(self, name: str) -> str:
         """Load the .env
@@ -53,7 +53,7 @@ class LLM:
             url=self.api_url,
             headers={
                 "Content-Type": "application/json",
-                "x-goog-api-key": self.api_key,
+                "x-goog-api-key": self._api_key,
             },
             json={
                 "model": self.model_name,
