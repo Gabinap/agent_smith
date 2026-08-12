@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional, Callable
 import signal
 import os
 
-from sandboxconf import SandboxConfig
+from srcs.models.sandbox import SandboxConfig
 
 class SecurityError(PermissionError):
     """Security Rules are not respected"""
@@ -18,6 +18,9 @@ def _timeout_handler(signum, frame):
 
 class Sandbox():
     def __init__(self):
+        """
+        
+        """
         self.config = SandboxConfig()
         self.namespace: Dict[str, Any] = {}
 
@@ -207,8 +210,9 @@ def main():
                 print(f"Error: {result['error']}")
             if result["finished"]:
                 print(f"Final Answer: {result['final_answer']}")
+            print(result)
         except (KeyboardInterrupt, EOFError):
-            print("\nSortie de la sandbox.")
+            print("\nExit the sandbox.")
             break
 
 if __name__ == "__main__":
