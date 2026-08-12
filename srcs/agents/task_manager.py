@@ -1,9 +1,7 @@
-from srcs.models.task import MBPPTaskInput
+from srcs.models.tasks import MBPPTaskInput
 
 
 class Task():
-    """Task Handler
-    """
     def __init__(self, input_file: str):
         """Initialiaze the task from the json file.
 

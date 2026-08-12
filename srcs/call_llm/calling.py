@@ -17,6 +17,7 @@ class LLM:
         self.api_url = api_url
         self.model_name = model_name
         self._api_key = self._get_from_env("API_KEY")
+        self._previous_interaction = None
 
     def _get_from_env(self, name: str) -> str:
         """Load the .env
@@ -57,12 +58,43 @@ class LLM:
             },
             json={
                 "model": self.model_name,
-                "input": input
+                "input": input,
             }
         )
         response.raise_for_status()
         response = response.json()
+        self._previous_interaction = response
         self.save_response("response.json", response)
+        return {
+            "input_tokens": response['usage']['total_input_tokens'],
+            "output_tokens": response['usage']['total_output_tokens'],
+            "model_name": self.model_name,
+            "llm_output": response['steps'][-1]['content'][0]['text'],
+        }
+
+    def recall(self, input: str) -> dict:
+        """Call the LLM throught the API a second time with the previus output.
+
+        Args:
+            input (str): Prompt input
+
+        Returns:
+            dict: LLM output
+        """
+        response = requests.post(
+            url=self.api_url,
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": self._api_key,
+            },
+            json={
+                "model": self.model_name,
+                "input": input,
+                "previous_interaction_id": self._previous_interaction["id"]
+            }
+        )
+        response.raise_for_status()
+        self._previous_interaction = response.json()
         return {
             "input_tokens": response['usage']['total_input_tokens'],
             "output_tokens": response['usage']['total_output_tokens'],
