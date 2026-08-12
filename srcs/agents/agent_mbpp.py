@@ -7,7 +7,7 @@ import datetime
 
 
 class Mbpp():
-    def __init__(self, task_file: str, api_url: str, model_name: str):
+    def __init__(self, task_file: str, api_url: str, model_name: str, update_state):
         """Load the task and the LLM
 
         Args:
@@ -22,6 +22,13 @@ class Mbpp():
         self.step = 1
         self.sandbox_output = None
         self.py_code = ""
+        self.update_state = update_state
+        
+    def run_agent(self):
+        self.update_state(self.task.input)
+        self.solve_task()
+        self.task.input.task_id = 0000
+        self.update_state(self.task.input)
 
     def execute(self):
         """Launch the loaded Task
