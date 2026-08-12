@@ -5,21 +5,25 @@ import os
 
 from srcs.models.sandbox import SandboxConfig
 
+
 class SecurityError(PermissionError):
     """Security Rules are not respected"""
     pass
+
 
 class TimeoutError(Exception):
     """Execution time limit exceeded"""
     pass
 
+
 def _timeout_handler(signum, frame):
     raise TimeoutError("Execution timed out")
+
 
 class Sandbox():
     def __init__(self):
         """
-        
+        Sandbox to execute code taht can be vulnerable
         """
         self.config = SandboxConfig()
         self.namespace: Dict[str, Any] = {}
@@ -37,8 +41,8 @@ class Sandbox():
         Args:
             name: str = module name
         Returns:
-            bool: True if the module import is allowed, False otherwise 
-        """ 
+            bool: True if the module import is allowed, False otherwise
+        """
         base_pkg = name.split(".")[0]
         for pattern in self.config.authorized_imports:
             if pattern.endswith(".*"):
@@ -49,20 +53,29 @@ class Sandbox():
                 return True
         return False
 
-    def _custom_import(self, name: str, globals=None, locals=None, fromlist=(), level=0):
+    def _custom_import(
+            self,
+            name: str,
+            globals=None,
+            locals=None,
+            fromlist=(),
+            level=0
+            ):
         """
         Rewriting the import function to restrict imports usage
         Args:
             name: str = module name
             globals: None | dict = context variable from the executed program
             locals: None | dict = context variable from the executed program
-            fromlist: Any = the function to import from a module like 'sqrt' from math
+            fromlist: Any = the function to import from a module
+                like 'sqrt' from math
             level: int = import type relative import or absolute, 0 = absolute
         Returns:
             module: The module required
         """
         if not self._is_import_allowed(name):
-            raise SecurityError(f"Import forbidden by sandbox policy: '{name}'")
+            raise SecurityError("Import forbidden by sandbox"
+                                f" policy: '{name}'")
         return builtins.__import__(name, globals, locals, fromlist, level)
 
     def _is_open_allowed(self, filepath: str):
@@ -71,11 +84,12 @@ class Sandbox():
         Args:
             filepath: str = file path
         Returns:
-            bool: True if opening this file is allowed, False otherwise 
+            bool: True if opening this file is allowed, False otherwise
         """
         for allowed_dir in self.config.allowed_directories:
             real_allowed = os.path.realpath(allowed_dir)
-            if filepath == real_allowed or filepath.startswith(real_allowed + os.sep):
+            if filepath == real_allowed or filepath.startswith(
+                    real_allowed + os.sep):
                 return True
         return False
 
@@ -85,15 +99,16 @@ class Sandbox():
         Args:
             file: str = file path
             mode: str = The type of action we have to do in the file
-            args: 
-            kwargs: 
+            args:
+            kwargs:
         Returns:
             IO: Opened file stream
         """
         filepath = os.path.realpath(str(file))
         if not self._is_open_allowed(filepath):
             raise SecurityError(
-                f"Access denied to file path '{filepath}'. Allowed directories: {self.config.allowed_directories}"
+                f"Access denied to file path '{filepath}'."
+                f" Allowed directories: {self.config.allowed_directories}"
             )
         return builtins.open(file, mode, *args, **kwargs)
 
@@ -106,7 +121,7 @@ class Sandbox():
             **kwargs
         Returns:
             Any: the printed variable from the agent code
-        """ 
+        """
         sep = kwargs.get("sep", " ")
         end = kwargs.get("end", "\n")
         text = sep.join(str(a) for a in args) + end
@@ -118,7 +133,7 @@ class Sandbox():
         The implementation of the function final_answer function,
         that the LLM can use to signal that this is the print to return
         Args:
-            answer: Any = the answer from the agent 
+            answer: Any = the answer from the agent
         Returns: Any = the answer from the agent
         """
         self.final_answer_value = answer
@@ -130,21 +145,23 @@ class Sandbox():
         Inject new functions tools to the white list
         Args:
             name: str = The name that the agent as to call
-            func: Callable = The code that as to be done when the agent call the named function
+            func: Callable = The code that as to be done
+                when the agent call the named function
         """
         self.namespace[name] = func
 
     def _setup_namespace(self):
         """
         Setting up allowed functions defined in the model SandboxConfig,
-        Also permits to rewrite __import__ with _custom_import, open with _custom_open and print with _custom_print
+        Also permits to rewrite __import__ with _custom_import,
+            open with _custom_open and print with _custom_print
         """
         authorized_builtins = dict(builtins.__dict__)
         authorized_builtins["__import__"] = self._custom_import
         authorized_builtins["open"] = self._custom_open
         authorized_builtins["print"] = self._custom_print
 
-        forbidden_builtins = ["eval", "exec", "input", "compile"] # add others if we need it
+        forbidden_builtins = ["eval", "exec", "input", "compile"]
 
         for builtin in forbidden_builtins:
             authorized_builtins.pop(builtin, None)
@@ -160,7 +177,8 @@ class Sandbox():
         Args:
             code: str = The code generated by the agent
         Returns:
-            Dictionary: - Success: True is no error, False if an exception is raised
+            Dictionary: - Success: True is no error,
+                            False if an exception is raised
                         - output: The standard output from the agent code
                         - error: None is no exception raised
                         - final_answer: The result from the agent code
@@ -201,7 +219,7 @@ def main():
             if command == "exit":
                 break
             if not command.strip():
-                    continue
+                continue
 
             result = sandbox.execute(command)
             if result["output"]:
@@ -214,6 +232,7 @@ def main():
         except (KeyboardInterrupt, EOFError):
             print("\nExit the sandbox.")
             break
+
 
 if __name__ == "__main__":
     main()
@@ -310,7 +329,7 @@ print(res)
 
 
 """
-# ========================== DOCUMENTATION FOR MY M8 ========================== #
+# ===================== DOCUMENTATION FOR MY M8 ===================== #
 
 To build a secure environment, the LLM’s Python code must be handled purely as raw text.
 
