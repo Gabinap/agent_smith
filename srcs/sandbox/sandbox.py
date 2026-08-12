@@ -59,7 +59,7 @@ class Sandbox():
             name: str,
             globals: Optional[Dict[str, Any]] = None,
             locals: Optional[Dict[str, Any]] = None,
-            fromlist: Any =(),
+            fromlist: Any = (),
             level: int = 0
             ) -> Any:
         """
@@ -95,12 +95,12 @@ class Sandbox():
         return False
 
     def _custom_open(
-            self, 
-            file: Any, 
-            mode: str = "r", 
-            *args: Any, 
+            self,
+            file: Any,
+            mode: str = "r",
+            *args: Any,
             **kwargs: Any
-        ) -> IO[Any]:
+            ) -> IO[Any]:
         """
         Rewriting the open function to restrict open usage
         Args:
