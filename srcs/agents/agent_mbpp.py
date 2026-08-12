@@ -17,7 +17,7 @@ class Mbpp():
         """
         self.task = Task(task_file)
         self.llm = LLM(api_url, model_name)
-        self.steps: list[StepMetrics]
+        self.steps: list[StepMetrics] = []
         self.sandbox = Sandbox()
         self.step = 1
         self.sandbox_output = None
