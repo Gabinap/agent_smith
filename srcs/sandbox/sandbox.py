@@ -331,13 +331,21 @@ print(res)
 """
 # ===================== DOCUMENTATION FOR MY M8 ===================== #
 
-To build a secure environment, the LLM’s Python code must be handled purely as raw text.
+To build a secure environment,
+the LLM’s Python code must be handled purely as raw text.
 
-The sandbox then runs this code using exec(). By configuring the globals variable, we explicitly define which modules and built-in functions exec() is allowed to access.
+The sandbox then runs this code using exec().
+By configuring the globals variable, we explicitly define
+    which modules and built-in functions exec() is allowed to access.
 
-Here, we implement a strict allowlist—blocking any module not explicitly granted access. We only include the bare minimum required for execution. Modules handling file systems, networking, or system access must be avoided at all costs to prevent the agent from breaking out of its sandbox.
+Here, we implement a strict allowlist—blocking any module
+    not explicitly granted access. We only include the bare
+    minimum required for execution. Modules handling file systems,
+    networking, or system access must be avoided at all costs to prevent
+    the agent from breaking out of its sandbox.
 
-Additionally, execution should be hard-capped—for instance, with a 5-second timeout—alongside strict CPU and resource limits.
+Additionally, execution should be hard-capped—for instance,
+    with a 5-second timeout—alongside strict CPU and resource limits.
 
 
 # --------- How to disable built-in functions in a Python sandbox? --------- #
@@ -371,7 +379,7 @@ def sandboxed_execution(code):
 
 
 
-# --------- How to sandbox Python code with restricted filesystem access? --------- #
+# ----- How to sandbox Python code with restricted filesystem access? ----- #
 
 def restricted_open(*args, **kwargs):
     raise RuntimeError("Filesystem access is restricted")
@@ -388,7 +396,7 @@ def sandboxed_execution(code):
 
 
 
-# --------- How to implement a whitelist approach in a Python sandbox? --------- #
+# ------- How to implement a whitelist approach in a Python sandbox? ------- #
 
 def sandboxed_execution(code):
     # Create a restricted environment
@@ -409,7 +417,8 @@ import resource
 def sandboxed_execution(code):
     # Set resource limits
     resource.setrlimit(resource.RLIMIT_CPU, (1, 1))  # 1 second CPU time limit
-    resource.setrlimit(resource.RLIMIT_AS, (1024 * 1024 * 10, 1024 * 1024 * 10))  # 10 MB memory limit
+    resource.setrlimit(resource.RLIMIT_AS,
+        (1024 * 1024 * 10, 1024 * 1024 * 10))      # 10 MB memory limit
     try:
         exec(code)
     except Exception as e:
