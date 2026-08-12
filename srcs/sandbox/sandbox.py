@@ -1,6 +1,6 @@
 import builtins
 from typing import Dict, Any, Optional, Callable, List, IO
-import signal
+
 import os
 import types
 
@@ -191,8 +191,6 @@ class Sandbox():
                         - final_answer: The result from the agent code
                         - finished: False if not finished of errors, else True
         """
-        signal.signal(signal.SIGALRM, _timeout_handler)
-        signal.alarm(self.config.max_execution_time_seconds)
 
         self.stdout = []
         try:
@@ -214,8 +212,7 @@ class Sandbox():
                 "final_answer": self.final_answer_value,
                 "finished": False
             }
-        finally:
-            signal.alarm(0)
+
 
 
 def main() -> None:

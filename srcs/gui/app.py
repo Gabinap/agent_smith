@@ -17,15 +17,13 @@ class MbppGui:
         page.padding = 30
         page.scroll = ft.ScrollMode.AUTO
  
-        self.task_view = ft.Column(spacing=16, expand=True)
+        self.task_view = ft.Column(spacing=2.5, expand=True)
  
         page.add(
             ft.Row(
                 [
-                    ft.Icon(ft.Icons.SMART_TOY_ROUNDED),
                     ft.Text("Agent Smith", size=26, weight=ft.FontWeight.BOLD),
                 ],
-                spacing=10,
             ),
             ft.Text("Mostly Basic Python Problems", size=13, italic=True),
             ft.Divider(),
@@ -72,12 +70,12 @@ class MbppGui:
                 content=ft.Column(content_items, spacing=10),
                 padding=20,
             ),
-            elevation=4,
+            elevation=6,
         )
  
     def update_task(self, task: MBPPTaskInput):
         if self.task_view is not None:
-            self.task_view.controls = [self.build_task_card(task)]
+            self.task_view.controls = self.build_task_card(task)
         if self.page:
             self.page.update()
     
