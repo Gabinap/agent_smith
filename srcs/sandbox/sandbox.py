@@ -1,7 +1,8 @@
 import builtins
-from typing import Dict, Any, Optional, Callable
+from typing import Dict, Any, Optional, Callable, List, IO
 import signal
 import os
+import types
 
 from srcs.models.sandbox import SandboxConfig
 
@@ -16,12 +17,12 @@ class TimeoutError(Exception):
     pass
 
 
-def _timeout_handler(signum, frame):
+def _timeout_handler(signum: int, frame: Optional[types.FrameType]) -> None:
     raise TimeoutError("Execution timed out")
 
 
 class Sandbox():
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Sandbox to execute code taht can be vulnerable
         """
@@ -31,11 +32,11 @@ class Sandbox():
         self.final_answer_value: Optional[Any] = None
         self.has_finished = False
 
-        self.stdout = []
+        self.stdout: List[Any] = []
 
         self._setup_namespace()
 
-    def _is_import_allowed(self, name):
+    def _is_import_allowed(self, name: str) -> bool:
         """
         Check if a module can be imported
         Args:
@@ -56,11 +57,11 @@ class Sandbox():
     def _custom_import(
             self,
             name: str,
-            globals=None,
-            locals=None,
-            fromlist=(),
-            level=0
-            ):
+            globals: Optional[Dict[str, Any]] = None,
+            locals: Optional[Dict[str, Any]] = None,
+            fromlist: Any =(),
+            level: int = 0
+            ) -> Any:
         """
         Rewriting the import function to restrict imports usage
         Args:
@@ -78,7 +79,7 @@ class Sandbox():
                                 f" policy: '{name}'")
         return builtins.__import__(name, globals, locals, fromlist, level)
 
-    def _is_open_allowed(self, filepath: str):
+    def _is_open_allowed(self, filepath: str) -> bool:
         """
         Check if a file can be open
         Args:
@@ -93,14 +94,20 @@ class Sandbox():
                 return True
         return False
 
-    def _custom_open(self, file: Any, mode: str = "r", *args, **kwargs):
+    def _custom_open(
+            self, 
+            file: Any, 
+            mode: str = "r", 
+            *args: Any, 
+            **kwargs: Any
+        ) -> IO[Any]:
         """
         Rewriting the open function to restrict open usage
         Args:
             file: str = file path
             mode: str = The type of action we have to do in the file
-            args:
-            kwargs:
+            args: other arguments that can be needed by open
+            kwargs: other arguments that can be needed by open
         Returns:
             IO: Opened file stream
         """
@@ -112,13 +119,13 @@ class Sandbox():
             )
         return builtins.open(file, mode, *args, **kwargs)
 
-    def _custom_print(self, *args, **kwargs):
+    def _custom_print(self, *args: Any, **kwargs: Any) -> None:
         """
         Rewriting the function print for the agent to capture
         the standard output and not printing it in the terminal
         Args:
-            *args
-            **kwargs
+            *args: other arguments that can be needed by open
+            **kwargs: other arguments that can be needed by open
         Returns:
             Any: the printed variable from the agent code
         """
@@ -140,7 +147,7 @@ class Sandbox():
         self.has_finished = True
         return answer
 
-    def register_tool(self, name: str, func: Callable):
+    def register_tool(self, name: str, func: Callable[..., Any]) -> None:
         """
         Inject new functions tools to the white list
         Args:
@@ -150,7 +157,7 @@ class Sandbox():
         """
         self.namespace[name] = func
 
-    def _setup_namespace(self):
+    def _setup_namespace(self) -> None:
         """
         Setting up allowed functions defined in the model SandboxConfig,
         Also permits to rewrite __import__ with _custom_import,
@@ -171,7 +178,7 @@ class Sandbox():
             "final_answer": self._final_answer_tool,
         }
 
-    def execute(self, code):
+    def execute(self, code: str) -> Dict[str, Any]:
         """
         This function securely execute the code build by the agent.
         Args:
@@ -211,7 +218,7 @@ class Sandbox():
             signal.alarm(0)
 
 
-def main():
+def main() -> None:
     sandbox = Sandbox()
     while True:
         try:
