@@ -190,6 +190,31 @@ class Sandbox():
             signal.alarm(0)
 
 
+def main():
+    sandbox = Sandbox()
+    while True:
+        try:
+            command = input("Sanbox>")
+            if command == "exit":
+                break
+            if not command.strip():
+                    continue
+
+            result = sandbox.execute(command)
+            if result["output"]:
+                print(result["output"], end="")
+            if result["error"]:
+                print(f"Error: {result['error']}")
+            if result["finished"]:
+                print(f"Final Answer: {result['final_answer']}")
+        except (KeyboardInterrupt, EOFError):
+            print("\nSortie de la sandbox.")
+            break
+
+if __name__ == "__main__":
+    main()
+
+'''
 if __name__ == "__main__":
     sandbox = Sandbox()
     print("=== Sandbox Tests ===\n")
@@ -277,6 +302,8 @@ print(res)
     print("-> OK\n")
 
     print("=== ALL TEST PASSED ===")
+'''
+
 
 """
 # ========================== DOCUMENTATION FOR MY M8 ========================== #
