@@ -24,18 +24,15 @@ class Mbpp():
         self.step = 1
         self.sandbox_output = None
         self.py_code = ""
-        self.ui_queue_push = ui_queue_push
-        self.update_ui()
         self.total_requests = 0
-
-    def update_ui(self):
-        if self.ui_queue_push:
-            self.ui_queue_push(self)
+        self.ui_queue_push = ui_queue_push
+        self.ui_queue_push(self.task)
+        
 
     def run_agent(self):
 
         self.solve_task()
-        self.update_ui()
+        # self.update_ui()
         # time.sleep(5)
 
     def execute(self):
@@ -134,6 +131,7 @@ class Mbpp():
             print("Step finished, saving metrics")
 
             metric = self.get_step_metrics()
+            self.ui_queue_push(metric)
             self.steps.append(metric)
 
             if self.sandbox_output.get("finished"):

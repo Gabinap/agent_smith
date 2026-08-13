@@ -7,26 +7,26 @@ import time
 
 def main():
 
-    # ui_queue = queue.Queue()
+    ui_queue = queue.Queue()
 
-    # gui_thread = threading.Thread(target=gui_thread_worker,
-    #                               args=(ui_queue,),
-    #                               daemon=True)
-    # gui_thread.start()
+    gui_thread = threading.Thread(target=gui_thread_worker,
+                                  args=(ui_queue,),
+                                  daemon=True)
+    gui_thread.start()
 
-    # time.sleep(1)
+    time.sleep(1)
 
     agent = Mbpp(
         task_file="moulinette/task.json",
         output_file="mbpp_solution.json",
         api_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         model_name="gemma-4-31b-it",
-        # ui_queue_push=ui_queue.put
+        ui_queue_push=ui_queue.put
     )
     agent.solve_task()
 
-    # ui_queue.put("Stop")
-    # gui_thread.join()
+    ui_queue.put("Stop")
+    gui_thread.join()
 
 
 if __name__ == "__main__":
