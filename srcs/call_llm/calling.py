@@ -1,7 +1,7 @@
-import requests
-import json
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import time
 
 
 class LLM:
@@ -17,6 +17,10 @@ class LLM:
         self.api_url = api_url
         self.model_name = model_name
         self._api_key = self._get_from_env("API_KEY")
+        self.client = OpenAI(
+            api_key=self._api_key,
+            base_url=self.api_url
+        )
         self._previous_interaction = None
 
     def _get_from_env(self, name: str) -> str:
@@ -39,7 +43,7 @@ class LLM:
             response (str): Api return
         """
         with (open(log_file, "w") as file):
-            file.write(json.dumps(response, indent=2))
+            file.write(response)
 
     def call(self, input: str) -> dict:
         """Call the LLM throught the API.
@@ -50,54 +54,23 @@ class LLM:
         Returns:
             dict: LLM output
         """
-        response = requests.post(
-            url=self.api_url,
-            headers={
-                "Content-Type": "application/json",
-                "x-goog-api-key": self._api_key,
-            },
-            json={
-                "model": self.model_name,
-                "input": input,
-            }
+        s = time.perf_counter()
+        completion = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[
+                {"role": "system", "content": "You are an agent that solve python exercises"},
+                {"role": "user", "content": input}
+            ]
         )
-        response.raise_for_status()
-        response = response.json()
+        e = time.perf_counter()
+        response = completion.model_dump_json(indent=2)
         self._previous_interaction = response
         self.save_response("response.json", response)
         return {
-            "input_tokens": response['usage']['total_input_tokens'],
-            "output_tokens": response['usage']['total_output_tokens'],
+            "input_tokens": completion.usage.prompt_tokens,
+            "output_tokens": completion.usage.completion_tokens,
             "model_name": self.model_name,
-            "llm_output": response['steps'][-1]['content'][0]['text'],
+            "llm_output": completion.choices[0].message.content,
+            "request_time": f"{e-s:.3f}"
         }
 
-    def recall(self, input: str) -> dict:
-        """Call the LLM throught the API a second time with the previus output.
-
-        Args:
-            input (str): Prompt input
-
-        Returns:
-            dict: LLM output
-        """
-        response = requests.post(
-            url=self.api_url,
-            headers={
-                "Content-Type": "application/json",
-                "x-goog-api-key": self._api_key,
-            },
-            json={
-                "model": self.model_name,
-                "input": input,
-                "previous_interaction_id": self._previous_interaction["id"]
-            }
-        )
-        response.raise_for_status()
-        self._previous_interaction = response.json()
-        return {
-            "input_tokens": response['usage']['total_input_tokens'],
-            "output_tokens": response['usage']['total_output_tokens'],
-            "model_name": self.model_name,
-            "llm_output": response['steps'][-1]['content'][0]['text'],
-        }
