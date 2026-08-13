@@ -6,7 +6,8 @@ from __future__ import annotations
 from typing import Protocol
 
 from .internal import CommandResult, LLMResponse, McpSpec
-from .tasks import SandboxConfig, TaskInput
+from .tasks import TaskInput
+from .sandbox import SandboxConfig
 
 __all__ = ["ExecBackend", "LLMClient", "BenchmarkAdapter"]
 
