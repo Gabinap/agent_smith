@@ -4,10 +4,11 @@ from srcs.models.metrics import StepMetrics, SolutionOutput
 from srcs.sandbox.sandbox import Sandbox
 import re
 import datetime
+import time
 
 
 class Mbpp():
-    def __init__(self, task_file: str, api_url: str, model_name: str, update_state):
+    def __init__(self, task_file: str, api_url: str, model_name: str, ui_queue_push):
         """Load the task and the LLM
 
         Args:
@@ -22,13 +23,17 @@ class Mbpp():
         self.step = 1
         self.sandbox_output = None
         self.py_code = ""
-        self.update_state = update_state
-        
+        self.ui_queue_push = ui_queue_push
+        self.update_ui()
+
+    def update_ui(self):
+        self.ui_queue_push(self)
+
     def run_agent(self):
-        self.update_state(self.task.input)
-        self.solve_task()
-        self.task.input.task_id = 0000
-        self.update_state(self.task.input)
+
+        # self.solve_task()
+        self.update_ui()
+        time.sleep(5)
 
     def execute(self):
         """Launch the loaded Task
