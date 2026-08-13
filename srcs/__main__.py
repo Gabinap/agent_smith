@@ -1,21 +1,32 @@
 from srcs.agents.agent_mbpp import Mbpp
-import flet as ft
-from srcs.gui.app import MbppGui 
+from srcs.gui.main import gui_thread_worker
 import threading
+import queue
+import time
+
 
 def main():
-    gui = MbppGui()
-    def flet_main(page: ft.Page):
-        gui.main(page) 
-        agent = Mbpp(
-            task_file="moulinette/task.json",
-            api_url="https://generativelanguage.googleapis.com/v1/interactions",
-            model_name="gemma-4-31b-it",
-            update_state=gui.update_task
-        )
-        threading.Thread(target=agent.run_agent, daemon=True).start()
-        
-    ft.run(flet_main)
+
+    ui_queue = queue.Queue()
+
+    gui_thread = threading.Thread(target=gui_thread_worker,
+                                  args=(ui_queue,),
+                                  daemon=True)
+    gui_thread.start()
+
+    time.sleep(1)
+
+    agent = Mbpp(
+        task_file="moulinette/task.json",
+        api_url="https://generativelanguage.googleapis.com/v1/interactions",
+        model_name="gemma-4-31b-it",
+        ui_queue_push=ui_queue.put
+    )
+    agent.run_agent()
+
+    ui_queue.put("Stop")
+    gui_thread.join()
+
 
 if __name__ == "__main__":
     main()
