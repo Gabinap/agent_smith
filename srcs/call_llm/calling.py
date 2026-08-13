@@ -58,8 +58,10 @@ class LLM:
         completion = self.client.chat.completions.create(
             model=self.model_name,
             messages=[
-                {"role": "system", "content": "You are an agent that solve python exercises"},
-                {"role": "user", "content": input}
+                {"role": "system",
+                 "content": "You are an agent that solve python exercises"},
+                {"role": "user",
+                 "content": input}
             ]
         )
         e = time.perf_counter()
