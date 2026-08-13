@@ -1,10 +1,11 @@
 import builtins
-from typing import Dict, Any, Optional, Callable, List, IO
-import signal
 import os
+import signal
 import types
 
-from srcs.models.sandbox import SandboxConfig
+from typing import Dict, Any, Optional, Callable, List, IO
+
+from models.sandbox import SandboxConfig
 
 
 class SecurityError(PermissionError):
@@ -22,11 +23,11 @@ def _timeout_handler(signum: int, frame: Optional[types.FrameType]) -> None:
 
 
 class Sandbox():
-    def __init__(self) -> None:
+    def __init__(self, config: SandboxConfig = SandboxConfig()) -> None:
         """
         Sandbox to execute code taht can be vulnerable
         """
-        self.config = SandboxConfig()
+        self.config = config
         self.namespace: Dict[str, Any] = {}
 
         self.final_answer_value: Optional[Any] = None
@@ -217,32 +218,6 @@ class Sandbox():
         finally:
             signal.alarm(0)
 
-
-def main() -> None:
-    sandbox = Sandbox()
-    while True:
-        try:
-            command = input("Sanbox>")
-            if command == "exit":
-                break
-            if not command.strip():
-                continue
-
-            result = sandbox.execute(command)
-            if result["output"]:
-                print(result["output"], end="")
-            if result["error"]:
-                print(f"Error: {result['error']}")
-            if result["finished"]:
-                print(f"Final Answer: {result['final_answer']}")
-            print(result)
-        except (KeyboardInterrupt, EOFError):
-            print("\nExit the sandbox.")
-            break
-
-
-if __name__ == "__main__":
-    main()
 
 '''
 if __name__ == "__main__":
