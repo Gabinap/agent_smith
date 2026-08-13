@@ -8,7 +8,7 @@ import time
 
 
 class Mbpp():
-    def __init__(self, task_file: str, api_url: str, model_name: str, ui_queue_push):
+    def __init__(self, task_file: str, output_file: str,api_url: str, model_name: str, ui_queue_push=None):
         """Load the task and the LLM
 
         Args:
@@ -16,7 +16,8 @@ class Mbpp():
             api_url (str): Url of the providers
             model_name (str): Name of the model
         """
-        self.task = Task(task_file)
+        self.output_file = output_file
+        self.task = Task(task_file).input
         self.llm = LLM(api_url, model_name)
         self.steps: list[StepMetrics] = []
         self.sandbox = Sandbox()
@@ -25,35 +26,29 @@ class Mbpp():
         self.py_code = ""
         self.ui_queue_push = ui_queue_push
         self.update_ui()
+        self.total_requests = 0
 
     def update_ui(self):
-        self.ui_queue_push(self)
+        if self.ui_queue_push:
+            self.ui_queue_push(self)
 
     def run_agent(self):
 
-        # self.solve_task()
+        self.solve_task()
         self.update_ui()
-        time.sleep(5)
+        # time.sleep(5)
 
     def execute(self):
         """Launch the loaded Task
         """
-        # prompt = f" \
-        #     {self.task.input.task_definition} \
-        #     \n Here is the definition of the function:\
-        #     {self.task.input.function_definition} \
-        #     \n Here some test to see if your function work, add them in your code, a sandbox will run it to see if all work properly: \
-        #     {self.task.input.test_list}\
-        #     \n Do not comment the code. \
-        #     \n Call also the function final_answer(your_solution_code) with your function code to validate the task"
         prompt = f"""
-            {self.task.input.task_definition}
+            {self.task.task_definition}
 
             Here is the definition of the function to implement:
-            {self.task.input.function_definition}
+            {self.task.function_definition}
 
             Here are some tests to see if your function works. Add them to your code so the sandbox can verify them:
-            {self.task.input.test_list}
+            {self.task.test_list}
 
             CRITICAL INSTRUCTION:
             To validate the task, the sandbox injects a callable named `final_answer`.
@@ -75,42 +70,75 @@ class Mbpp():
                 return ...
             \"\"\"
             final_answer(code_string)"""
-        self.llm_output = self.llm.call(prompt)
-        raw_code = self.llm_output.get("llm_output")
-        match = re.search(r"```python\s*(.*?)```", raw_code, re.DOTALL)
+
+        self.llm_output_data = self.llm.call(prompt)
+        self.total_requests += 1
+
+        self.llm_output = self.clean_thought_bloc(self.llm_output_data.get("llm_output"))
+        match = self.extract_python(self.llm_output)
         self.py_code = match.group(1) if match else None
         self.sandbox_output = self.sandbox.execute(self.py_code)
 
+    def clean_thought_bloc(self, text):
+        return re.sub(r"<thought>.*?</thought>", "",
+                      text, flags=re.DOTALL).strip()
+
+    def extract_python(self, text):
+        return re.search(r"```python\s*(.*?)```", text, re.DOTALL)
+
     def solve_task(self):
-        while (not self.sandbox_output or not self.sandbox_output.get("finished")):
-            print(f"Starting step {self.step}")
+        print(f"Solving task {self.task.task_id}:")
+        while (True):
+            print(f"Starting step {self.step}...")
             self.execute()
-            self.step += 1
-            print(self.sandbox_output)
+            print("Step finished, saving metrics")
+
             metric = StepMetrics(
                 step=self.step,
-                input_tokens=self.llm_output.get("input_tokens"),
-                output_tokens=self.llm_output.get("output_tokens"),
-                request_time_ms=0.0,
+                input_tokens=self.llm_output_data.get("input_tokens"),
+                output_tokens=self.llm_output_data.get("output_tokens"),
+                request_time_ms=self.llm_output_data.get("request_time"),
                 api_url=self.llm.api_url,
                 model_name=self.llm.model_name,
-                llm_output=self.llm_output.get("llm_output"),
+                llm_output=self.llm_output,
                 sandbox_input=self.py_code,
                 sandbox_output=self.sandbox_output.get("output"),
-                retries=0
             )
             self.steps.append(metric)
-            print(metric)
+
+            if self.sandbox_output.get("finished"):
+                break
+            else:
+                self.step += 1
+                 # analyser l output de la sanbox et mettre des paramettres special pour le recall
+
         print(self.sandbox_output.get("final_answer"))
-            # analyser l output de la sanbox et mettre des paramettres special pour le recall
-        # output = SolutionOutput(
-        #     task_id=self.task.input.task_id ,
-        #     benchmark="mbpp",
-        #     success=True,
-        #     solution=self.sandbox_output.get("final_answer"),
-        #     iterations=
-        # )
+        timestamp = datetime.datetime.now().isoformat()
 
+        output = SolutionOutput(
+            task_id=str(self.task.task_id),
+            benchmark="mbpp",
+            success=True,
+            solution=self.sandbox_output.get("final_answer"),
+            iterations=len(self.steps),
+            total_requests=self.total_requests,
+            total_input_tokens=sum(metric.input_tokens or 0
+                                   for metric in self.steps),
+            total_output_tokens=sum(metric.output_tokens or 0
+                                    for metric in self.steps),
+            total_time_seconds=sum(metric.request_time_ms or 0
+                                   for metric in self.steps),
+            steps=self.steps,
+            system_prompt="",
+            error=None,
+            timestamp=timestamp
+        )
+        self.save_output(output)
 
-
-
+    def save_output(self, output: SolutionOutput):
+        """Save the Agent output in a Json file.
+        Args:
+            output (SolutionOutput): solution output
+        """
+        with (open(self.output_file, "w") as file):
+            file.write(output.model_dump_json(indent=2))

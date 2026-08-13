@@ -54,6 +54,7 @@ class MbppGui(customtkinter.CTk):
         try:
             data = self.ui_queue.get_nowait()
             if isinstance(data, Mbpp):
+                pass
                 # self.scrollable_txt.update_texts(values)
             else:
                 self.destroy()
