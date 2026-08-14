@@ -2,7 +2,7 @@ import customtkinter
 import queue
 from srcs.agents.agent_mbpp import Mbpp
 from srcs.models.tasks import MBPPTaskInput
-from srcs.models.metrics import StepMetrics
+from srcs.models.metrics import StepMetrics, SolutionOutput
 
 
 class MbppGui(customtkinter.CTk):
@@ -11,8 +11,8 @@ class MbppGui(customtkinter.CTk):
         self.ui_queue = ui_queue
         self.task = None
 
-        self.title(f"Agent Smith")
-        self.geometry("1280x720")
+        self.title("Agent Smith")
+        self.geometry("1280x500")
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
@@ -30,7 +30,7 @@ class MbppGui(customtkinter.CTk):
         self.history_frame = customtkinter.CTkScrollableFrame(self)
         self.history_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=(20, 20))
         self.history_frame.grid_columnconfigure(0, weight=1)
-        
+
         self._task_row_count = 0
 
         self._current_task_frame = None
@@ -47,6 +47,8 @@ class MbppGui(customtkinter.CTk):
                     self.insert_task(data)
                 elif isinstance(data, StepMetrics):
                     self.insert_step(data)
+                elif isinstance(data, SolutionOutput):
+                    self.insert_solution(data)
                 elif data is None:
                     self.destroy()
                     return
@@ -133,7 +135,7 @@ class MbppGui(customtkinter.CTk):
 
     def _add_code_block(self, parent, content: str, row: int, padx: int = 10, last: bool = False):
         n_lines = max(1, content.count("\n") + 1)
-        height = min(120, 20 * n_lines + 8)
+        height = min(120, 22.5 * n_lines + 8)
 
         box = customtkinter.CTkTextbox(
             parent,
@@ -183,6 +185,7 @@ class MbppGui(customtkinter.CTk):
         title.grid(row=0, column=0, sticky="ew", padx=14, pady=(10, 4))
 
         self._add_code_block(bubble, step.llm_output, row=1, padx=14, last=True)
+
         row_wrapper_sandbox = customtkinter.CTkFrame(steps_container, fg_color="transparent")
         row_wrapper_sandbox.grid(
             row=self._current_step_row_count, column=0, sticky="ew", pady=(0, 8)
@@ -194,7 +197,7 @@ class MbppGui(customtkinter.CTk):
         sandbox_bubble = customtkinter.CTkFrame(
             row_wrapper_sandbox,
             corner_radius=16,
-            fg_color="#3b2f1f", 
+            fg_color="#3b2f1f",
         )
         sandbox_bubble.grid(row=0, column=0, sticky="w")
         sandbox_bubble.grid_columnconfigure(0, weight=1)
@@ -212,6 +215,47 @@ class MbppGui(customtkinter.CTk):
         self._add_section_title(sandbox_bubble, "Output", row=3, padx=16)
         self._add_code_block(sandbox_bubble, step.sandbox_output, row=4, padx=14, last=True)
 
+        self._scroll_to_bottom()
+
+    def insert_solution(self, solution: SolutionOutput):
+        if self._current_task_frame is None:
+            return
+
+        container = self._current_task_frame
+        row_wrapper = customtkinter.CTkFrame(container, fg_color="transparent")
+        row_wrapper.grid(
+            row=self._current_step_row_count,
+            column=0,
+            sticky="ew",
+            pady=(0, 8)
+        )
+        row_wrapper.grid_columnconfigure(0, weight=0)
+        row_wrapper.grid_columnconfigure(1, weight=1)
+        self._current_step_row_count += 1
+
+        frame = customtkinter.CTkFrame(
+            row_wrapper,
+            corner_radius=16,
+            fg_color="#1b3855",
+        )
+        frame.grid(row=0, column=0, sticky="w")
+        frame.grid_columnconfigure(0, weight=1)
+
+        title = customtkinter.CTkLabel(
+            frame,
+            text="Final Solution",
+            font=customtkinter.CTkFont(size=13, weight="bold"),
+            anchor="w",
+        )
+        title.grid(row=0, column=0, sticky="ew", padx=14, pady=(10, 4))
+        self._add_section_title(frame, "Total Time:", row=1, padx=16)
+        self._add_code_block(frame, f"{solution.total_time_seconds}s", row=2, padx=14)
+        self._add_section_title(frame, "Total input tokens:", row=3, padx=16)
+        self._add_code_block(frame, f"{solution.total_input_tokens} tokens", row=4, padx=14)
+        self._add_section_title(frame, "Total output tokens:", row=5, padx=16)
+        self._add_code_block(frame, f"{solution.total_output_tokens} tokens", row=6, padx=14)
+        self._add_section_title(frame, "Solution code", row=7, padx=16)
+        self._add_code_block(frame, solution.solution, row=8, padx=14, last=True)
         self._scroll_to_bottom()
 
     def _scroll_to_bottom(self):
