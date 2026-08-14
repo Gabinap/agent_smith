@@ -27,50 +27,19 @@ class Mbpp():
         self.total_requests = 0
         self.ui_queue_push = ui_queue_push
         self.ui_queue_push(self.task)
-        
 
-    def run_agent(self):
-
-        self.solve_task()
-        # self.update_ui()
-        # time.sleep(5)
 
     def execute(self):
         """Launch the loaded Task
         """
         self.prompt = f"""
-            {self.task.task_definition}
+{self.task.task_definition}
 
-            Here is the definition of the function to implement:
-            {self.task.function_definition}
+Definition of the function: {self.task.function_definition}
 
-            Here are some tests to see if your function works. Add them to
-            your code so the sandbox can verify them:
-            {self.task.test_list}
-
-            CRITICAL INSTRUCTION:
-            To validate the task, the sandbox injects a callable
-            named `final_answer`.
-            You MUST pass your entire solution code as a **Python String** to
-            this function. Do not pass the function object itself, pass the
-            code as a string. Do not comment the code.
-
-            Here is the EXACT format your output must follow:
-
-            ```python
-            # 1. Write your function
-            def your_function_name(args):
-                return ...
-
-            # 2. Add the tests
-            assert your_function_name(test_arg) == expected_result
-
-            # 3. Pass the exact code as a string to final_answer
-            code_string = \"\"\"
-            def your_function_name(args):
-                return ...
-            \"\"\"
-            final_answer(code_string)"""
+Tests to try:
+{"/n".join(self.task.test_list)}
+"""
 
         self.llm_output_data = self.llm.call(self.prompt)
         self.total_requests += 1
@@ -133,15 +102,16 @@ class Mbpp():
             metric = self.get_step_metrics()
             self.ui_queue_push(metric)
             self.steps.append(metric)
-
+            print(self.sandbox_output)
             if self.sandbox_output.get("finished"):
                 break
             else:
                 self.step += 1
                 # analyser l output de la sanbox et mettre des paramettres
                 # special pour le recall
-
+        print("finished")
         output = self.get_solution_output()
+        self.ui_queue_push(output)
         self.save_output(output)
 
     def save_output(self, output: SolutionOutput):
