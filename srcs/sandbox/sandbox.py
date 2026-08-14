@@ -4,8 +4,8 @@ import signal
 import types
 
 from typing import Dict, Any, Optional, Callable, List, IO
-
-from models.sandbox import SandboxConfig
+from mcp_server.mcp_client import McpClient
+from models.sandbox import SandboxConfig, SandboxResult
 
 
 class SecurityError(PermissionError):
@@ -23,9 +23,12 @@ def _timeout_handler(signum: int, frame: Optional[types.FrameType]) -> None:
 
 
 class Sandbox():
-    def __init__(self, config: SandboxConfig = SandboxConfig()) -> None:
+    def __init__(
+            self,
+            config: SandboxConfig = SandboxConfig()
+            ) -> None:
         """
-        Sandbox to execute code taht can be vulnerable
+        Sandbox to execute code that can be vulnerable
         """
         self.config = config
         self.namespace: Dict[str, Any] = {}
@@ -198,26 +201,25 @@ class Sandbox():
         self.stdout = []
         try:
             exec(code, self.namespace)
-            return {
+            return SandboxResult.model_validate({
                 "success": True,
                 "output": "".join(self.stdout),
                 "error": None,
                 "final_answer": self.final_answer_value,
                 "finished": self.has_finished
-            }
+            })
         except Exception as e:
             if isinstance(e, (KeyboardInterrupt, SystemExit)):
                 raise e
-            return {
+            return SandboxResult.model_validate({
                 "success": False,
                 "output": "".join(self.stdout),
                 "error": f"{type(e).__name__}: {str(e)}",
                 "final_answer": self.final_answer_value,
                 "finished": False
-            }
+            })
         finally:
             signal.alarm(0)
-
 
 '''
 if __name__ == "__main__":
