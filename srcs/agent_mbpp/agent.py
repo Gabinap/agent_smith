@@ -1,14 +1,15 @@
-from srcs.agents.task_manager import Task
-from srcs.call_llm.calling import LLM
-from srcs.models.metrics import StepMetrics, SolutionOutput
-from srcs.sandbox.sandbox import Sandbox
+from .task_manager import Task
+from call_llm.calling import LLM
+from models.metrics import StepMetrics, SolutionOutput
+from models.tasks import MBPPTaskInput
+from sandbox.sandbox import Sandbox
 import re
 import datetime
 
 
 class Mbpp():
     def __init__(self, task_file: str, output_file: str,
-                 api_url: str, model_name: str, ui_queue_push=None):
+                 api_url: str, model_name: str, env_key: str, ui_queue_push=None):
         """Load the task and the LLM
 
         Args:
@@ -18,7 +19,7 @@ class Mbpp():
         """
         self.output_file = output_file
         self.task = Task(task_file).input
-        self.llm = LLM(api_url, model_name)
+        self.llm = LLM(api_url, model_name, env_key)
         self.steps: list[StepMetrics] = []
         self.sandbox = Sandbox()
         self.step = 1
@@ -26,7 +27,7 @@ class Mbpp():
         self.py_code = ""
         self.total_requests = 0
         self.ui_queue_push = ui_queue_push
-        self.ui_queue_push(self.task)
+        # self.ui_queue_push(self.task)
 
 
     def execute(self):
@@ -100,8 +101,8 @@ Tests to try:
             print("Step finished, saving metrics")
 
             metric = self.get_step_metrics()
-            self.ui_queue_push(metric)
-            self.ui_queue_push(self.sandbox_data)
+            # self.ui_queue_push(metric)
+            # self.ui_queue_push(self.sandbox_data)
             self.steps.append(metric)
             if self.sandbox_data.finished:
                 break
@@ -111,7 +112,7 @@ Tests to try:
                 # special pour le recall
         print("finished")
         output = self.get_solution_output()
-        self.ui_queue_push(output)
+        # self.ui_queue_push(output)
         self.save_output(output)
 
     def save_output(self, output: SolutionOutput):

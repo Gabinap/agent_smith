@@ -9,7 +9,7 @@ class LLM:
     """
         The link between agent and api
     """
-    def __init__(self, api_url: str, model_name: str):
+    def __init__(self, api_url: str, model_name: str, env_key: str):
         """Initialise the llm Api
         Args:
             api_url (str): Url of the providers
@@ -17,7 +17,7 @@ class LLM:
         """
         self.api_url = api_url
         self.model_name = model_name
-        self._api_key = self._get_from_env("API_KEY")
+        self._api_key = self._get_from_env(env_key)
         self.client = OpenAI(
             api_key=self._api_key,
             base_url=self.api_url
