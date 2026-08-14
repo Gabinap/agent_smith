@@ -8,6 +8,7 @@ dependencies = [
     "dotenv>=0.9.9",
     "openai>=3.0.0",
     "pydantic>=2.13.4",
+    "pyfiglet>=1.0.4",
     "questionary>=2.1.1",
     "rich>=15.0.0",
 ]
