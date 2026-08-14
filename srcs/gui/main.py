@@ -3,6 +3,7 @@ import queue
 from srcs.agents.agent_mbpp import Mbpp
 from srcs.models.tasks import MBPPTaskInput
 from srcs.models.metrics import StepMetrics, SolutionOutput
+from srcs.models.sandbox import SandboxResult
 
 
 class MbppGui(customtkinter.CTk):
@@ -47,6 +48,8 @@ class MbppGui(customtkinter.CTk):
                     self.insert_task(data)
                 elif isinstance(data, StepMetrics):
                     self.insert_step(data)
+                elif isinstance(data, SandboxResult):
+                    self.insert_sandbox_output(data)
                 elif isinstance(data, SolutionOutput):
                     self.insert_solution(data)
                 elif data is None:
@@ -204,16 +207,14 @@ class MbppGui(customtkinter.CTk):
 
         sandbox_title = customtkinter.CTkLabel(
             sandbox_bubble,
-            text="Sandbox",
+            text="Sandbox input",
             font=customtkinter.CTkFont(size=13, weight="bold"),
             anchor="w",
         )
         sandbox_title.grid(row=0, column=0, sticky="ew", padx=14, pady=(10, 4))
 
         self._add_section_title(sandbox_bubble, "Python code:", row=1, padx=16)
-        self._add_code_block(sandbox_bubble, step.sandbox_input, row=2, padx=14)
-        self._add_section_title(sandbox_bubble, "Output", row=3, padx=16)
-        self._add_code_block(sandbox_bubble, step.sandbox_output, row=4, padx=14, last=True)
+        self._add_code_block(sandbox_bubble, step.sandbox_input, row=2, padx=14, last=True)
 
         self._scroll_to_bottom()
 
@@ -257,6 +258,50 @@ class MbppGui(customtkinter.CTk):
         self._add_section_title(frame, "Solution code", row=7, padx=16)
         self._add_code_block(frame, solution.solution, row=8, padx=14, last=True)
         self._scroll_to_bottom()
+
+    def insert_sandbox_output(self, sand_out: SandboxResult):
+        if self._current_task_frame is None:
+            return
+
+        container = self._current_task_frame
+        row_wrapper = customtkinter.CTkFrame(container, fg_color="transparent")
+        row_wrapper.grid(
+            row=self._current_step_row_count,
+            column=0,
+            sticky="ew",
+            pady=(0, 8)
+        )
+        row_wrapper.grid_columnconfigure(0, weight=0)
+        row_wrapper.grid_columnconfigure(1, weight=1)
+        self._current_step_row_count += 1
+
+        frame = customtkinter.CTkFrame(
+            row_wrapper,
+            corner_radius=16,
+            fg_color="#1b3855",
+        )
+        frame.grid(row=0, column=0, sticky="w")
+        frame.grid_columnconfigure(0, weight=1)
+
+        title = customtkinter.CTkLabel(
+            frame,
+            text="Sandbox output",
+            font=customtkinter.CTkFont(size=13, weight="bold"),
+            anchor="w",
+        )
+
+        if sand_out.error is None:
+            msg = "No errors"
+        else:
+            msg = sand_out.error
+
+        title.grid(row=0, column=0, sticky="ew", padx=14, pady=(10, 4))
+        self._add_section_title(frame, "Output:", row=1, padx=16)
+        self._add_code_block(frame, sand_out.output, row=2, padx=14)
+        self._add_section_title(frame, "Error:", row=3, padx=16)
+        self._add_code_block(frame, msg, row=4, padx=14)
+        self._add_section_title(frame, "Final answer:", row=5, padx=16)
+        self._add_code_block(frame, sand_out.final_answer, row=6, padx=14, last=True)
 
     def _scroll_to_bottom(self):
         self.history_frame._parent_canvas.yview_moveto(1.0)
