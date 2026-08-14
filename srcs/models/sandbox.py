@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import List
+from pydantic import BaseModel, Field, ConfigDict
+from typing import List, Optional
 
 
 class SandboxConfig(BaseModel):
@@ -23,3 +23,12 @@ class SandboxConfig(BaseModel):
     ])
     max_execution_time_seconds: int = 30
     max_memory_mb: int = 512
+
+
+class SandboxResult(BaseModel):
+    model_config = ConfigDict(extra='ignore')
+    success: bool
+    output: str
+    error: Optional[str]
+    final_answer: Optional[str] = None
+    finished: bool
