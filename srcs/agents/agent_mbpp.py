@@ -22,7 +22,7 @@ class Mbpp():
         self.steps: list[StepMetrics] = []
         self.sandbox = Sandbox()
         self.step = 1
-        self.sandbox_output = None
+        self.sandbox_data = None
         self.py_code = ""
         self.total_requests = 0
         self.ui_queue_push = ui_queue_push
@@ -49,7 +49,7 @@ Tests to try:
         )
         match = self.extract_python(self.llm_output)
         self.py_code = match.group(1) if match else None
-        self.sandbox_output = self.sandbox.execute(self.py_code)
+        self.sandbox_data = self.sandbox.execute(self.py_code)
 
     def clean_thought_bloc(self, text):
         return re.sub(r"<thought>.*?</thought>", "",
@@ -68,7 +68,7 @@ Tests to try:
                 model_name=self.llm.model_name,
                 llm_output=self.llm_output,
                 sandbox_input=self.py_code,
-                sandbox_output=self.sandbox_output.get("output"),
+                sandbox_output=self.sandbox_data.output,
         )
 
     def get_solution_output(self) -> SolutionOutput:
@@ -77,7 +77,7 @@ Tests to try:
             task_id=str(self.task.task_id),
             benchmark="mbpp",
             success=True,
-            solution=self.sandbox_output.get("final_answer"),
+            solution=self.sandbox_data.final_answer,
             iterations=len(self.steps),
             total_requests=self.total_requests,
             total_input_tokens=sum(metric.input_tokens or 0
@@ -101,9 +101,9 @@ Tests to try:
 
             metric = self.get_step_metrics()
             self.ui_queue_push(metric)
+            self.ui_queue_push(self.sandbox_data)
             self.steps.append(metric)
-            print(self.sandbox_output)
-            if self.sandbox_output.get("finished"):
+            if self.sandbox_data.finished:
                 break
             else:
                 self.step += 1
