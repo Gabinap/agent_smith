@@ -2,7 +2,7 @@ import sys
 import argparse
 from pydantic import ValidationError
 from models.internal import McpSpec
-from models.sandbox import SandboxConfig
+from models.sandbox import SandboxConfig, SandboxResult
 from sandbox.sandbox import Sandbox
 
 
@@ -12,8 +12,8 @@ class CLI_Sandbox:
         if len(sys.argv) > 4:
             print("Error: Too many arguments passed", file=sys.stderr)
             return
-        self._get_sandbox_config(self.args)
         self._get_mcp_spec(self.args)
+        self._get_sandbox_config(self.args)
         self.sandbox = Sandbox(config=self.config)
 
     def _sandbox_cli_parsing(self) -> None:
@@ -84,13 +84,13 @@ class CLI_Sandbox:
                 if not command.strip():
                     continue
 
-                result = self.sandbox.execute(command)
-                if result["output"]:
-                    print(result["output"], end="")
-                if result["error"]:
-                    print(f"Error: {result['error']}")
-                if result["finished"]:
-                    print(f"Final Answer: {result['final_answer']}")
+                result: SandboxResult = self.sandbox.execute(command)
+                if result.output:
+                    print(result.output, end="")
+                if result.error:
+                    print(f"Error: {result.error}")
+                if result.finished:
+                    print(f"Final Answer: {result.final_answer}")
                 print(result)
             except (KeyboardInterrupt, EOFError):
                 print("\nExit the sandbox.")
