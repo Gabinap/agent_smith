@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import time
 import textwrap
+import re
 
 
 class LLM:
@@ -18,6 +19,7 @@ class LLM:
         self.api_url = api_url
         self.model_name = model_name
         self._api_key = self._get_from_env(env_key)
+        
         self.client = OpenAI(
             api_key=self._api_key,
             base_url=self.api_url
@@ -56,27 +58,47 @@ class LLM:
             dict: LLM output
         """
         s = time.perf_counter()
-
-        completion = self.client.chat.completions.create(
-            model=self.model_name,
-            messages=[
-                {"role": "system",
-                 "content": self._system_content()},
-                {"role": "user",
-                 "content": input}
-            ]
-        )
+        try: 
+            completion = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system",
+                    "content": self._system_content()},
+                    {"role": "user",
+                    "content": input}
+                ]
+            )
+        except Exception:
+            raise ValueError("Invalid API Key")
         e = time.perf_counter()
         response = completion.model_dump_json(indent=2)
         self._previous_interaction = response
         self.save_response("response.json", response)
+        thought, answer = self.clean_thought_bloc(completion.choices[0].message.content)
+
         return {
             "input_tokens": completion.usage.prompt_tokens,
             "output_tokens": completion.usage.completion_tokens,
             "model_name": self.model_name,
-            "llm_output": completion.choices[0].message.content,
+            "thought": thought,
+            "answer": answer,
             "request_time": f"{e-s:.3f}"
         }
+        
+    def clean_thought_bloc(self, text):
+        match = re.search(r"<thought>(.*?)</thought>", text, flags=re.DOTALL)
+
+        thought = match.group(1).strip() if match else ""
+
+        clean_text = re.sub(
+            r"<thought>.*?</thought>",
+            "",
+            text,
+            flags=re.DOTALL
+        ).strip()
+
+        return thought, clean_text
+
 
     def _system_content(self) -> str:
         return textwrap.dedent("""
