@@ -11,7 +11,7 @@ def display_sandbox(console: Console, sandbox_data: SandboxResult, py_code: str)
         msg_error = sandbox_data.error
     sandbox_cli = Group(
         Text("Input:", style="bold white", end="\n\n"),
-        Syntax(py_code.strip(), "python", theme="stata-dark"),
+        Syntax(py_code, "python", theme="stata-dark"),
         Text("\nOutput:", style="bold white", end="\n\n"),
         Syntax(sandbox_data.output, "python", theme="stata-dark"),
         Text("\nErrors:", style="bold white", end="\n\n"),

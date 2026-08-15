@@ -100,7 +100,7 @@ Tests to try:
         Args:
             output (SolutionOutput): solution output
         """
-        with (open(self.output_file, "w") as file):
+        with (open(self.output_file, "w", encoding="utf-8") as file):
             file.write(output.model_dump_json(indent=2))
 
                 
