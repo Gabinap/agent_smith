@@ -17,8 +17,16 @@ import re
 import datetime
 
 class Mbpp():
-    def __init__(self, task_file: str, output_file: str,
-                 api_url: str, model_name: str, env_key: str, console: Console):
+    def __init__(
+        self,
+        task_file: str,
+        output_file: str,
+        api_url: str,
+        model_name: str,
+        env_key: str,
+        console: Console,
+        max_iteration: int = 2 
+    ):
         """Load the task and the LLM
 
         Args:
@@ -36,6 +44,7 @@ class Mbpp():
         self.py_code = ""
         self.total_requests = 0
         self.console = console
+        self.max_iteration = max_iteration
 
 
     def execute(self):
@@ -56,6 +65,8 @@ class Mbpp():
          
     def solve_task(self):
         while (True):
+            if self.step > self.max_iteration:
+                break
             self.execute()
             metric = self.get_step_metrics()
             self.steps.append(metric)
@@ -63,8 +74,8 @@ class Mbpp():
                 break
             else:
                 self.step += 1
-                # analyser l output de la sanbox et mettre des paramettres
-                # special pour le recall
+                self.llm.sandbox_output = self.sandbox_data
+
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         self.save_output(output)

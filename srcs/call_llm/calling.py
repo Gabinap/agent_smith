@@ -22,9 +22,11 @@ class LLM:
         
         self.client = OpenAI(
             api_key=self._api_key,
-            base_url=self.api_url
+            base_url=self.api_url,
+            timeout=120.0
         )
         self._previous_interaction = None
+        self.sandbox_output = None
 
     def _get_from_env(self, name: str) -> str:
         """Load the .env
@@ -57,22 +59,41 @@ class LLM:
         Returns:
             dict: LLM output
         """
+        messages=[
+            {"role": "system",
+            "content": self._system_content()},
+            {"role": "user",
+            "content": input}
+        ]
+        if self.sandbox_output is not None:
+            messages.append({
+                "role": "assistant",
+                "content": self.last_answer
+            })
+            input += f"""
+The first code was wrong
+Errors: {self.sandbox_output.error}
+Final answer: {self.sandbox_output.final_answer}
+
+Adjust your code to solve the coding problem
+"""
+            messages.append(
+                {"role": "user",
+                "content": input
+            })
+            
+
         s = time.perf_counter()
         try: 
             completion = self.client.chat.completions.create(
                 model=self.model_name,
-                messages=[
-                    {"role": "system",
-                    "content": self._system_content()},
-                    {"role": "user",
-                    "content": input}
-                ]
+                messages=messages
             )
         except Exception:
             raise ValueError("Invalid API Key")
         e = time.perf_counter()
         response = completion.model_dump_json(indent=2)
-        self._previous_interaction = response
+        self.last_answer = completion.choices[0].message.content
         self.save_response("response.json", response)
         thought, answer = self.clean_thought_bloc(completion.choices[0].message.content)
 
@@ -87,7 +108,6 @@ class LLM:
         
     def clean_thought_bloc(self, text):
         match = re.search(r"<thought>(.*?)</thought>", text, flags=re.DOTALL)
-
         thought = match.group(1).strip() if match else ""
 
         clean_text = re.sub(
