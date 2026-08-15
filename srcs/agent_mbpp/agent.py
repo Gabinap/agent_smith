@@ -8,6 +8,8 @@ from rich.console import Console, Group
 from rich.panel import Panel
 from rich.markdown import Markdown
 from rich.syntax import Syntax
+from rich.progress import Progress
+import questionary
 
 import re
 import datetime
@@ -38,27 +40,22 @@ class Mbpp():
     def execute(self):
         """Launch the loaded Task
         """
+        tests = '\n'.join(self.task.test_list)
         self.prompt = f"""
 {self.task.task_definition}
 
 Definition of the function: {self.task.function_definition}
 
 Tests to try:
-{"/n".join(self.task.test_list)}
+{tests}
 """
-        with self.console.status("[bold blue]LMM Generation..."):
+        with self.console.status("[bold blue]LMM Generation...", spinner_style="blue", spinner="aesthetic",speed=0.5):
             self.llm_output_data = self.llm.call(self.prompt)
         self.total_requests += 1
 
-        thought, self.llm_output = self.clean_thought_bloc(
+        self.thought, self.llm_output = self.clean_thought_bloc(
             self.llm_output_data.get("llm_output")
         )
-        self.console.print(Panel(
-            Text(thought, style="italic"),
-            title="thought",
-            title_align="left",
-            border_style="white"
-        ))
         match = self.extract_python(self.llm_output)
         self.py_code = match.group(1) if match else None
         self.console.print(Panel(
@@ -149,6 +146,32 @@ Tests to try:
         )
         self.console.print(Panel(output_cli, title=f"[bold green3]Solution output", padding=1, border_style="green3"))
         self.save_output(output)
+        exits=['Show the think process', 'Show the prompt', 'Exit']
+        while(True):
+            selected = questionary.select(
+                "Select an option",
+                choices=exits
+            ).ask()
+            if selected == None : return
+            match exits.index(selected):
+                case 0:
+                    self.console.print(Panel(
+                        Text(self.thought, style="italic"),
+                        title="Thought",
+                        title_align="left",
+                        border_style="white"
+                    ))
+                case 1:
+                    self.console.print(Panel(
+                        Text(output.system_prompt, style="italic"),
+                        title="Prompt",
+                        title_align="left",
+                        border_style="white"
+                    ))
+                case 2:
+                    return
+                
+        
 
     def save_output(self, output: SolutionOutput):
         """Save the Agent output in a Json file.
