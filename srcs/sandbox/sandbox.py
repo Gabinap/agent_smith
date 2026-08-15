@@ -25,12 +25,14 @@ def _timeout_handler(signum: int, frame: Optional[types.FrameType]) -> None:
 class Sandbox():
     def __init__(
             self,
+            mcp_client: Optional[McpClient] = None,
             config: SandboxConfig = SandboxConfig()
             ) -> None:
         """
         Sandbox to execute code that can be vulnerable
         """
         self.config = config
+        self.mcp_client = mcp_client
         self.namespace: Dict[str, Any] = {}
 
         self.final_answer_value: Optional[Any] = None
