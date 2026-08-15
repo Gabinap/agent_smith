@@ -4,8 +4,7 @@ import signal
 import types
 
 from typing import Dict, Any, Optional, Callable, List, IO
-from mcp_server.mcp_client import McpClient
-from models.sandbox import SandboxConfig, SandboxResult
+from srcs.models.sandbox import SandboxConfig, SandboxResult
 
 
 class SecurityError(PermissionError):
@@ -184,7 +183,7 @@ class Sandbox():
             "final_answer": self._final_answer_tool,
         }
 
-    def execute(self, code: str) -> Dict[str, Any]:
+    def execute(self, code: str) -> SandboxResult:
         """
         This function securely execute the code build by the agent.
         Args:
