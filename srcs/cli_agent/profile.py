@@ -7,9 +7,9 @@ providers = {
                 "model": ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
             },
             "Open Router" : {
-                "url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+                "url": "https://openrouter.ai/api/v1",
                 "key": "OPEN_ROUTER_KEY",
-                "model": ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
+                "model": ["qwen/qwen3.5-flash-02-23", "dots-studio/dots-3-note-preview:free", "nvidia/nemotron-3-super-120b-a12b:free", "cohere/north-mini-code:free"]
             }
 }   
 

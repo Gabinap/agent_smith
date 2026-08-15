@@ -40,14 +40,15 @@ class LLM:
         load_dotenv()
         return os.getenv(name)
 
-    def save_response(self, log_file: str, response: str):
+    def save_response(self, log_file: str, completion: str):
         """Save the LLM output in a Json file.
 
         Args:
             log_file (str): Json saving file.
             response (str): Api return
         """
-        with (open(log_file, "w") as file):
+        response = completion.model_dump_json(indent=2)
+        with (open(log_file, "w", encoding="utf-8") as file):
             file.write(response)
 
     def call(self, input: str) -> dict:
@@ -92,10 +93,14 @@ Adjust your code to solve the coding problem
         except Exception:
             raise ValueError("Invalid API Key")
         e = time.perf_counter()
-        response = completion.model_dump_json(indent=2)
+        
         self.last_answer = completion.choices[0].message.content
-        self.save_response("response.json", response)
-        thought, answer = self.clean_thought_bloc(completion.choices[0].message.content)
+        self.save_response("response.json", completion)
+        try:
+            answer = completion.choices[0].message.content
+            thought = completion.choices[0].message.reasoning
+        except Exception:   
+            thought, answer = self.clean_thought_bloc(completion.choices[0].message.content)
 
         return {
             "input_tokens": completion.usage.prompt_tokens,
@@ -106,7 +111,12 @@ Adjust your code to solve the coding problem
             "request_time": f"{e-s:.3f}"
         }
         
-    def clean_thought_bloc(self, text):
+    def clean_thought_bloc(self, text: str):
+
+        if "</think>" in text:
+            splitted = text.split("</think>")
+            return splitted[0], splitted[-1]
+            
         match = re.search(r"<thought>(.*?)</thought>", text, flags=re.DOTALL)
         thought = match.group(1).strip() if match else ""
 
