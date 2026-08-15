@@ -9,6 +9,7 @@ from rich.panel import Panel
 from rich.markdown import Markdown
 from rich.syntax import Syntax
 from rich.progress import Progress
+from rich.table import Table
 import questionary
 
 import re
@@ -58,19 +59,42 @@ Tests to try:
         )
         match = self.extract_python(self.llm_output)
         self.py_code = match.group(1) if match else None
-        self.console.print(Panel(
+        table = Table(padding=1).grid(padding=(0, 2))
+        table.add_column(style="bold")
+        table.add_column()
+
+        table.add_row("Model:", self.llm_output_data.get("model_name"))
+        table.add_row("Input tokens:", str(self.llm_output_data.get("input_tokens")))
+        table.add_row("Output tokens:", str(self.llm_output_data.get("output_tokens")))
+        table.add_row("Request time:", f"{self.llm_output_data.get('request_time')}s")
+        content = Group(
+            Text("Code:", style="bold white", end="\n\n"),
             Syntax(self.py_code, "python", theme="stata-dark", line_numbers=True),
-            title="LLM code",
+            "\n",
+            table
+        )
+        self.console.print(Panel(
+            content,
+            title="LLM answer",
             border_style="blue"
         ))
         self.sandbox_data = self.sandbox.execute(self.py_code)
         
+        if self.sandbox_data.error is None:
+            msg_error = "No Errors"
+        else:
+            msg_error = self.sandbox_data.error
         sandbox_cli = Group(
-            Text.from_markup(f"[bold]Error:[/bold] {self.sandbox_data.error}"),
-            Text("\n\nFinal result:", style="bold white", end="\n\n"),
+            Text("Input:", style="bold white", end="\n\n"),
+            Syntax(self.py_code.strip(), "python", theme="stata-dark"),
+            Text("\nOutput:", style="bold white", end="\n\n"),
+            Syntax(self.sandbox_data.output, "python", theme="stata-dark"),
+            Text("\nErrors:", style="bold white", end="\n\n"),
+            Syntax(msg_error, "python", theme="stata-dark"),
+            Text("\nFinal result:", style="bold white", end="\n\n"),
             Syntax(self.sandbox_data.final_answer, "python", theme="stata-dark", line_numbers=True),
         )
-        self.console.print(Panel(sandbox_cli, title=f"[bold dark_orange]SANDBOX output", padding=1, border_style="dark_orange"))
+        self.console.print(Panel(sandbox_cli, title=f"[bold orange1]SANDBOX output", border_style="orange1"))
             
         
 
@@ -144,13 +168,13 @@ Tests to try:
             Text("\nSolution:", style="bold white", end="\n\n"),
             Syntax(output.solution, "python", theme="stata-dark"),
         )
-        self.console.print(Panel(output_cli, title=f"[bold green3]Solution output", padding=1, border_style="green3"))
+        self.console.print(Panel(output_cli, title=f"[bold green3]Solution output", border_style="green3"))
         self.save_output(output)
         exits=['Show the think process', 'Show the prompt', 'Exit']
         while(True):
             selected = questionary.select(
                 "Select an option",
-                choices=exits
+                choices=exits,
             ).ask()
             if selected == None : return
             match exits.index(selected):

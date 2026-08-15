@@ -98,13 +98,13 @@ def main():
     )
     console.print(Columns(stats, expand=True))
     task = Group(
-        Text(agent.task.task_definition, style="bold yellow", end="\n\n", justify="center"),
+        Text(agent.task.task_definition, style="bold orange1", end="\n\n", justify="center"),
         Text("Function definition:", style="bold white", end="\n\n"),
         Syntax(agent.task.function_definition, "python", theme="stata-dark"),
         Text("\n\nTests to try:", style="bold white", end="\n\n"),
         Syntax("\n".join(agent.task.test_list), "python", theme="stata-dark", line_numbers=True),
     )
-    console.print(Panel(task, title=f"[bold yellow]TASK #{agent.task.task_id}", padding=1))
+    console.print(Panel(task, title=f"[bold]TASK #{agent.task.task_id}", padding=1, style='orange1'))
     agent.solve_task()
 
 if __name__ == "__main__":
