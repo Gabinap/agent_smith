@@ -13,6 +13,7 @@ from .sandbox import SandboxConfig
 __all__ = ["ExecBackend", "LLMClient", "BenchmarkAdapter"]
 
 
+# TODO: may adapt timeout
 class ExecBackend(Protocol):
     """Run commands and read/write files, locally or inside a container."""
 
