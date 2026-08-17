@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Dict, Optional
 
+# from models.internal import McpSpec  # commented for test, uncomment for server
+
 
 class TransportMode(Enum):
     STDIO = "stdio"
@@ -23,21 +25,29 @@ class McpClient(ABC):
             params={
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {"name": "MySandboxClient", "version": "1.0.0"},
+                "clientInfo": {"name": "AgentSmithSandbox", "version": "1.0.0"},
             },
         )
         init_response = self.send_message(init_request)
-        print(f"Init response: {init_response}\n")
+        print(f"Init response: {init_response}\n")  # delete debug print
 
         notif = self._build_notification(method="notifications/initialized")
         self.send_message(notif)
-        print("Notification send (no response needed)\n")
+        print("Notification send (no response needed)\n")  # delete debug print
 
-        server_request = self._build_request("tools/list") # replace with the right request
+        server_request = self._build_request("tools/list") 
         server_response = self.send_message(server_request)
-        print(f"Server response: {server_response}\n")
+        print(f"Server response: {server_response}\n")  # delete debug print
 
         return server_response if server_response else {}
+
+    def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Call an MCP tools."""
+        req = self._build_request(
+            "tools/call",
+            params={"name": tool_name, "arguments": arguments}
+        )
+        return self.send_message(req)
 
     def _build_request(self, method: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Build JSON-RPC 2.0 request with ID incrementation."""
@@ -87,14 +97,20 @@ class McpHttp(McpClient):
 
 class McpStdio(McpClient):
     def __init__(self, command: str) -> None:
+        """
+        MCP stdio client
+        Args:
+            command: str = the command to execute on the server
+        Return:
+            None
+        """
         super().__init__(TransportMode.STDIO)
         self.command: str = command
-        self.process: Optional[subprocess.Popen[str]] = None
-        self.connect()
+        self.process = self.connect()
 
     def send_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Send a message to the server and return response."""
-        if not self.process or self.process.stdin is None or self.process.stdout is None:
+        if not self.process or self.process.stdin is None or not self.process.stdout:
             raise RuntimeError("Not connected to Stdio process")
 
         payload = json.dumps(message) + "\n"
@@ -110,7 +126,7 @@ class McpStdio(McpClient):
 
     def connect(self) -> None:
         """Starting the process to connection to the server"""
-        self.process = subprocess.Popen(
+        return subprocess.Popen(
             shlex.split(self.command),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -123,7 +139,25 @@ class McpStdio(McpClient):
             self.process.terminate()
             self.process.wait()
 
+# Uncomment when the server is done to work with the sandbox
+'''
+def create_mcp_client(spec: Optional[McpSpec]) -> Optional[McpClient]:
+    """Choosing the right client with McpSpec"""
+    if not spec:
+        return None
 
+    if spec.transport == "stdio":
+        if not spec.command:
+            raise ValueError("A command is required for the stdio Client.")
+        return McpStdio(command=spec.command)
+    
+    if spec.transport == "http":
+        if not spec.url:
+            raise ValueError("An url is required for the http client.")
+        return McpHttp(url=spec.url)
+
+    raise ValueError(f"Unknown transport method: {spec.transport}")
+'''
 # ================ ============ ================ #
 # ================ ============ ================ #
 # ================ SERVEUR MOCK ================ #
