@@ -4,7 +4,8 @@ import signal
 import types
 
 from typing import Dict, Any, Optional, Callable, List, IO
-from srcs.models.sandbox import SandboxConfig, SandboxResult
+from models.sandbox import SandboxConfig, SandboxResult
+from mcp_server.mcp_client import McpClient
 
 
 class SecurityError(PermissionError):
@@ -33,13 +34,14 @@ class Sandbox():
         self.config = config
         self.mcp_client = mcp_client
         self.namespace: Dict[str, Any] = {}
-
         self.final_answer_value: Optional[Any] = None
         self.has_finished = False
 
         self.stdout: List[Any] = []
 
         self._setup_namespace()
+        if self.mcp_client:
+            self._bind_mcp_tools()
 
     def _is_import_allowed(self, name: str) -> bool:
         """
@@ -182,6 +184,25 @@ class Sandbox():
             "__builtins__": authorized_builtins,
             "final_answer": self._final_answer_tool,
         }
+
+    def _bind_mcp_tools(self) -> None:
+        """Report MCP functions directly as usable for the agent."""
+        if not self.mcp_client:
+            return
+
+        tools_res = self.mcp_client.initialize_session()
+        tools = tools_res.get("result", {}).get("tools", [])  # depend of the name of the field recieved by the server
+
+        for tool in tools:
+            tool_name = tool["name"]
+
+            def make_tool_wrapper(name: str):
+                def tool_wrapper(**kwargs):
+                    res = self.mcp_client.call_tool(name, kwargs)
+                    return res.get("result") if res else None
+                return tool_wrapper
+
+            self.namespace[tool_name] = make_tool_wrapper(tool_name)
 
     def execute(self, code: str) -> SandboxResult:
         """

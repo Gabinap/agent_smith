@@ -1,22 +1,23 @@
 import sys
 import argparse
-from pydantic import ValidationError
 from models.internal import McpSpec
 from models.sandbox import SandboxConfig, SandboxResult
 from sandbox.sandbox import Sandbox
-
+from mcp_server.mcp_client import create_mcp_client, McpClient
+from typing import Optional
 
 class CLI_Sandbox:
     def __init__(self) -> None:
-        self._sandbox_cli_parsing()
+        self.args = self._sandbox_cli_parsing()
         if len(sys.argv) > 4:
             print("Error: Too many arguments passed", file=sys.stderr)
             return
-        self._get_mcp_spec(self.args)
-        self._get_sandbox_config(self.args)
-        self.sandbox = Sandbox(config=self.config)
+        self.mcp_spec = self._get_mcp_spec(self.args)
+        self.mcp_client: Optional[McpClient] = create_mcp_client(self.mcp_spec)
+        self.sandbox = Sandbox(mcp_client=self.mcp_client, config=SandboxConfig())
 
-    def _sandbox_cli_parsing(self) -> None:
+    @staticmethod
+    def _sandbox_cli_parsing() -> None:
         parser = argparse.ArgumentParser(prog="SandboxCLI")
         mcp_group = parser.add_mutually_exclusive_group()
         mcp_group.add_argument(
@@ -34,7 +35,7 @@ class CLI_Sandbox:
             nargs="?",
             help="Path to the JSON configuration file"
         )
-        self.args = parser.parse_args()
+        return parser.parse_args()
 
     @staticmethod
     def _read_config(config_file: str) -> SandboxConfig:
@@ -50,51 +51,38 @@ class CLI_Sandbox:
             json = file.read()
             return SandboxConfig.model_validate_json(json)
 
-    def _get_sandbox_config(self, args: argparse.Namespace) -> None:
-        if args.config_file:
-            try:
-                self.config = self._read_config(self.args.config_file)
-            except FileNotFoundError:
-                print("Error: Config File not found, entering the "
-                      "Sandbox with default configuration", file=sys.stderr)
-                self.config = SandboxConfig()
-            except ValidationError:
-                print("Error: Bad formatted configuration file, entering the "
-                      "Sandbox with default configuration", file=sys.stderr)
-                self.config = SandboxConfig()
-        else:
-            self.config = SandboxConfig()
-
-    def _get_mcp_spec(self, args: argparse.Namespace) -> None:
+    @staticmethod
+    def _get_mcp_spec(args: argparse.Namespace) -> Optional[McpSpec]:
         if args.mcp_server:
-            self.mcp_spec = McpSpec(transport="http", url=args.mcp_server)
-            print(self.mcp_spec)
+            return McpSpec(transport="http", url=args.mcp_server)
         elif args.mcp_stdio:
-            self.mcp_spec = McpSpec(transport="stdio", command=args.mcp_stdio)
-            print(self.mcp_spec)
-        else:
-            self.mcp_spec = None
+            return McpSpec(transport="stdio", command=args.mcp_stdio)
+        return None
 
     def execute(self) -> None:
-        while True:
-            try:
-                command = input("Sanbox>")
-                if command == "exit":
-                    break
-                if not command.strip():
-                    continue
+        try:
+            while True:
+                try:
+                    command = input("Sanbox>")
+                    if command == "exit":
+                        break
+                    if not command.strip():
+                        continue
 
-                result: SandboxResult = self.sandbox.execute(command)
-                if result.output:
-                    print(result.output, end="")
-                if result.error:
-                    print(f"Error: {result.error}")
-                if result.finished:
-                    print(f"Final Answer: {result.final_answer}")
-                print(result)
-            except (KeyboardInterrupt, EOFError):
-                print("\nExit the sandbox.")
-                break
+                    result: SandboxResult = self.sandbox.execute(command)
+                    if result.output:
+                        print(result.output, end="")
+                    if result.error:
+                        print(f"Error: {result.error}")
+                    if result.finished:
+                        print(f"Final Answer: {result.final_answer}")
+                    print(result)
+                except (KeyboardInterrupt, EOFError):
+                    print("\nExit the sandbox.")
+                    break
+        finally:
+            if self.mcp_client:
+                self.mcp_client.close()
 
 
 if __name__ == "__main__":
