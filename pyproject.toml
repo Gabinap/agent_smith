@@ -3,12 +3,21 @@ name = "agent-smith"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10.0,<3.11"
+requires-python = ">=3.10.18,<3.11"
 dependencies = [
     "dotenv>=0.9.9",
+    "mcp>=2.0.0",
     "openai>=3.0.0",
     "pydantic>=2.13.4",
     "pyfiglet>=1.0.4",
     "questionary>=2.1.1",
     "rich>=15.0.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
