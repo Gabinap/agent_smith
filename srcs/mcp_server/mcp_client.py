@@ -6,7 +6,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Dict, Optional
 
-# from models.internal import McpSpec  # commented for test, uncomment for server
+# from models.internal import McpSpec  # commented for test,
+#  uncomment for server
 
 
 class TransportMode(Enum):
@@ -25,7 +26,10 @@ class McpClient(ABC):
             params={
                 "protocolVersion": "2024-11-05",
                 "capabilities": {},
-                "clientInfo": {"name": "AgentSmithSandbox", "version": "1.0.0"},
+                "clientInfo": {
+                    "name": "AgentSmithSandbox",
+                    "version": "1.0.0"
+                },
             },
         )
         init_response = self.send_message(init_request)
@@ -35,13 +39,14 @@ class McpClient(ABC):
         self.send_message(notif)
         print("Notification send (no response needed)\n")  # delete debug print
 
-        server_request = self._build_request("tools/list") 
+        server_request = self._build_request("tools/list")
         server_response = self.send_message(server_request)
         print(f"Server response: {server_response}\n")  # delete debug print
 
         return server_response if server_response else {}
 
-    def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def call_tool(self, tool_name: str, arguments: Dict[str, Any]
+                  ) -> Optional[Dict[str, Any]]:
         """Call an MCP tools."""
         req = self._build_request(
             "tools/call",
@@ -49,7 +54,11 @@ class McpClient(ABC):
         )
         return self.send_message(req)
 
-    def _build_request(self, method: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def _build_request(
+            self,
+            method: str,
+            params: Optional[Dict[str, Any]] = None
+            ) -> Dict[str, Any]:
         """Build JSON-RPC 2.0 request with ID incrementation."""
         req = {
             "jsonrpc": "2.0",
@@ -62,7 +71,10 @@ class McpClient(ABC):
         return req
 
     @staticmethod
-    def _build_notification(method: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def _build_notification(
+        method: str,
+        params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Build notification JSON-RPC 2.0 (no ID)"""
         notif: Dict[str, Any] = {
             "jsonrpc": "2.0",
@@ -73,7 +85,10 @@ class McpClient(ABC):
         return notif
 
     @abstractmethod
-    def send_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def send_message(
+        self,
+        message: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Send a message to the server and return response."""
         pass
 
@@ -82,13 +97,20 @@ class McpClient(ABC):
         """Starting the process to connection to the server"""
         pass
 
+    @abstractmethod
+    def close(self) -> None:
+        pass
+
 
 class McpHttp(McpClient):
     def __init__(self, url: str) -> None:
         super().__init__(TransportMode.HTTP)
         self.url = url
 
-    def send_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def send_message(
+        self,
+        message: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         pass
 
     def connect(self) -> None:
@@ -106,11 +128,16 @@ class McpStdio(McpClient):
         """
         super().__init__(TransportMode.STDIO)
         self.command: str = command
-        self.process = self.connect()
+        self.connect()
 
-    def send_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def send_message(
+        self,
+        message: Dict[str, Any]
+    ) -> Any | None:
         """Send a message to the server and return response."""
-        if not self.process or self.process.stdin is None or not self.process.stdout:
+        if (not self.process or
+            self.process.stdin is None or
+                not self.process.stdout):
             raise RuntimeError("Not connected to Stdio process")
 
         payload = json.dumps(message) + "\n"
@@ -126,7 +153,7 @@ class McpStdio(McpClient):
 
     def connect(self) -> None:
         """Starting the process to connection to the server"""
-        return subprocess.Popen(
+        self.process = subprocess.Popen(
             shlex.split(self.command),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -140,6 +167,8 @@ class McpStdio(McpClient):
             self.process.wait()
 
 # Uncomment when the server is done to work with the sandbox
+
+
 '''
 def create_mcp_client(spec: Optional[McpSpec]) -> Optional[McpClient]:
     """Choosing the right client with McpSpec"""
@@ -150,7 +179,7 @@ def create_mcp_client(spec: Optional[McpSpec]) -> Optional[McpClient]:
         if not spec.command:
             raise ValueError("A command is required for the stdio Client.")
         return McpStdio(command=spec.command)
-    
+
     if spec.transport == "http":
         if not spec.url:
             raise ValueError("An url is required for the http client.")
@@ -164,11 +193,12 @@ def create_mcp_client(spec: Optional[McpSpec]) -> Optional[McpClient]:
 # ================ ============ ================ #
 # ================ ============ ================ #
 
+'''
 def run_mock_server():
     for line in sys.stdin:
         if not line.strip():
             continue
-        
+
         request = json.loads(line)
         method = request.get("method")
         msg_id = request.get("id")
@@ -180,7 +210,10 @@ def run_mock_server():
                 "result": {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "MockMBPPServer", "version": "1.0.0"}
+                    "serverInfo": {
+                        "name": "MockMBPPServer",
+                        "version": "1.0.0"
+                    }
                 }
             }
             sys.stdout.write(json.dumps(response) + "\n")
@@ -221,8 +254,11 @@ def main():
         client = McpStdio(command=f"python3 {__file__} --server")
         tools_response = client.initialize_session()
         print("=========== PERFECT BBY ===========")
+        print("tools_response =", tools_response)
     finally:
         client.close()
 
+
 if __name__ == "__main__":
     main()
+'''

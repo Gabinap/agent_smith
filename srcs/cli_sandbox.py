@@ -3,8 +3,9 @@ import argparse
 from models.internal import McpSpec
 from models.sandbox import SandboxConfig, SandboxResult
 from sandbox.sandbox import Sandbox
-from mcp_server.mcp_client import create_mcp_client, McpClient
+from mcp_server.mcp_client import McpClient, create_mcp_client
 from typing import Optional
+
 
 class CLI_Sandbox:
     def __init__(self) -> None:
@@ -14,10 +15,13 @@ class CLI_Sandbox:
             return
         self.mcp_spec = self._get_mcp_spec(self.args)
         self.mcp_client: Optional[McpClient] = create_mcp_client(self.mcp_spec)
-        self.sandbox = Sandbox(mcp_client=self.mcp_client, config=SandboxConfig())
+        self.sandbox = Sandbox(
+            mcp_client=self.mcp_client,
+            config=SandboxConfig()
+            )
 
     @staticmethod
-    def _sandbox_cli_parsing() -> None:
+    def _sandbox_cli_parsing() -> argparse.Namespace:
         parser = argparse.ArgumentParser(prog="SandboxCLI")
         mcp_group = parser.add_mutually_exclusive_group()
         mcp_group.add_argument(

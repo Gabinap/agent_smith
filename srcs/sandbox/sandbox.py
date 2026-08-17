@@ -191,13 +191,14 @@ class Sandbox():
             return
 
         tools_res = self.mcp_client.initialize_session()
-        tools = tools_res.get("result", {}).get("tools", [])  # depend of the name of the field recieved by the server
+        tools = tools_res.get("result", {}).get("tools", [])  # depend
+        # of the name of the field recieved by the server
 
         for tool in tools:
             tool_name = tool["name"]
 
-            def make_tool_wrapper(name: str):
-                def tool_wrapper(**kwargs):
+            def make_tool_wrapper(name: str) -> Callable:
+                def tool_wrapper(**kwargs: Any):
                     res = self.mcp_client.call_tool(name, kwargs)
                     return res.get("result") if res else None
                 return tool_wrapper
@@ -242,6 +243,7 @@ class Sandbox():
             })
         finally:
             signal.alarm(0)
+
 
 '''
 if __name__ == "__main__":
