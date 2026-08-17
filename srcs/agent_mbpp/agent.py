@@ -1,20 +1,13 @@
 from .task_manager import Task
 from call_llm.calling import LLM
 from models.metrics import StepMetrics, SolutionOutput
-from models.tasks import MBPPTaskInput
 from sandbox.sandbox import Sandbox
 
-from rich.console import Console, Group
-from rich.panel import Panel
-from rich.markdown import Markdown
-from rich.syntax import Syntax
-from rich.progress import Progress
-
-import questionary
+from rich.console import Console
 import cli_agent
-
 import re
 import datetime
+
 
 class Mbpp():
     def __init__(
@@ -25,7 +18,7 @@ class Mbpp():
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 2 
+        max_iteration: int = 2
     ):
         """Load the task and the LLM
 
@@ -46,23 +39,30 @@ class Mbpp():
         self.console = console
         self.max_iteration = max_iteration
 
-
     def execute(self):
         """Launch the loaded Task
         """
         self.prompt = self.get_prompt()
-        
-        with self.console.status("[bold blue]LMM Generation...", spinner_style="blue", spinner="aesthetic",speed=0.5):
-            self.llm_output_data = self.llm.call(self.prompt)    
+
+        with self.console.status("[bold blue]LMM Generation...",
+                                 spinner_style="blue",
+                                 spinner="aesthetic",
+                                 speed=0.5):
+            self.llm_output_data = self.llm.call(self.prompt)
         self.total_requests += 1
-        
-        match = self.extract_python(self.llm_output_data.get("answer"))
+
+        llm_answer = self.llm_output_data.get("answer")
+        match = self.extract_python(llm_answer)
         self.py_code = match.group(1) if match else None
-        
-        cli_agent.display_llm_output(self.console, self.llm_output_data, self.py_code)
+
+        cli_agent.display_llm_output(self.console,
+                                     self.llm_output_data,
+                                     llm_answer)
         self.sandbox_data = self.sandbox.execute(self.py_code)
-        cli_agent.display_sandbox(self.console, self.sandbox_data, self.py_code)
-         
+        cli_agent.display_sandbox(self.console,
+                                  self.sandbox_data,
+                                  self.py_code)
+
     def solve_task(self):
         while (True):
             if self.step > self.max_iteration:
@@ -79,9 +79,7 @@ class Mbpp():
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         self.save_output(output)
-        
-        
-    
+
     def get_prompt(self):
         tests = '\n'.join(self.task.test_list)
         return f"""
@@ -92,9 +90,10 @@ Definition of the function: {self.task.function_definition}
 Tests to try:
 {tests}
 """
+
     def extract_python(self, text):
         return re.search(r"```python\s*(.*?)```", text, re.DOTALL)
-                
+
     def save_output(self, output: SolutionOutput):
         """Save the Agent output in a Json file.
         Args:
@@ -102,9 +101,6 @@ Tests to try:
         """
         with (open(self.output_file, "w", encoding="utf-8") as file):
             file.write(output.model_dump_json(indent=2))
-
-                
-
 
     def get_step_metrics(self) -> StepMetrics:
         return StepMetrics(

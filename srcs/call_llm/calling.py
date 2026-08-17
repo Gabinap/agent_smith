@@ -3,7 +3,6 @@ import os
 from dotenv import load_dotenv
 import time
 import textwrap
-import re
 
 
 class LLM:
@@ -19,14 +18,20 @@ class LLM:
         self.api_url = api_url
         self.model_name = model_name
         self._api_key = self._get_from_env(env_key)
-        
-        self.client = OpenAI(
-            api_key=self._api_key,
-            base_url=self.api_url,
-            timeout=120.0
-        )
+
+        self.client = self._load_llm()
         self._previous_interaction = None
         self.sandbox_output = None
+
+    def _load_llm(self):
+        try:
+            return OpenAI(
+                api_key=self._api_key,
+                base_url=self.api_url,
+                timeout=120.0
+            )
+        except Exception:
+            raise ValueError("Failed to load LLM, invalid URL or API key")
 
     def _get_from_env(self, name: str) -> str:
         """Load the .env
@@ -60,47 +65,56 @@ class LLM:
         Returns:
             dict: LLM output
         """
-        messages=[
-            {"role": "system",
-            "content": self._system_content()},
-            {"role": "user",
-            "content": input}
+
+        messages = [
+            {
+                "role": "system",
+                "content": self._system_content()
+            },
+            {
+                "role": "user",
+                "content": input
+            }
         ]
-        if self.sandbox_output is not None:
+        if self.sandbox_output:
             messages.append({
                 "role": "assistant",
                 "content": self.last_answer
             })
-            input += f"""
-The first code was wrong
-Errors: {self.sandbox_output.error}
-Final answer: {self.sandbox_output.final_answer}
-
-Adjust your code to solve the coding problem
-"""
+            retry_input = input + self._sandbox_error()
             messages.append(
-                {"role": "user",
-                "content": input
-            })
-            
+                {
+                    "role": "user",
+                    "content": retry_input
+                })
 
         s = time.perf_counter()
-        try: 
+        try:
             completion = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=messages
             )
         except Exception:
-            raise ValueError("Invalid API Key")
+            raise ValueError("Invalid Providers fields, Api connection failed")
         e = time.perf_counter()
-        
+
+        response = completion.choices[0].message.content
         self.last_answer = completion.choices[0].message.content
         self.save_response("response.json", completion)
-        try:
-            answer = completion.choices[0].message.content
+        if "</think>" in response:
+            response_split = response.split("</think>")
+            thought = response_split[0]
+            answer = response_split[-1]
+        elif getattr(completion.choices[0].message, "reasoning", None):
             thought = completion.choices[0].message.reasoning
-        except Exception:   
-            thought, answer = self.clean_thought_bloc(completion.choices[0].message.content)
+            answer = response
+        elif "</thought>" in response:
+            response_split = response.split("</thought>")
+            thought = response_split[0]
+            answer = response_split[-1]
+        else:
+            thought = "No thought found"
+            answer = response
 
         return {
             "input_tokens": completion.usage.prompt_tokens,
@@ -110,25 +124,6 @@ Adjust your code to solve the coding problem
             "answer": answer,
             "request_time": f"{e-s:.3f}"
         }
-        
-    def clean_thought_bloc(self, text: str):
-
-        if "</think>" in text:
-            splitted = text.split("</think>")
-            return splitted[0], splitted[-1]
-            
-        match = re.search(r"<thought>(.*?)</thought>", text, flags=re.DOTALL)
-        thought = match.group(1).strip() if match else ""
-
-        clean_text = re.sub(
-            r"<thought>.*?</thought>",
-            "",
-            text,
-            flags=re.DOTALL
-        ).strip()
-
-        return thought, clean_text
-
 
     def _system_content(self) -> str:
         return textwrap.dedent("""
@@ -157,4 +152,13 @@ Adjust your code to solve the coding problem
                 return ...
             \"\"\"
             final_answer(code_string)
+            """)
+
+    def _sandbox_error(self):
+        return textwrap.dedent(f"""
+            The first code was wrong
+            Errors: {self.sandbox_output.error}
+            Final answer: {self.sandbox_output.final_answer}
+
+            Adjust your code to solve the coding problem
             """)
