@@ -1,3 +1,5 @@
+"""MCP tool implementations: file, search, and execute operations."""
+
 import shlex
 import re
 
@@ -22,10 +24,10 @@ def _definition_regex(name: str) -> str:
 
 
 def _format_matches(raw_output: str, root: str) -> str:
-    """
-    Turn `grep -n` output ("path:line:content", one match per line,
-    path relative to `root`) into the mandatory
-    "/absolute/path:<line> <content>" form.
+    """Turn `grep -n` output into the mandatory match-line format.
+
+    Input is "path:line:content" per line, with path relative to
+    `root`. Output is "/absolute/path:<line> <content>".
     """
     lines = []
     for entry in raw_output.splitlines():
@@ -41,8 +43,8 @@ def read_file(
     backend: ExecBackend, filepath: str,
     start_line: int = 1, end_line: int | None = None,
 ) -> str:
-    """
-    Read file lines, cat -n style: "<line_number>: <line_content>".
+    """Read file lines, cat -n style: "<line_number>: <line_content>".
+
     Args:
         backend: Execution backend.
         filepath: File to read.
@@ -68,8 +70,8 @@ def read_file(
 def edit_file(
         backend: ExecBackend, filepath: str, old_str: str, new_str: str
         ) -> str:
-    """
-    Replace one exact occurrence of `old_str` with `new_str`.
+    """Replace one exact occurrence of `old_str` with `new_str`.
+
     Args:
         backend: Execution backend.
         filepath: File to edit.
@@ -99,9 +101,10 @@ def edit_file(
 
 def list_files(backend: ExecBackend, directory: str, pattern: str) \
         -> str:
-    """
-    List entries directly inside `directory` matching `pattern`
-    (non-recursive).
+    """List entries directly inside `directory` matching `pattern`.
+
+    Listing is non-recursive.
+
     Args:
         backend: Execution backend.
         directory: Directory to list.
@@ -127,8 +130,8 @@ def list_files(backend: ExecBackend, directory: str, pattern: str) \
 # TODO: maybe delete by default all files starting with a dot.
 def search_code(backend: ExecBackend, pattern: str, file_pattern: str) \
         -> str:
-    """
-    Recursively grep the codebase for a regex pattern.
+    """Recursively grep the codebase for a regex pattern.
+
     Args:
         backend: Execution backend.
         pattern: Regex to search for (grep -E syntax).
@@ -150,8 +153,8 @@ def search_code(backend: ExecBackend, pattern: str, file_pattern: str) \
 
 def search_function_or_class_definition_in_code(
         backend: ExecBackend, name: str) -> str:
-    """
-    Find where a function or class named `name` is defined.
+    """Find where a function or class named `name` is defined.
+
     Args:
         backend: Execution backend.
         name: Exact function/class name (not a regex).
@@ -173,10 +176,11 @@ def search_function_or_class_definition_in_code(
 def find_references(
         backend: ExecBackend, name: str, filepath: str | None = None,
         line: int | None = None) -> str:
-    """
-    Find usages of `name` across the whole codebase. Its own
-    definition is excluded automatically; `filepath`/`line` are only
-    a fallback for definition styles this can't auto-detect.
+    """Find usages of `name` across the whole codebase.
+
+    Its own definition is excluded automatically; `filepath`/`line`
+    are only a fallback for definition styles this can't auto-detect.
+
     Args:
         backend: Execution backend.
         name: Symbol name to search for (not a regex).
@@ -216,8 +220,8 @@ def find_references(
 def run_tests(
         backend: ExecBackend, eval_script: str, workdir: str,
         timeout: int = EXEC_TOOL_TIMEOUT_SECONDS) -> str:
-    """
-    Run this task's evaluation script.
+    """Run this task's evaluation script.
+
     Args:
         backend: Execution backend.
         eval_script: Bash script running the test/eval suite.
@@ -231,8 +235,8 @@ def run_tests(
 
 
 def get_patch(backend: ExecBackend) -> str:
-    """
-    Stage all changes and return the unified diff against HEAD.
+    """Stage all changes and return the unified diff against HEAD.
+
     Args:
         backend: Execution backend.
     Returns:
@@ -264,8 +268,8 @@ def get_patch(backend: ExecBackend) -> str:
 def run_command(
         backend: ExecBackend, command: str, workdir: str,
         timeout: int = EXEC_TOOL_TIMEOUT_SECONDS) -> str:
-    """
-    Run an arbitrary shell command.
+    """Run an arbitrary shell command.
+
     Args:
         backend: Execution backend.
         command: Shell command to run.
