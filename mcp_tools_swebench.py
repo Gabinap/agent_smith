@@ -1,27 +1,19 @@
-# LLM écrit du code → sandbox (= client MCP) → JSON-RPC (stdio/HTTP)
-#   → mcp_tools_swebench.py (= le vrai "serveur", process séparé)
-#     → tools.<tool>(backend, ...) → backend.run()/read_file()/write_file()
-#     ← résultat formaté
-#   ← réponse JSON-RPC
-# ← retour Python normal dans le namespace du LLM
 import os
 import sys
 
 from mcp.server.mcpserver import MCPServer
 
-from srcs.backends.local import LocalExecBackend
+from srcs.backends.docker import DockerExecBackend
 from srcs.mcp_server import tools
 from srcs.models import SWEBenchTaskInput
 
-# TODO M6: swap for DockerExecBackend(image=task.docker_image), rooted
-# at /testbed (SWE-bench's conventional checkout path — already in
-# SandboxConfig.allowed_directories). LocalExecBackend here is the M0
-# doublure: for local testing, `root` must point at an actual clone
-# of the target repo, not an empty directory.
-backend = LocalExecBackend(root="/tmp/testbed")
-
 with open(os.environ["SWE_TASK_FILE"]) as f:
     task = SWEBenchTaskInput.model_validate_json(f.read())
+
+# /testbed is SWE-bench's conventional checkout path inside the
+# image — the repo is already there, pre-baked at the buggy commit.
+# Also matches SandboxConfig.allowed_directories' default.
+backend = DockerExecBackend(task.docker_image, root="/testbed")
 
 mcp = MCPServer("swebench-tools")
 

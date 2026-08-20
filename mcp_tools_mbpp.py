@@ -1,12 +1,3 @@
-# LLM écrit du code → sandbox (= client MCP) → JSON-RPC (stdio/HTTP)
-#   → mcp_tools_mbpp.py (= le vrai "serveur", process séparé)
-#     → tools.run_tests(backend, ...)
-#       → backend.run(cmd, ...)   ← ICI, le backend
-#         → subprocess.run(...) ou docker exec ...
-#       ← CommandResult (stdout/stderr/exit_code)
-#     ← string formatée
-#   ← réponse JSON-RPC
-# ← retour Python normal dans le namespace du LLM
 import os
 import sys
 
