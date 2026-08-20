@@ -1,3 +1,5 @@
+"""MCP server exposing the MBPP task's run_tests tool."""
+
 import os
 import sys
 
@@ -22,10 +24,12 @@ mcp = MCPServer("mbpp-tools")
 
 
 def _build_eval_script() -> str:
-    """Assemble one script: task imports + current solution.py +
-    the task's acceptance tests, run top to bottom. An assertion
-    failure or missing solution.py surfaces as a normal Python
-    traceback on stderr with a non-zero exit code."""
+    """Assemble the eval script: imports, solution, then acceptance tests.
+
+    Runs top to bottom; an assertion failure or missing solution.py
+    surfaces as a normal Python traceback on stderr with a non-zero
+    exit code.
+    """
     imports = "\n".join(task.test_imports)
     tests = "\n".join(task.test_list)
     return (
@@ -45,8 +49,11 @@ def _build_eval_script() -> str:
     )
 )
 def run_tests() -> str:
-    """MCP-facing text is set via description= above (references
-    SOLUTION_FILE directly, stays in sync if it's ever renamed)."""
+    """Run the MBPP acceptance tests against the current solution.
+
+    MCP-facing text is set via description= above (references
+    SOLUTION_FILE directly, stays in sync if it's ever renamed).
+    """
     backend.write_file(EVAL_SCRIPT_FILE, _build_eval_script())
     cmd = f"{sys.executable} {EVAL_SCRIPT_FILE}"
     return tools.run_tests(backend, cmd, workdir=str(backend.root))

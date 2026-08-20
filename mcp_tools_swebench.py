@@ -1,3 +1,5 @@
+"""MCP server exposing the SWE-bench task's tools."""
+
 import os
 import sys
 

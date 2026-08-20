@@ -1,8 +1,12 @@
 """Docker implementation of ExecBackend — no host involved."""
 
 from __future__ import annotations
+import atexit
+import io
+import posixpath
+import tarfile
+import time
 import docker
-import atexit, io, posixpath, tarfile, time
 from srcs.models import CommandResult
 
 
@@ -10,8 +14,11 @@ class DockerExecBackend:
     """Run commands and read/write files inside a Docker container."""
 
     def __init__(self, image_name: str, root: str = "/") -> None:
-        """Pull `image_name`, purge orphaned containers from a
-        previous run, and start a fresh container to work in."""
+        """Prepare the Docker backend for a fresh run.
+
+        Pulls `image_name`, purges orphaned containers from a
+        previous run, and starts a fresh container to work in.
+        """
         client = docker.from_env()  # connect to the Docker daemon
         for c in client.containers.list(
                 all=True, filters={"label": "agent-smith"}):
@@ -31,8 +38,11 @@ class DockerExecBackend:
         self._clean = False
 
     def __enter__(self) -> DockerExecBackend:
-        """Return self, so this backend can be used as a context
-        manager: `with DockerExecBackend(...) as backend:`."""
+        """Return self.
+
+        Allows this backend to be used as a context manager:
+        `with DockerExecBackend(...) as backend:`.
+        """
         return self
 
     def __exit__(self, _, __, ___) -> None:
@@ -40,8 +50,11 @@ class DockerExecBackend:
         self._cleanup()
 
     def _cleanup(self) -> None:
-        """Stop and remove the container. Safe to call more than
-        once from both `__exit__` and the `atexit` fallback."""
+        """Stop and remove the container.
+
+        Safe to call more than once from both `__exit__` and the
+        `atexit` fallback.
+        """
         if self._clean:
             return
         self._clean = True
@@ -49,10 +62,12 @@ class DockerExecBackend:
         self.container.remove()
 
     def _resolve(self, path: str) -> str:
-        """Resolve `path` (absolute or relative to `root`) and
-        refuse anything that escapes `root`. Purely textual — this
+        """Resolve `path` (absolute or relative to `root`) and validate it.
+
+        Refuses anything that escapes `root`. Purely textual — this
         is the container's filesystem, not the host's, so pathlib's
-        `resolve()` (which touches the host disk) can't be used."""
+        `resolve()` (which touches the host disk) can't be used.
+        """
         root = self.root.rstrip("/")
         if not path.startswith("/"):
             path = f"{root}/{path}" if root else f"/{path}"
@@ -66,8 +81,7 @@ class DockerExecBackend:
 
     # ---- Contract: ExecBackend ----
     def run(self, cmd: str, workdir: str, timeout: int) -> CommandResult:
-        """Run a shell command inside the container and return its
-        result."""
+        """Run a shell command inside the container and return its result."""
         resolved_workdir = self._resolve(workdir)
         self.container.exec_run(["mkdir", "-p", resolved_workdir])
         start = time.monotonic()
@@ -88,8 +102,7 @@ class DockerExecBackend:
         )
 
     def read_file(self, path: str) -> str:
-        """Return the raw text content of a file inside the
-        container."""
+        """Return the raw text content of a file inside the container."""
         resolved = self._resolve(path)
         result = self.container.exec_run(["cat", resolved], demux=True)
         stdout, stderr = result.output
@@ -98,8 +111,10 @@ class DockerExecBackend:
         return stdout.decode()
 
     def write_file(self, path: str, content: str) -> None:
-        """Overwrite a file inside the container with `content`,
-        packing it into a tar stream (what put_archive expects)."""
+        """Overwrite a file inside the container with `content`.
+
+        Packs it into a tar stream, which is what put_archive expects.
+        """
         resolved = self._resolve(path)
         dest_dir = posixpath.dirname(resolved) or "/"
         self.container.exec_run(["mkdir", "-p", dest_dir])

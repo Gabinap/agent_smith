@@ -14,10 +14,13 @@ from srcs.models import CommandResult
 
 
 class LocalExecBackend:
-    """Run commands and read/write files on the host, confined to
-    `root` — any path resolving outside it is refused."""
+    """Run commands and read/write files on the host, confined to root.
+
+    Any path resolving outside `root` is refused.
+    """
 
     def __init__(self, root: str) -> None:
+        """Resolve `root` and create it on the host if missing."""
         self.root = Path(root).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
 
@@ -55,9 +58,11 @@ class LocalExecBackend:
         target.write_text(content)
 
     def _resolve(self, path: str) -> Path:
-        """Resolve `path` (absolute or relative to root) and refuse
-        anything that escapes `root` (e.g. via `../..` or an
-        unrelated absolute path)."""
+        """Resolve `path` (absolute or relative to root) and validate it.
+
+        Refuses anything that escapes `root` (e.g. via `../..` or an
+        unrelated absolute path).
+        """
         candidate = Path(path)
         if not candidate.is_absolute():
             candidate = self.root / candidate
