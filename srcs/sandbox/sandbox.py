@@ -138,7 +138,7 @@ class Sandbox():
         self.stdout.append(text)
         return None
 
-    def _final_answer_tool(self, answer: Any) -> Any:
+    def _final_answer_tool(self, answer: str) -> str:
         """
         The implementation of the function final_answer function,
         that the LLM can use to signal that this is the print to return
@@ -146,6 +146,7 @@ class Sandbox():
             answer: Any = the answer from the agent
         Returns: Any = the answer from the agent
         """
+        answer = str(answer)
         self.final_answer_value = answer
         self.has_finished = True
         return answer
@@ -198,6 +199,8 @@ class Sandbox():
         signal.alarm(self.config.max_execution_time_seconds)
 
         self.stdout = []
+        self.final_answer_value = None
+        self.has_finished = False
         try:
             exec(code, self.namespace)
             return SandboxResult.model_validate({
