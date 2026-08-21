@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import time
 import textwrap
+from mcp import ListToolsResult
 
 
 class LLM:
@@ -24,6 +25,7 @@ class LLM:
         self._system_content = system_content
         self._previous_interaction = None
         self.sandbox_output = None
+        self.tools: ListToolsResult = None
 
     def _load_llm(self):
         try:
@@ -92,15 +94,33 @@ class LLM:
 
         s = time.perf_counter()
         try:
-            completion = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=messages
-            )
+            if self.tools:
+                tools = [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": tool.name,
+                            "description": tool.description or "",
+                            "parameters": tool.input_schema,
+                        }
+                    }
+                    for tool in self.tools.tools]
+                completion = self.client.chat.completions.create(
+                                model=self.model_name,
+                                messages=messages,
+                                tools=tools
+                            )
+            else:
+                completion = self.client.chat.completions.create(
+                                model=self.model_name,
+                                messages=messages,
+                            )
         except Exception:
             raise ValueError("Invalid Providers fields, Api connection failed")
         e = time.perf_counter()
 
         response = completion.choices[0].message.content
+
         self.last_answer = completion.choices[0].message.content
         self.save_response("response.json", completion)
         if "</think>" in response:
@@ -117,6 +137,9 @@ class LLM:
         else:
             thought = "No thought found"
             answer = response
+        tool_call = None
+        if getattr(completion.choices[0].message, "tool_calls", None):
+            tool_call = completion.choices[0].message.tool_calls[0]
 
         return {
             "input_tokens": completion.usage.prompt_tokens,
@@ -124,7 +147,8 @@ class LLM:
             "model_name": self.model_name,
             "thought": thought,
             "answer": answer,
-            "request_time": f"{e-s:.3f}"
+            "request_time": f"{e-s:.3f}",
+            "tool_calls": tool_call
         }
 
     def _sandbox_error(self):

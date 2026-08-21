@@ -46,7 +46,7 @@ def main() -> None:
         )
 
         cli_agent.display_header(console, profile)
-        cli_agent.display_task(console, agent.task)
+        cli_agent.display_mbpp_task(console, agent.task)
         agent.solve_task()
         cli_agent.display_exit(console, agent.llm_output_data, agent.prompt)
     except Exception as e:

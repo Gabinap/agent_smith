@@ -2,10 +2,10 @@ from rich.console import Console, Group
 from rich.text import Text
 from rich.syntax import Syntax
 from rich.panel import Panel
-from models.tasks import MBPPTaskInput
+from models.tasks import MBPPTaskInput, SWEBenchTaskInput
 
 
-def display_task(console: Console, task: MBPPTaskInput):
+def display_mbpp_task(console: Console, task: MBPPTaskInput):
     content = Group(
         Text(task.task_definition, style="bold orange1", end="\n\n", justify="center"),
         Text("Function definition:", style="bold white", end="\n\n"),
@@ -14,3 +14,13 @@ def display_task(console: Console, task: MBPPTaskInput):
         Syntax("\n".join(task.test_list), "python", theme="stata-dark", line_numbers=True),
     )
     console.print(Panel(content, title=f"[bold]TASK #{task.task_id}", padding=1, style='orange1'))
+
+def display_swebench_task(console: Console, task: SWEBenchTaskInput):
+    content = Group(
+        Text(task.problem_statement, style="bold orange1", end="\n\n", justify="center"),
+        Text("Repository:", style="bold white", end="\n\n"),
+        Syntax(task.repo, "python", theme="stata-dark"),
+        Text("\n\nTests to try:", style="bold white", end="\n\n"),
+        Syntax(task.eval_script, "python", theme="stata-dark", line_numbers=True),
+    )
+    console.print(Panel(content, title=f"[bold]TASK #{task.instance_id}", padding=1, style='orange1'))
