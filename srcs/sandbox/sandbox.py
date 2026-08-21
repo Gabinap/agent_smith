@@ -4,7 +4,7 @@ import signal
 import types
 
 from typing import Dict, Any, Optional, Callable, List, IO
-from srcs.models.sandbox import SandboxConfig, SandboxResult
+from models.sandbox import SandboxConfig, SandboxResult
 
 
 class SecurityError(PermissionError):
@@ -222,6 +222,7 @@ class Sandbox():
             })
         finally:
             signal.alarm(0)
+
 
 '''
 if __name__ == "__main__":
