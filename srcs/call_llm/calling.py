@@ -9,7 +9,8 @@ class LLM:
     """
         The link between agent and api
     """
-    def __init__(self, api_url: str, model_name: str, env_key: str):
+    def __init__(self, api_url: str, model_name: str, env_key: str,
+                 system_content: str):
         """Initialise the llm Api
         Args:
             api_url (str): Url of the providers
@@ -20,6 +21,7 @@ class LLM:
         self._api_key = self._get_from_env(env_key)
 
         self.client = self._load_llm()
+        self._system_content = system_content
         self._previous_interaction = None
         self.sandbox_output = None
 
@@ -69,7 +71,7 @@ class LLM:
         messages = [
             {
                 "role": "system",
-                "content": self._system_content()
+                "content": self._system_content
             },
             {
                 "role": "user",
@@ -124,35 +126,6 @@ class LLM:
             "answer": answer,
             "request_time": f"{e-s:.3f}"
         }
-
-    def _system_content(self) -> str:
-        return textwrap.dedent("""
-            You are a Python agent. You solve basics coding problems.
-            Write in a ```python ... ``` block.
-
-            Do not comment the code and go straight to the point.
-            The sandbox injects a callable named `final_answer`,
-            to validate the coding problem,
-            You MUST pass only the function solution code as a
-            **Python String** to this function.
-
-            Here is the EXACT format your output must follow:
-
-            ```python
-            # 1. Write your function
-            def your_function_name(args):
-                return ...
-
-            # 2. Add the tests
-            assert your_function_name(test_arg) == expected_result
-
-            # 3. Pass the exact code as a string to final_answer
-            code_string = \"\"\"
-            def your_function_name(args):
-                return ...
-            \"\"\"
-            final_answer(code_string)
-            """)
 
     def _sandbox_error(self):
         return textwrap.dedent(f"""
