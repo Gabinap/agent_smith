@@ -1,10 +1,14 @@
+"""Interactive selection of an LLM provider and model."""
+
 import questionary
 import json
 
 
 class Profile():
+    """Resolve which LLM provider, model, and API key to use."""
 
     def __init__(self, mode, provider_url, model_name):
+        """Load providers and, if not fully specified, prompt for the rest."""
         self.mode = mode
         self.providers = self._load_providers()
         self.provider_name = "Unknown"
@@ -19,6 +23,7 @@ class Profile():
             self.key_name = self.provider.get('key')
 
     def provider_selection(self):
+        """Prompt the user to pick a provider, return its name."""
         selected = questionary.select(
             "Choose a Provider: ",
             choices=list(self.providers.keys())
@@ -28,7 +33,7 @@ class Profile():
         return selected
 
     def model_selection(self):
-
+        """Prompt the user to pick a model, return its name."""
         selected = questionary.select(
             "Select a Model: ",
             choices=self.provider.get("model")
@@ -39,5 +44,6 @@ class Profile():
         return selected
 
     def _load_providers(self):
+        """Load the provider catalog from providers.json."""
         with (open("call_llm/providers.json", "r") as file):
             return json.load(file)
