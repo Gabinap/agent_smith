@@ -1,3 +1,5 @@
+"""Interactive CLI for the sandbox REPL (uv run sandbox)."""
+
 import sys
 import argparse
 from pydantic import ValidationError
@@ -7,7 +9,10 @@ from sandbox.sandbox import Sandbox
 
 
 class CLI_Sandbox:
+    """Parse CLI args and drive an interactive Sandbox REPL."""
+
     def __init__(self) -> None:
+        """Parse CLI args and build the sandbox from them."""
         self._sandbox_cli_parsing()
         if len(sys.argv) > 4:
             print("Error: Too many arguments passed", file=sys.stderr)
@@ -17,6 +22,7 @@ class CLI_Sandbox:
         self.sandbox = Sandbox(config=self.config)
 
     def _sandbox_cli_parsing(self) -> None:
+        """Parse --mcp-stdio/--mcp-server and the config file argument."""
         parser = argparse.ArgumentParser(prog="SandboxCLI")
         mcp_group = parser.add_mutually_exclusive_group()
         mcp_group.add_argument(
@@ -38,12 +44,7 @@ class CLI_Sandbox:
 
     @staticmethod
     def _read_config(config_file: str) -> SandboxConfig:
-        """Read the Json config file
-        Args:
-            config_file (str): config json file
-        Returns:
-            SandboxConfig: SandboxConfig input modele
-        """
+        """Read a SandboxConfig from a JSON file."""
         from pathlib import Path
         path = Path(config_file)
         with (open(path, "r") as file):
@@ -51,6 +52,7 @@ class CLI_Sandbox:
             return SandboxConfig.model_validate_json(json)
 
     def _get_sandbox_config(self, args: argparse.Namespace) -> None:
+        """Load the sandbox config from a file, or use the defaults."""
         if args.config_file:
             try:
                 self.config = self._read_config(self.args.config_file)
@@ -66,6 +68,7 @@ class CLI_Sandbox:
             self.config = SandboxConfig()
 
     def _get_mcp_spec(self, args: argparse.Namespace) -> None:
+        """Build the McpSpec from --mcp-stdio/--mcp-server, or None."""
         if args.mcp_server:
             self.mcp_spec = McpSpec(transport="http", url=args.mcp_server)
             print(self.mcp_spec)
@@ -76,6 +79,7 @@ class CLI_Sandbox:
             self.mcp_spec = None
 
     def execute(self) -> None:
+        """Run the read-eval-print loop until 'exit' or EOF/Ctrl-C."""
         while True:
             try:
                 command = input("Sanbox>")
