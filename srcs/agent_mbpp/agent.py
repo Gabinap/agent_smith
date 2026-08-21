@@ -1,3 +1,5 @@
+"""Autonomous agent loop that solves a single MBPP task."""
+
 from .task_manager import Task
 from call_llm.calling import LLM
 from models.metrics import StepMetrics, SolutionOutput
@@ -10,6 +12,8 @@ import datetime
 
 
 class Mbpp():
+    """Run the generate/execute loop for one MBPP task."""
+
     def __init__(
         self,
         task_file: str,
@@ -19,14 +23,8 @@ class Mbpp():
         env_key: str,
         console: Console,
         max_iteration: int = 2
-    ):
-        """Load the task and the LLM
-
-        Args:
-            task_file (str): Task json file
-            api_url (str): Url of the providers
-            model_name (str): Name of the model
-        """
+    ) -> None:
+        """Load the task and set up the LLM, sandbox, and console."""
         self.output_file = output_file
         self.task = Task(task_file).input
         self.llm = LLM(api_url, model_name, env_key)
@@ -39,9 +37,8 @@ class Mbpp():
         self.console = console
         self.max_iteration = max_iteration
 
-    def execute(self):
-        """Launch the loaded Task
-        """
+    def execute(self) -> None:
+        """Run one generate -> extract -> sandbox-execute cycle."""
         self.prompt = self.get_prompt()
 
         with self.console.status("[bold blue]LMM Generation...",
@@ -63,7 +60,8 @@ class Mbpp():
                                   self.sandbox_data,
                                   self.py_code)
 
-    def solve_task(self):
+    def solve_task(self) -> None:
+        """Iterate until the task is solved or max_iteration is hit."""
         while (True):
             if self.step > self.max_iteration:
                 break
@@ -80,7 +78,8 @@ class Mbpp():
         cli_agent.display_solution(self.console, output)
         self.save_output(output)
 
-    def get_prompt(self):
+    def get_prompt(self) -> str:
+        """Build the user prompt describing the task and its tests."""
         tests = '\n'.join(self.task.test_list)
         return f"""
 {self.task.task_definition}
@@ -91,18 +90,17 @@ Tests to try:
 {tests}
 """
 
-    def extract_python(self, text):
+    def extract_python(self, text: str | None) -> re.Match[str] | None:
+        """Extract the first ```python fenced code block from `text`."""
         return re.search(r"```python\s*(.*?)```", text, re.DOTALL)
 
-    def save_output(self, output: SolutionOutput):
-        """Save the Agent output in a Json file.
-        Args:
-            output (SolutionOutput): solution output
-        """
+    def save_output(self, output: SolutionOutput) -> None:
+        """Write `output` to output_file as JSON."""
         with (open(self.output_file, "w", encoding="utf-8") as file):
             file.write(output.model_dump_json(indent=2))
 
     def get_step_metrics(self) -> StepMetrics:
+        """Build the StepMetrics for the current step."""
         return StepMetrics(
                 step=self.step,
                 input_tokens=self.llm_output_data.get("input_tokens"),
@@ -116,6 +114,7 @@ Tests to try:
         )
 
     def get_solution_output(self) -> SolutionOutput:
+        """Assemble the final SolutionOutput for this run."""
         timestamp = datetime.datetime.now().isoformat()
         return SolutionOutput(
             task_id=str(self.task.task_id),

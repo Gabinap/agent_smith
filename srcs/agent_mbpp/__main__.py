@@ -1,3 +1,5 @@
+"""CLI entry point for the MBPP agent: `python -m agent_mbpp`."""
+
 from agent_mbpp.agent import Mbpp
 from rich.console import Console
 
@@ -7,7 +9,8 @@ from call_llm.profile import Profile
 import argparse
 
 
-def main():
+def main() -> None:
+    """Parse CLI args, run one MBPP task, and print the result."""
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
