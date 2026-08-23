@@ -3,7 +3,7 @@ import os
 import signal
 import types
 
-from typing import Dict, Any, Optional, Callable, List, IO
+from typing import Any, Callable, IO
 from models.sandbox import SandboxConfig, SandboxResult
 from mcp_server.mcp_client import McpClient
 
@@ -18,14 +18,14 @@ class TimeoutError(Exception):
     pass
 
 
-def _timeout_handler(signum: int, frame: Optional[types.FrameType]) -> None:
+def _timeout_handler(signum: int, frame: types.FrameType | None) -> None:
     raise TimeoutError("Execution timed out")
 
 
 class Sandbox():
     def __init__(
             self,
-            mcp_client: Optional[McpClient] = None,
+            mcp_client: McpClient | None = None,
             config: SandboxConfig = SandboxConfig()
             ) -> None:
         """
@@ -33,11 +33,11 @@ class Sandbox():
         """
         self.config = config
         self.mcp_client = mcp_client
-        self.namespace: Dict[str, Any] = {}
-        self.final_answer_value: Optional[Any] = None
+        self.namespace: dict[str, Any] = {}
+        self.final_answer_value: Any | None = None
         self.has_finished = False
 
-        self.stdout: List[Any] = []
+        self.stdout: list[Any] = []
 
         self._setup_namespace()
         if self.mcp_client:
@@ -64,8 +64,8 @@ class Sandbox():
     def _custom_import(
             self,
             name: str,
-            globals: Optional[Dict[str, Any]] = None,
-            locals: Optional[Dict[str, Any]] = None,
+            globals: dict[str, Any] | None = None,
+            locals: dict[str, Any] | None = None,
             fromlist: Any = (),
             level: int = 0
             ) -> Any:
