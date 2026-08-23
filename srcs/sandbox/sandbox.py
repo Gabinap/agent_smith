@@ -5,7 +5,7 @@ import types
 
 from typing import Any, Callable, IO
 from models.sandbox import SandboxConfig, SandboxResult
-from mcp_server.mcp_client import McpClient
+from sandbox.mcp_client import McpClient
 
 
 class SecurityError(PermissionError):
