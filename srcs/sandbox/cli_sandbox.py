@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from models.internal import McpSpec
 from models.sandbox import SandboxConfig, SandboxResult
 from sandbox.sandbox import Sandbox
-from mcp_server.mcp_client import McpClient, create_mcp_client
+from sandbox.mcp_client import McpClient, create_mcp_client
 from typing import Optional
 
 
