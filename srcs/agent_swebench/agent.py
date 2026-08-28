@@ -1,8 +1,9 @@
 from call_llm.calling import LLM
 from models.metrics import StepMetrics, SolutionOutput
 from models.tasks import SWEBenchTaskInput
-from sandbox.sandbox import Sandbox
-from .mcp_client import MCPClient
+from sandbox.sandbox import Sandbox, SandboxConfig
+from sandbox.mcp_client import create_mcp_client
+from models import McpSpec
 
 from rich.console import Console
 import cli_agent
@@ -20,7 +21,6 @@ class SWEBench():
         model_name: str,
         env_key: str,
         console: Console,
-        mcp: MCPClient,
         max_iteration: int = 2
     ):
         """Load the task and the LLM
@@ -36,19 +36,19 @@ class SWEBench():
         self.model_name = model_name
         self.env_key = env_key
         self.steps: list[StepMetrics] = []
-        self.sandbox = Sandbox()
+        
         self.step = 1
         self.sandbox_data = None
         self.py_code = ""
         self.total_requests = 0
         self.console = console
-        self.mcp = mcp
+        spec = McpSpec(transport="stdio", command="python3 ../mcp_tools_swebench.py")
+        client = create_mcp_client(spec)
+        self.sandbox =  Sandbox(mcp_client=client, config=SandboxConfig())
         self.max_iteration = max_iteration
-
-    async def initialize_llm(self):
         self.llm = LLM(self.api_url, self.model_name, self.env_key,
-                       self._system_content())
-        self.llm.tools = await self.mcp.tools_list()
+                               self._system_content(), self.sandbox.list_tools())
+
 
     def execute(self):
         """Launch the loaded Task
@@ -63,7 +63,9 @@ class SWEBench():
         self.total_requests += 1
 
         if self.llm_output_data.get("tool_calls"):
-            pass
+            tool_calls = self.llm_output_data.get("tool_calls")
+            mcp_output = self.sandbox.mcp_client.call_tool(tool_calls[0].function.name, tool_calls[0].function.arguments)
+            print(mcp_output)
         else:
             llm_answer = self.llm_output_data.get("answer")
             match = self.extract_python(llm_answer)
