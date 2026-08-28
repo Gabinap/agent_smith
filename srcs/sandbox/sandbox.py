@@ -34,6 +34,7 @@ class Sandbox():
         self.config = config
         self.mcp_client = mcp_client
         self.namespace: dict[str, Any] = {}
+        self.tools: list[dict[str, Any]] = []
         self.final_answer_value: Any | None = None
         self.has_finished = False
 
@@ -193,7 +194,7 @@ class Sandbox():
 
         tools_res = self.mcp_client.initialize_session()
         tools = tools_res.get("result", {}).get("tools", [])  # depend
-        # of the name of the field recieved by the server
+        self.tools = tools
 
         for tool in tools:
             tool_name = tool["name"]
@@ -205,6 +206,10 @@ class Sandbox():
                 return tool_wrapper
 
             self.namespace[tool_name] = make_tool_wrapper(tool_name)
+
+    def list_tools(self) -> list[dict[str, Any]]:
+        """Return the discovered MCP tool specs, or [] if none."""
+        return self.tools
 
     def execute(self, code: str) -> SandboxResult:
         """
