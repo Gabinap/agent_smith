@@ -16,11 +16,8 @@ SOLUTION_FILE = "solution.py"
 EVAL_SCRIPT_FILE = "_run_tests.py"
 
 backend = LocalExecBackend(root="/tmp/agent")
-
-with open(os.environ["MBPP_TASK_FILE"]) as f:
-    task = MBPPTaskInput.model_validate_json(f.read())
-
 mcp = MCPServer("mbpp-tools")
+task: MBPPTaskInput
 
 
 def _build_eval_script() -> str:
@@ -59,5 +56,16 @@ def run_tests() -> str:
     return tools.run_tests(backend, cmd, workdir=str(backend.root))
 
 
-transport = "streamable-http" if "--http" in sys.argv else "stdio"
-mcp.run(transport=transport)
+def main() -> None:
+    """Load the task and start serving (blocks until the client
+    disconnects) — kept out of module scope so importing this file
+    never touches MBPP_TASK_FILE or starts the server."""
+    global task
+    with open(os.environ["MBPP_TASK_FILE"]) as f:
+        task = MBPPTaskInput.model_validate_json(f.read())
+    transport = "streamable-http" if "--http" in sys.argv else "stdio"
+    mcp.run(transport=transport)
+
+
+if __name__ == "__main__":
+    main()

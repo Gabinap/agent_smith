@@ -9,13 +9,8 @@ from srcs.backends.docker import DockerExecBackend
 from srcs.mcp_server import tools
 from srcs.models import SWEBenchTaskInput
 
-with open(os.environ["SWE_TASK_FILE"]) as f:
-    task = SWEBenchTaskInput.model_validate_json(f.read())
-
-# /testbed is SWE-bench's conventional checkout path inside the
-# image — the repo is already there, pre-baked at the buggy commit.
-# Also matches SandboxConfig.allowed_directories' default.
-backend = DockerExecBackend(task.docker_image, root="/testbed")
+task: SWEBenchTaskInput
+backend: DockerExecBackend
 
 mcp = MCPServer("swebench-tools")
 
@@ -88,5 +83,23 @@ def run_command(command: str, workdir: str) -> str:
     return tools.run_command(backend, command, workdir)
 
 
-transport = "streamable-http" if "--http" in sys.argv else "stdio"
-mcp.run(transport=transport)
+def main() -> None:
+    """Load the task, pull/start the Docker backend, and start
+    serving (blocks until the client disconnects) — kept out of
+    module scope so importing this file never touches SWE_TASK_FILE
+    or pulls/starts a container."""
+    global task, backend
+    with open(os.environ["SWE_TASK_FILE"]) as f:
+        task = SWEBenchTaskInput.model_validate_json(f.read())
+
+    # /testbed is SWE-bench's conventional checkout path inside the
+    # image — the repo is already there, pre-baked at the buggy
+    # commit. Also matches SandboxConfig.allowed_directories' default.
+    backend = DockerExecBackend(task.docker_image, root="/testbed")
+
+    transport = "streamable-http" if "--http" in sys.argv else "stdio"
+    mcp.run(transport=transport)
+
+
+if __name__ == "__main__":
+    main()
