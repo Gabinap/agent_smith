@@ -11,7 +11,7 @@ class LLM:
         The link between agent and api
     """
     def __init__(self, api_url: str, model_name: str, env_key: str,
-                 system_content: str):
+                 system_content: str, tools):
         """Initialise the llm Api
         Args:
             api_url (str): Url of the providers
@@ -24,8 +24,24 @@ class LLM:
         self.client = self._load_llm()
         self._system_content = system_content
         self._previous_interaction = None
-        self.sandbox_output = None
-        self.tools: ListToolsResult = None
+        self.sandbox_output = None   
+        self.tools = [] 
+        for tool in tools:
+            self.tools.append({
+                "type": "function",
+                "function": {
+                    "name": tool["name"],
+                    "description": tool.get("description", ""),
+                    "parameters": tool["inputSchema"],
+                }
+            })
+        self.messages = [
+                    {
+                        "role": "system",
+                        "content": self._system_content
+                    },
+                    
+                ]
 
     def _load_llm(self):
         try:
@@ -70,76 +86,51 @@ class LLM:
             dict: LLM output
         """
 
-        messages = [
+        self.messages.append(
             {
-                "role": "system",
-                "content": self._system_content
-            },
-            {
-                "role": "user",
-                "content": input
-            }
-        ]
-        if self.sandbox_output:
-            messages.append({
-                "role": "assistant",
-                "content": self.last_answer
-            })
-            retry_input = input + self._sandbox_error()
-            messages.append(
-                {
-                    "role": "user",
-                    "content": retry_input
-                })
+            "role": "user",
+            "content": input
+        })
 
         s = time.perf_counter()
         try:
             if self.tools:
-                tools = [
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": tool.name,
-                            "description": tool.description or "",
-                            "parameters": tool.input_schema,
-                        }
-                    }
-                    for tool in self.tools.tools]
+                
                 completion = self.client.chat.completions.create(
                                 model=self.model_name,
-                                messages=messages,
-                                tools=tools
+                                messages=self.messages,
+                                tools=self.tools
                             )
             else:
                 completion = self.client.chat.completions.create(
                                 model=self.model_name,
-                                messages=messages,
+                                messages=self.messages,
                             )
         except Exception:
             raise ValueError("Invalid Providers fields, Api connection failed")
         e = time.perf_counter()
 
-        response = completion.choices[0].message.content
+        response = completion.choices[0].message
+        self.messages.append(response)
 
-        self.last_answer = completion.choices[0].message.content
         self.save_response("response.json", completion)
-        if "</think>" in response:
-            response_split = response.split("</think>")
+        if "</think>" in response.content:
+            response_split = response.content.split("</think>")
             thought = response_split[0]
             answer = response_split[-1]
-        elif getattr(completion.choices[0].message, "reasoning", None):
-            thought = completion.choices[0].message.reasoning
-            answer = response
-        elif "</thought>" in response:
-            response_split = response.split("</thought>")
+        elif getattr(response, "reasoning", None):
+            thought = response.reasoning
+            answer = response.content
+        elif "</thought>" in response.content:
+            response_split = response.content.split("</thought>")
             thought = response_split[0]
             answer = response_split[-1]
         else:
             thought = "No thought found"
-            answer = response
+            answer = response.content
         tool_call = None
-        if getattr(completion.choices[0].message, "tool_calls", None):
-            tool_call = completion.choices[0].message.tool_calls[0]
+        if getattr(response, "tool_calls", None):
+            tool_call = response.tool_calls[0]
 
         return {
             "input_tokens": completion.usage.prompt_tokens,
