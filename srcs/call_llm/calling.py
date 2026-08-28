@@ -42,6 +42,7 @@ class LLM:
                     },
                     
                 ]
+        self.mcp_output = False
 
     def _load_llm(self):
         try:
@@ -85,12 +86,14 @@ class LLM:
         Returns:
             dict: LLM output
         """
-
-        self.messages.append(
-            {
-            "role": "user",
-            "content": input
-        })
+        if not self.mcp_output:
+            self.messages.append(
+                {
+                "role": "user",
+                "content": input
+            })
+        else:
+            self.mcp_output = False
 
         s = time.perf_counter()
         try:
@@ -114,17 +117,22 @@ class LLM:
         self.messages.append(response)
 
         self.save_response("response.json", completion)
-        if "</think>" in response.content:
-            response_split = response.content.split("</think>")
-            thought = response_split[0]
-            answer = response_split[-1]
+        
+        if getattr(response, "content", None):
+            if "</think>" in response.content:
+                response_split = response.content.split("</think>")
+                thought = response_split[0]
+                answer = response_split[-1]
+            elif "</thought>" in response.content:
+                response_split = response.content.split("</thought>")
+                thought = response_split[0]
+                answer = response_split[-1]
+            else:
+                thought = "No thought found"
+                answer = response.content
         elif getattr(response, "reasoning", None):
             thought = response.reasoning
             answer = response.content
-        elif "</thought>" in response.content:
-            response_split = response.content.split("</thought>")
-            thought = response_split[0]
-            answer = response_split[-1]
         else:
             thought = "No thought found"
             answer = response.content

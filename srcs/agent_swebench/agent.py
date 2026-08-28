@@ -5,12 +5,13 @@ from sandbox.sandbox import Sandbox, SandboxConfig
 from sandbox.mcp_client import create_mcp_client
 from models import McpSpec
 
+
 from rich.console import Console
 import cli_agent
 import re
 import datetime
 import textwrap
-
+import json
 
 class SWEBench():
     def __init__(
@@ -21,7 +22,7 @@ class SWEBench():
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 2
+        max_iteration: int = 10
     ):
         """Load the task and the LLM
 
@@ -63,9 +64,17 @@ class SWEBench():
         self.total_requests += 1
 
         if self.llm_output_data.get("tool_calls"):
-            tool_calls = self.llm_output_data.get("tool_calls")
-            mcp_output = self.sandbox.mcp_client.call_tool(tool_calls[0].function.name, tool_calls[0].function.arguments)
+            tool_call = self.llm_output_data.get("tool_calls")
+            print(tool_call)
+            mcp_output = self.sandbox.mcp_client.call_tool(tool_call.function.name, json.loads(tool_call.function.arguments))
             print(mcp_output)
+            self.sandbox_data = False
+            self.llm.mcp_output = True
+            self.llm.messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": str(mcp_output.get('result'))
+            })
         else:
             llm_answer = self.llm_output_data.get("answer")
             match = self.extract_python(llm_answer)
@@ -80,22 +89,35 @@ class SWEBench():
                                       self.py_code)
 
     def solve_task(self):
-        self.execute()
-        # while (True):
-        #     if self.step > self.max_iteration:
-        #         break
-        #     self.execute()
-        #     metric = self.get_step_metrics()
-        #     self.steps.append(metric)
-        #     if self.sandbox_data.finished:
-        #         break
-        #     else:
-        #         self.step += 1
-        #         self.llm.sandbox_output = self.sandbox_data
+        while (True):
+            if self.step > self.max_iteration:
+                break
+            self.execute()
+            # metric = self.get_step_metrics()
+            # self.steps.append(metric)
+            response = json.dumps(
+                [
+                    m.model_dump() if hasattr(m, "model_dump") else m
+                    for m in self.llm.messages
+                ],
+                indent=2,
+                ensure_ascii=False
+            )
+
+            with open("llm_messages.json", "w", encoding="utf-8") as file:
+                file.write(response)
+            if self.sandbox_data and self.sandbox_data.finished:
+                break
+           
+            else:
+                print(self.llm.messages)
+                self.step += 1
 
         # output = self.get_solution_output()
         # cli_agent.display_solution(self.console, output)
         # self.save_output(output)
+        print("ENDDDD")
+        print(self.llm.messages)
 
     def get_prompt(self):
         return f"""
