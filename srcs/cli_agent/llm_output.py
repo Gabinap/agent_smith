@@ -3,6 +3,7 @@ from rich.console import Console, Group
 from rich.text import Text
 from rich.syntax import Syntax
 from rich.panel import Panel
+import json
 
 def display_llm_output(console: Console, llm_output_data: dict, py_code: str):
     table = Table(padding=1).grid(padding=(0, 2))
@@ -26,3 +27,20 @@ def display_llm_output(console: Console, llm_output_data: dict, py_code: str):
         title="LLM answer",
         border_style="blue"
     ))
+
+
+def display_llm_tool_call(console: Console, tool_call: dict):
+    content = Group(
+        Text("Tool called:", style="bold white", end="\n\n"),
+        Syntax(str(tool_call.function.name), "python", theme="stata-dark", line_numbers=False),
+        "\n",
+        Text("Arguments:", style="bold white", end="\n\n"),
+        Syntax(str(json.loads(tool_call.function.arguments)), "python", theme="stata-dark", line_numbers=False),
+    )
+    
+    
+    console.print(Panel(
+            content,
+            title="LLM answer",
+            border_style="blue"
+        ))

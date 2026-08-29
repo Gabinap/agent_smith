@@ -10,7 +10,7 @@ def display_header(console: Console, profile: Profile):
 
     titre = figlet_format("Agent Smith", font="slant")
     stats = [
-        Panel("Mode: MBPP", style="bold"),
+        Panel(f"Mode: {profile.mode}", style="bold"),
         Panel(f"Provider: {profile.provider_name}", style="bold"),
         Panel(f"Model: {profile.model_name}", style="bold"),
         ]
