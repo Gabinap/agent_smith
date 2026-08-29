@@ -65,9 +65,9 @@ class SWEBench():
 
         if self.llm_output_data.get("tool_calls"):
             tool_call = self.llm_output_data.get("tool_calls")
-            print(tool_call)
+            cli_agent.display_llm_tool_call(self.console, tool_call)
             mcp_output = self.sandbox.mcp_client.call_tool(tool_call.function.name, json.loads(tool_call.function.arguments))
-            print(mcp_output)
+            cli_agent.display_tool_result(self.console, mcp_output.get('result'))
             self.sandbox_data = False
             self.llm.mcp_output = True
             self.llm.messages.append({
@@ -110,14 +110,12 @@ class SWEBench():
                 break
            
             else:
-                print(self.llm.messages)
                 self.step += 1
 
         # output = self.get_solution_output()
         # cli_agent.display_solution(self.console, output)
         # self.save_output(output)
         print("ENDDDD")
-        print(self.llm.messages)
 
     def get_prompt(self):
         return f"""
