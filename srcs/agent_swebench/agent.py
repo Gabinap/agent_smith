@@ -4,7 +4,7 @@ from models.tasks import SWEBenchTaskInput
 from sandbox.sandbox import Sandbox, SandboxConfig
 from sandbox.mcp_client import create_mcp_client
 from models import McpSpec
-
+from mcp import Tool
 
 from rich.console import Console
 import cli_agent
@@ -45,11 +45,10 @@ class SWEBench():
         self.console = console
         spec = McpSpec(transport="stdio", command="python3 ../mcp_tools_swebench.py")
         client = create_mcp_client(spec)
-        self.sandbox =  Sandbox(mcp_client=client, config=SandboxConfig())
+        self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
         self.max_iteration = max_iteration
         self.llm = LLM(self.api_url, self.model_name, self.env_key,
-                               self._system_content(), self.sandbox.list_tools())
-
+                       self._system_content())
 
     def execute(self):
         """Launch the loaded Task
@@ -64,7 +63,10 @@ class SWEBench():
         self.total_requests += 1
 
         if self.llm_output_data.get("tool_calls"):
-            pass
+            self.llm.messages.append({
+                        "role": "user",
+                        "content": "Do not call tools like that, write them in the python code"
+                    })
             # tool_call = self.llm_output_data.get("tool_calls")
             # cli_agent.display_llm_tool_call(self.console, tool_call)
             # mcp_output = self.sandbox.mcp_client.call_tool(tool_call.function.name, json.loads(tool_call.function.arguments))
@@ -88,12 +90,16 @@ class SWEBench():
             self.py_code = match.group(1) if match else None
 
             cli_agent.display_llm_output(self.console,
-                                         self.llm_output_data,
-                                         llm_answer)
+                                            self.llm_output_data,
+                                            llm_answer)
             self.sandbox_data = self.sandbox.execute(self.py_code)
+            self.llm.messages.append({
+                "role": "user",
+                "content": f"Here is the result of the execution :\n{self.sandbox_data}"
+            })
             cli_agent.display_sandbox(self.console,
-                                      self.sandbox_data,
-                                      self.py_code)
+                                        self.sandbox_data,
+                                        self.py_code)
 
     def solve_task(self):
         while (True):
@@ -176,10 +182,53 @@ class SWEBench():
         )
 
     def _system_content(self) -> str:
-        return textwrap.dedent("""
-            You are operating in a code-based tool calling environment.
+        tools = self.sandbox.list_tools()
+        tools_txt = ""
+        for tool in tools:
+            tool_txt = f"-{tool.get('name')}: {tool.get('description')}\nArgs:\n"
+            args:dict = tool.get('inputSchema').get('properties')
+            for arg in args.values():
+                tool_txt += f"-{arg.get('title')}: {arg.get('type')}\n"
+            tool_txt += f"\n required: {(tool.get('inputSchema').get('required'))}"
+            tool_txt += "\n Output:"
+            tool_txt += f"{str(tool.get('outputSchema'))}\n\n"
+            tools_txt += tool_txt
+        print(tools_txt)
+        raise
+        return textwrap.dedent(f"""
+            You are a Python agent that solve step by steps problems.
 
-            The available tools are Python functions that will be executed by an external sandbox.
+            Write in a ```python ... ``` block ONLY.
+            Your generated Python code will be executed inside a restricted sandbox.
+            Here is all the available tools, they are Python functions that will be executed by an external sandbox, you dont need to import them you can use them directly:
+
+            {tools_txt}
+
+            Authorized imports:
+            - math
+            - collections
+            - itertools
+            - re
+            - json
+            - typing
+            - functools
+            - operator
+            - heapq
+            - bisect
+            - copy
+            - string
+            - random
+            - datetime
+            - array
+            - cmath
+
+            Do NOT use unauthorized imports.
+
+
+
+            The sandbox injects a callable named `final_answer`,
+            to validate the coding problem, use it like
+            that: final_answer(get_patch())
 
             DO NOT use native function calling.
             DO NOT return tool calls.
@@ -187,11 +236,4 @@ class SWEBench():
 
             Instead, generate ordinary Python code that calls the available functions.
 
-            For example:
-
-            result = search_code("validate_email")
-            print(result)
-
-            content = read_file("models.py", 1, 50)
-            print(content)
             """)
