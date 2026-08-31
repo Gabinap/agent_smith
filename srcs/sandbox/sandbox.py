@@ -24,6 +24,7 @@ class TimeoutError(Exception):
 def _timeout_handler(signum: int, frame: types.FrameType | None) -> None:
     raise TimeoutError("Execution timed out")
 
+
 SAFE_BUILTINS = {
     "abs": abs, "all": all, "any": any, "bool": bool, "dict": dict,
     "enumerate": enumerate, "filter": filter, "float": float, "int": int,
@@ -31,6 +32,7 @@ SAFE_BUILTINS = {
     "range": range, "set": set, "str": str, "sum": sum, "tuple": tuple,
     "zip": zip, "True": True, "False": False, "None": None,
 }
+
 
 class Sandbox():
     def __init__(
@@ -205,7 +207,9 @@ class Sandbox():
             tool_name = tool["name"]
 
             def make_tool_wrapper(name: str) -> Callable:
-                def tool_wrapper(**kwargs: Any):
+                def tool_wrapper(**kwargs: Any) -> Any:
+                    if self.mcp_client is None:
+                        return None
                     res = self.mcp_client.call_tool(name, kwargs)
                     return res.get("result") if res else None
                 return tool_wrapper
@@ -224,17 +228,20 @@ class Sandbox():
 
     def _block_network(self) -> None:
         """Blocking the network access to the child process"""
-        def dummy_socket(*args: Any, **kwargs: Any):
+        def dummy_socket(*args: Any, **kwargs: Any) -> None:
             raise SecurityError("Network access is blocked by sandbox policy")
         socket.socket = dummy_socket  # type: ignore
         socket.create_connection = dummy_socket  # type: ignore
 
     def _worker(self, code: str, conn: Connection) -> None:
         """
-        Thread specialy made for the code execution to controll the RAM and time and only stop this thread if a limit is reached and not all the running code
+        Thread specialy made for the code execution to controll the RAM
+            and time and only stop this thread if a limit is reached
+            and not all the running code
         Args:
             code: str = The code that the sandbox has to run securly
-            conn : mp.connection.Connection = The conneciton between the child and the parent
+            conn : mp.connection.Connection = The conneciton between the child
+                and the parent
         """
         try:
             self._limit_resource()
@@ -264,11 +271,10 @@ class Sandbox():
         Args:
             code : str = The code to run
         Return Value:
-            SandboxResult = The return of the executed code in the SandboxResult class
+            SandboxResult = The return of the executed code in the
+                SandboxResult class
         """
-        manager = mp.Manager()
         parent_conn, child_conn = mp.Pipe()
-        shared_dict = manager.dict()
         process = mp.Process(target=self._worker, args=(code, child_conn))
         process.start()
 
@@ -288,7 +294,7 @@ class Sandbox():
         if parent_conn.poll():
             res_dict = parent_conn.recv()
             return SandboxResult.model_validate(res_dict)
-        
+
         return SandboxResult.model_validate({
             "success": False,
             "output": "",
