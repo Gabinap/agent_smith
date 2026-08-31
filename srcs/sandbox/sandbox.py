@@ -2,6 +2,7 @@ import builtins
 import os
 import types
 import resource
+import socket
 import multiprocessing as mp
 from multiprocessing.connection import Connection
 from typing import Any, Callable, IO
