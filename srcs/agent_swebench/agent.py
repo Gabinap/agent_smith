@@ -4,7 +4,7 @@ from models.tasks import SWEBenchTaskInput
 from sandbox.sandbox import Sandbox, SandboxConfig
 from sandbox.mcp_client import create_mcp_client
 from models import McpSpec
-from mcp import Tool
+from typing import Any, Dict
 
 from rich.console import Console
 import cli_agent
@@ -47,6 +47,7 @@ class SWEBench():
         client = create_mcp_client(spec)
         self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
         self.max_iteration = max_iteration
+        print(self._system_content())
         self.llm = LLM(self.api_url, self.model_name, self.env_key,
                        self._system_content())
 
@@ -182,58 +183,106 @@ class SWEBench():
         )
 
     def _system_content(self) -> str:
-        tools = self.sandbox.list_tools()
-        tools_txt = ""
-        for tool in tools:
-            tool_txt = f"-{tool.get('name')}: {tool.get('description')}\nArgs:\n"
-            args:dict = tool.get('inputSchema').get('properties')
-            for arg in args.values():
-                tool_txt += f"-{arg.get('title')}: {arg.get('type')}\n"
-            tool_txt += f"\n required: {(tool.get('inputSchema').get('required'))}"
-            tool_txt += "\n Output:"
-            tool_txt += f"{str(tool.get('outputSchema'))}\n\n"
-            tools_txt += tool_txt
-        print(tools_txt)
-        raise
+        mcp_tools = self.sandbox.list_tools()
+        tools = ""
+        for tool in mcp_tools:
+            tools += f"{mcp_tool_to_prototype(tool)}\n\n" 
         return textwrap.dedent(f"""
-            You are a Python agent that solve step by steps problems.
+You are a software engineering agent solving SWE-bench issues, one tool call per turn.
 
-            Write in a ```python ... ``` block ONLY.
-            Your generated Python code will be executed inside a restricted sandbox.
-            Here is all the available tools, they are Python functions that will be executed by an external sandbox, you dont need to import them you can use them directly:
+SANDBOX: You can ONLY call the tools listed below. No `import`, no `open()`, no writing your own
+scripts. Read/edit/test/run only through these tools.
 
-            {tools_txt}
+RULES:
+1. ONE tool call per turn. One ```python``` block, then STOP. No text after the block.
+2. Thought: max 2 sentences, only about this action. Don't discuss these rules, just follow them.
+3. Never invent or guess a tool's output. Wait for the real result.
+4. Always store output in a variable and print() it.
+5. Always use keyword arguments: `read_file(filepath="...", start_line=1)`.
+6. Never write your own reproduction/test scripts. Use run_tests() to verify. If it fails from
+   environment/tooling issues (not a real pass/fail), retry once; if still stuck, say so plainly
+   instead of finalizing anyway.
+7. If a tool call fails twice the same way, change approach — don't repeat it a third time.
 
-            Authorized imports:
-            - math
-            - collections
-            - itertools
-            - re
-            - json
-            - typing
-            - functools
-            - operator
-            - heapq
-            - bisect
-            - copy
-            - string
-            - random
-            - datetime
-            - array
-            - cmath
+TOOLS:
+{tools}
 
-            Do NOT use unauthorized imports.
+DONE: Call final_answer(get_patch()) only after run_tests() has shown a real pass — never on
+confidence alone.
 
-
-
-            The sandbox injects a callable named `final_answer`,
-            to validate the coding problem, use it like
-            that: final_answer(get_patch())
-
-            DO NOT use native function calling.
-            DO NOT return tool calls.
-            DO NOT use JSON tool calls.
-
-            Instead, generate ordinary Python code that calls the available functions.
-
+FORMAT:
+Thought: <1-2 sentences>
+```python
+result = tool_name(keyword=value)
+print(result)
+```
             """)
+
+
+JSON_TO_PY = {
+    "string": "str",
+    "integer": "int",
+    "number": "float",
+    "boolean": "bool",
+    "array": "list",
+    "object": "dict",
+    "null": "None",
+}
+
+
+def get_type(arg: Dict[str, Any]) -> str:
+    """Résout une propriété JSON Schema en annotation de type Python."""
+    if "anyOf" in arg:
+        multi_types = [get_type(p) for p in arg["anyOf"]]
+        non_null = [type for type in multi_types if type != "None"]
+        if "None" in multi_types:
+            return f"Optional[{non_null[0]}]" if len(non_null) == 1 else f"Optional[Union[{', '.join(non_null)}]]"
+        return f"Union[{', '.join(multi_types)}]"
+    return JSON_TO_PY.get(arg.get("type", "Any"), "Any")
+
+
+def format_default(value: Any) -> str:
+    """Formate une valeur par défaut JSON en littéral Python."""
+    if value is None or value == "null":
+        return "None"
+    if isinstance(value, bool):
+        return str(value)
+    if isinstance(value, str):
+        return repr(value)
+    return repr(value)
+
+
+def mcp_tool_to_prototype(tool: Dict[str, Any]) -> str:
+    name = tool["name"]
+    description = tool.get("description", "")
+    schema = tool["inputSchema"]
+    args = schema.get("properties", {})
+    required = set(schema.get("required", []))
+
+    ordered = [k for k in args if k in required] + [k for k in args if k not in required]
+
+    params_src, args_doc = [], []
+    needs_optional = needs_union = False
+
+
+    for key in ordered:
+        prop = args[key]
+        py_type = get_type(prop)
+        needs_optional |= py_type.startswith("Optional")
+        needs_union |= "Union[" in py_type
+
+        if key in required:
+            params_src.append(f"{key}: {py_type}")
+        else:
+            params_src.append(f"{key}: {py_type} = {format_default(prop.get('default'))}")
+
+
+    out_props = tool.get("outputSchema", {}).get("properties", {})
+    return_type = get_type(out_props["result"]) if list(out_props) == ["result"] else "dict"
+
+    params_joined = ", ".join(params_src)
+    return (
+        f"def {name}({params_joined}) -> {return_type}:\n"
+        f'    """{description}\n'
+        f'    """\n'
+    )
