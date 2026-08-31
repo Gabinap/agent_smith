@@ -22,7 +22,7 @@ class SWEBench():
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 10
+        max_iteration: int = 20
     ):
         """Load the task and the LLM
 
@@ -37,7 +37,7 @@ class SWEBench():
         self.model_name = model_name
         self.env_key = env_key
         self.steps: list[StepMetrics] = []
-        
+
         self.step = 1
         self.sandbox_data = None
         self.py_code = ""
@@ -64,17 +64,24 @@ class SWEBench():
         self.total_requests += 1
 
         if self.llm_output_data.get("tool_calls"):
-            tool_call = self.llm_output_data.get("tool_calls")
-            cli_agent.display_llm_tool_call(self.console, tool_call)
-            mcp_output = self.sandbox.mcp_client.call_tool(tool_call.function.name, json.loads(tool_call.function.arguments))
-            cli_agent.display_tool_result(self.console, mcp_output.get('result'))
-            self.sandbox_data = False
-            self.llm.mcp_output = True
-            self.llm.messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": str(mcp_output.get('result'))
-            })
+            pass
+            # tool_call = self.llm_output_data.get("tool_calls")
+            # cli_agent.display_llm_tool_call(self.console, tool_call)
+            # mcp_output = self.sandbox.mcp_client.call_tool(tool_call.function.name, json.loads(tool_call.function.arguments))
+            # cli_agent.display_tool_result(self.console, mcp_output.get('result'))
+            # self.sandbox_data = False
+            # self.llm.mcp_output = True
+            # content = mcp_output.get('result')
+            # content_txt = content.get('content')[0].get('text')
+            # new_lines = [i for i, c in enumerate(content_txt) if c == '\n']
+            # if len(new_lines) > 20:
+            #     content = "Warning: output is too long; please be more specific to reduce the tool's output."
+
+            # self.llm.messages.append({
+            #     "role": "tool",
+            #     "tool_call_id": tool_call.id,
+            #     "content": str(content)
+            # })
         else:
             llm_answer = self.llm_output_data.get("answer")
             match = self.extract_python(llm_answer)
@@ -108,7 +115,7 @@ class SWEBench():
                 file.write(response)
             if self.sandbox_data and self.sandbox_data.finished:
                 break
-           
+
             else:
                 self.step += 1
 
@@ -120,9 +127,6 @@ class SWEBench():
     def get_prompt(self):
         return f"""
 {self.task.problem_statement}
-
-Repository: {self.task.repo}
-
 
 """
 
@@ -154,7 +158,7 @@ Repository: {self.task.repo}
         timestamp = datetime.datetime.now().isoformat()
         return SolutionOutput(
             task_id=str(self.task.task_id),
-            benchmark="mbpp",
+            benchmark="swebench",
             success=True,
             solution=self.sandbox_data.final_answer,
             iterations=len(self.steps),
@@ -173,30 +177,21 @@ Repository: {self.task.repo}
 
     def _system_content(self) -> str:
         return textwrap.dedent("""
-            You are a Python agent. You solve basics coding problems.
+            You are operating in a code-based tool calling environment.
 
-            For Python code, write in a ```python ... ``` block.
+            The available tools are Python functions that will be executed by an external sandbox.
 
-            Do not comment the code and go straight to the point.
-            The sandbox injects a callable named `final_answer`,
-            to validate the coding problem,
-            You MUST pass only the function solution code as a
-            **Python String** to this function.
+            DO NOT use native function calling.
+            DO NOT return tool calls.
+            DO NOT use JSON tool calls.
 
-            Here is the EXACT format your output must follow:
+            Instead, generate ordinary Python code that calls the available functions.
 
-            ```python
-            # 1. Write your function
-            def your_function_name(args):
-                return ...
+            For example:
 
-            # 2. Add the tests
-            assert your_function_name(test_arg) == expected_result
+            result = search_code("validate_email")
+            print(result)
 
-            # 3. Pass the exact code as a string to final_answer
-            code_string = \"\"\"
-            def your_function_name(args):
-                return ...
-            \"\"\"
-            final_answer(code_string)
+            content = read_file("models.py", 1, 50)
+            print(content)
             """)
