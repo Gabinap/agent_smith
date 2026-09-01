@@ -10,7 +10,7 @@ class LLM:
         The link between agent and api
     """
     def __init__(self, api_url: str, model_name: str, env_key: str,
-                 system_content: str):
+                 system_content: str, tools):
         """Initialise the llm Api
         Args:
             api_url (str): Url of the providers
@@ -25,6 +25,16 @@ class LLM:
         self._previous_interaction = None
         self.sandbox_output = None
         self._system_content = system_content
+        self.tools = []
+        for tool in tools:
+            self.tools.append({
+                "type": "function",
+                "function": {
+                    "name": tool["name"],
+                    "description": tool.get("description", ""),
+                    "parameters": tool["inputSchema"],
+                }
+            })
         self.messages = [
                     {
                         "role": "system",
@@ -84,10 +94,18 @@ class LLM:
 
         s = time.perf_counter()
         try:
-            completion = self.client.chat.completions.create(
-                            model=self.model_name,
-                            messages=self.messages,
-                        )
+            if self.tools:
+
+                completion = self.client.chat.completions.create(
+                                model=self.model_name,
+                                messages=self.messages,
+                                tools=self.tools
+                            )
+            else:
+                completion = self.client.chat.completions.create(
+                                model=self.model_name,
+                                messages=self.messages,
+                            )
         except RateLimitError:
             raise ValueError("Wait for rate limit")
         except Exception:
@@ -117,9 +135,9 @@ class LLM:
         else:
             thought = "No thought found"
             answer = response.content
-        tool_call = False
+        tool_call = None
         if getattr(response, "tool_calls", None):
-            tool_call = True
+            tool_call = response.tool_calls[0]
 
         return {
             "input_tokens": completion.usage.prompt_tokens,

@@ -5,6 +5,9 @@ from sandbox.sandbox import Sandbox, SandboxConfig
 from sandbox.mcp_client import create_mcp_client
 from models import McpSpec
 from typing import Any, Dict
+from openai.types.chat.chat_completion_message_function_tool_call import (
+    ChatCompletionMessageFunctionToolCall
+)
 
 from rich.console import Console
 import cli_agent
@@ -24,7 +27,7 @@ class SWEBench():
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 20
+        max_iteration: int = 10
     ):
         """Load the task and the LLM
 
@@ -51,7 +54,7 @@ class SWEBench():
         self.max_iteration = max_iteration
         print(self._system_content())
         self.llm = LLM(self.api_url, self.model_name, self.env_key,
-                       self._system_content())
+                       self._system_content(), self.sandbox.list_tools())
 
     def execute(self):
         """Launch the loaded Task
@@ -66,10 +69,10 @@ class SWEBench():
         self.total_requests += 1
 
         if self.llm_output_data.get("tool_calls"):
-            self.llm.messages.append({
-                        "role": "user",
-                        "content": "Do not call tools like that, write them in the python code"
-                    })
+            py_code = self.python_block_gen(self.llm_output_data.get("tool_calls"))
+            self.sandbox_data = self.sandbox.execute(py_code)
+            print(self.sandbox_data)
+
         else:
             llm_answer = self.llm_output_data.get("answer")
             match = self.extract_python(llm_answer)
@@ -79,24 +82,34 @@ class SWEBench():
                                          self.llm_output_data,
                                          llm_answer)
             self.sandbox_data = self.sandbox.execute(self.py_code)
-            try:
-                output = ast.literal_eval(self.sandbox_data.output)
-                new_output = output.get('structuredContent').get('result')
-                new_lines = [i for i, c in enumerate(new_output) if c == '\n']
-                max_lines = 40
-                if len(new_lines) > max_lines:
-                    new_output = new_output[:new_lines[max_lines]]
-                    new_output += f"\n({len(new_lines)-max_lines} Remaining Lines...)"
-                self.sandbox_data.output = new_output
-            except Exception:
-                pass
-            cli_agent.display_sandbox(self.console,
-                                    self.sandbox_data,
-                                    self.py_code)
-            self.llm.messages.append({
-                        "role": "user",
-                        "content": f"Tool result :\n{self.sandbox_data.output} \nSandbox Error: {self.sandbox_data.error}"
-            })
+        try:
+            output = ast.literal_eval(self.sandbox_data.output)
+            new_output = output.get('structuredContent').get('result')
+            new_lines = [i for i, c in enumerate(new_output) if c == '\n']
+            max_lines = 40
+            if len(new_lines) > max_lines:
+                new_output = new_output[:new_lines[max_lines]]
+                new_output += f"\n({len(new_lines)-max_lines} Remaining Lines...)"
+            self.sandbox_data.output = new_output
+        except Exception:
+            pass
+        self.llm.messages.append({
+                    "role": "user",
+                    "content": f"Tool result :\n{self.sandbox_data.output} \nSandbox Error: {self.sandbox_data.error}"
+        })
+        cli_agent.display_sandbox(self.console,
+                    self.sandbox_data,
+                    self.py_code)
+
+    def python_block_gen(self,
+                         tool_call: ChatCompletionMessageFunctionToolCall):
+        fct_call = tool_call.function
+        args = []
+        for name, val in json.loads(fct_call.arguments).items():
+            args.append(f"{name}='{val}'")
+        args_txt = ", ".join(args)
+        py_code = f"result = {fct_call.name}({args_txt})\nprint(result)"
+        return py_code
 
     def solve_task(self):
         while (True):
@@ -129,6 +142,7 @@ class SWEBench():
 
     def get_prompt(self):
         return f"""
+Here is the problem
 {self.task.problem_statement}
 
 """
@@ -179,105 +193,78 @@ class SWEBench():
         )
 
     def _system_content(self) -> str:
-        mcp_tools = self.sandbox.list_tools()
-        tools = ""
-        for tool in mcp_tools:
-            tools += f"{mcp_tool_to_prototype(tool)}\n\n"
-        return textwrap.dedent(f"""
-You are a software engineering agent solving SWE-bench issues, one tool call per turn.
+        return textwrap.dedent("""
+You are an expert Python software engineer resolving bugs step by step.
 
-SANDBOX: You python code run inside, You can ONLY call the tools listed below. No `import`, no `open()`, no writing your own
-scripts. Process only through these tools.
+Your goal is to provide a git diff (patch) that fixes the bug
 
-TOOLS:
-{tools}
-
-
-RULES:
-1. ONE tool call per turn. One ```python``` block, then STOP. No text after the block.
-2. Thought: max 2 sentences, only about this action. Don't discuss these rules, just follow them.
-3. Never invent or guess a tool's output. Wait for the real result.
-4. Always store output in a variable and print() it.
-5. Always use keyword arguments: `read_file(filepath="...", start_line=1)`.
-6. Use run_tests() to verify your patch.
-7. If a tool call fails twice the same way, change approach.
-
-
-DONE: Call final_answer(get_patch()) only after run_tests() has shown a real pass
-
-FORMAT:
-Thought: <1-2 sentences>
-```python
-result = tool_name(keyword=value)
-print(result)
-```
 """)
 
 
-JSON_TO_PY = {
-    "string": "str",
-    "integer": "int",
-    "number": "float",
-    "boolean": "bool",
-    "array": "list",
-    "object": "dict",
-    "null": "None",
-}
+# JSON_TO_PY = {
+#     "string": "str",
+#     "integer": "int",
+#     "number": "float",
+#     "boolean": "bool",
+#     "array": "list",
+#     "object": "dict",
+#     "null": "None",
+# }
 
 
-def get_type(arg: Dict[str, Any]) -> str:
-    """Résout une propriété JSON Schema en annotation de type Python."""
-    if "anyOf" in arg:
-        multi_types = [get_type(p) for p in arg["anyOf"]]
-        non_null = [type for type in multi_types if type != "None"]
-        if "None" in multi_types:
-            return f"Optional[{non_null[0]}]" if len(non_null) == 1 else f"Optional[Union[{', '.join(non_null)}]]"
-        return f"Union[{', '.join(multi_types)}]"
-    return JSON_TO_PY.get(arg.get("type", "Any"), "Any")
+# def get_type(arg: Dict[str, Any]) -> str:
+#     """Résout une propriété JSON Schema en annotation de type Python."""
+#     if "anyOf" in arg:
+#         multi_types = [get_type(p) for p in arg["anyOf"]]
+#         non_null = [type for type in multi_types if type != "None"]
+#         if "None" in multi_types:
+#             return f"Optional[{non_null[0]}]" if len(non_null) == 1 else f"Optional[Union[{', '.join(non_null)}]]"
+#         return f"Union[{', '.join(multi_types)}]"
+#     return JSON_TO_PY.get(arg.get("type", "Any"), "Any")
 
 
-def format_default(value: Any) -> str:
-    """Formate une valeur par défaut JSON en littéral Python."""
-    if value is None or value == "null":
-        return "None"
-    if isinstance(value, bool):
-        return str(value)
-    if isinstance(value, str):
-        return repr(value)
-    return repr(value)
+# def format_default(value: Any) -> str:
+#     """Formate une valeur par défaut JSON en littéral Python."""
+#     if value is None or value == "null":
+#         return "None"
+#     if isinstance(value, bool):
+#         return str(value)
+#     if isinstance(value, str):
+#         return repr(value)
+#     return repr(value)
 
 
-def mcp_tool_to_prototype(tool: Dict[str, Any]) -> str:
-    name = tool["name"]
-    description = tool.get("description", "")
-    schema = tool["inputSchema"]
-    args = schema.get("properties", {})
-    required = set(schema.get("required", []))
+# def mcp_tool_to_prototype(tool: Dict[str, Any]) -> str:
+#     name = tool["name"]
+#     description = tool.get("description", "")
+#     schema = tool["inputSchema"]
+#     args = schema.get("properties", {})
+#     required = set(schema.get("required", []))
 
-    ordered = [k for k in args if k in required] + [k for k in args if k not in required]
+#     ordered = [k for k in args if k in required] + [k for k in args if k not in required]
 
-    params_src, args_doc = [], []
-    needs_optional = needs_union = False
-
-
-    for key in ordered:
-        prop = args[key]
-        py_type = get_type(prop)
-        needs_optional |= py_type.startswith("Optional")
-        needs_union |= "Union[" in py_type
-
-        if key in required:
-            params_src.append(f"{key}: {py_type}")
-        else:
-            params_src.append(f"{key}: {py_type} = {format_default(prop.get('default'))}")
+#     params_src = []
+#     needs_optional = needs_union = False
 
 
-    out_props = tool.get("outputSchema", {}).get("properties", {})
-    return_type = get_type(out_props["result"]) if list(out_props) == ["result"] else "dict"
+#     for key in ordered:
+#         prop = args[key]
+#         py_type = get_type(prop)
+#         needs_optional |= py_type.startswith("Optional")
+#         needs_union |= "Union[" in py_type
 
-    params_joined = ", ".join(params_src)
-    return (
-        f"def {name}({params_joined}) -> {return_type}:\n"
-        f'    """{description}\n'
-        f'    """\n'
-    )
+#         if key in required:
+#             params_src.append(f"{key}: {py_type}")
+#         else:
+#             params_src.append(f"{key}: {py_type} = {format_default(prop.get('default'))}")
+
+
+#     out_props = tool.get("outputSchema", {}).get("properties", {})
+#     return_type = get_type(out_props["result"]) if list(out_props) == ["result"] else "dict"
+
+#     params_joined = ", ".join(params_src)
+#     return (
+#         f"def {name}({params_joined}) -> {return_type}:\n"
+#         f'    """{description}\n'
+#         f'    """\n'
+#     )
