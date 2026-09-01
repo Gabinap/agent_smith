@@ -80,13 +80,19 @@ class DockerExecBackend:
         return normalized
 
     # ---- Contract: ExecBackend ----
-    def run(self, cmd: str, workdir: str, timeout: int) -> CommandResult:
+    def run(self, cmd: str, workdir: str, timeout: int,
+            bash: bool = False) -> CommandResult:
         """Run a shell command inside the container and return its result."""
         resolved_workdir = self._resolve(workdir)
         self.container.exec_run(["mkdir", "-p", resolved_workdir])
         start = time.monotonic()
+        if bash:
+            exec_cmd = ["timeout", str(timeout), "bash", "-c", cmd]
+        else:
+            exec_cmd = ["sh", "-c", f"timeout {timeout} {cmd}"]
+
         result = self.container.exec_run(
-            ["sh", "-c", f"timeout {timeout} {cmd}"],
+            exec_cmd,
             workdir=resolved_workdir, demux=True
         )
         elapsed = time.monotonic() - start

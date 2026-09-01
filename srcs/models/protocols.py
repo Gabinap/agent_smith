@@ -17,7 +17,7 @@ __all__ = ["ExecBackend", "LLMClient", "BenchmarkAdapter"]
 class ExecBackend(Protocol):
     """Run commands and read/write files, locally or inside a container."""
 
-    def run(self, cmd: str, workdir: str, timeout: int) -> CommandResult:
+    def run(self, cmd: str, workdir: str, timeout: int, bash: bool = False) -> CommandResult:
         """Run a shell command and return its result."""
         ...
 
