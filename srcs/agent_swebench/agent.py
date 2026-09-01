@@ -27,7 +27,7 @@ class SWEBench():
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 10
+        max_iteration: int = 25
     ):
         """Load the task and the LLM
 
@@ -69,24 +69,40 @@ class SWEBench():
         self.total_requests += 1
 
         if self.llm_output_data.get("tool_calls"):
-            py_code = self.python_block_gen(self.llm_output_data.get("tool_calls"))
-            self.sandbox_data = self.sandbox.execute(py_code)
-            print(self.sandbox_data)
-
+            tool_call = self.llm_output_data.get("tool_calls")
+            cli_agent.display_llm_tool_call(self.console, tool_call)
+            self.py_code = self.python_block_gen(tool_call)
         else:
             llm_answer = self.llm_output_data.get("answer")
             match = self.extract_python(llm_answer)
             self.py_code = match.group(1) if match else None
-
             cli_agent.display_llm_output(self.console,
                                          self.llm_output_data,
                                          llm_answer)
-            self.sandbox_data = self.sandbox.execute(self.py_code)
+        
+        self.sandbox_data = self.sandbox.execute(self.py_code)
+        
+
         try:
             output = ast.literal_eval(self.sandbox_data.output)
             new_output = output.get('structuredContent').get('result')
+            
+            if "run_tests()" in self.py_code:
+                cli_agent.display_sandbox(self.console,
+                    self.sandbox_data,
+                    new_output)
+                match = re.search(r"== tests finished: (.+?) ==", output)
+                if match:
+                    result = match.group(1)
+                    self.llm.messages.append({
+                                        "role": "user",
+                                        "content": f"test output: {result}"
+                            })
+                    return
+                    
+            
             new_lines = [i for i, c in enumerate(new_output) if c == '\n']
-            max_lines = 40
+            max_lines = 20
             if len(new_lines) > max_lines:
                 new_output = new_output[:new_lines[max_lines]]
                 new_output += f"\n({len(new_lines)-max_lines} Remaining Lines...)"
@@ -95,7 +111,7 @@ class SWEBench():
             pass
         self.llm.messages.append({
                     "role": "user",
-                    "content": f"Tool result :\n{self.sandbox_data.output} \nSandbox Error: {self.sandbox_data.error}"
+                    "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nTool result :\n{self.sandbox_data.output}"
         })
         cli_agent.display_sandbox(self.console,
                     self.sandbox_data,
@@ -106,7 +122,7 @@ class SWEBench():
         fct_call = tool_call.function
         args = []
         for name, val in json.loads(fct_call.arguments).items():
-            args.append(f"{name}='{val}'")
+            args.append(f"{name}={repr(val)}")
         args_txt = ", ".join(args)
         py_code = f"result = {fct_call.name}({args_txt})\nprint(result)"
         return py_code
@@ -194,9 +210,16 @@ Here is the problem
 
     def _system_content(self) -> str:
         return textwrap.dedent("""
-You are an expert Python software engineer resolving bugs step by step.
+        You are an expert Python software engineer resolving bugs step by step.
 
-Your goal is to provide a git diff (patch) that fixes the bug
+        Your goal is to fixes the bug.
+        
+        If you think that you solve the bug, run the tool 'run_tests()',
+        if succes, use final_answer(get_patch()) to finish your work.
+        
+        When you call a tool, always explicitly specify the values of all arguments, never rely on their default values.
+        
+        Use ONLY the tools, NO import, No install.
 
 """)
 
