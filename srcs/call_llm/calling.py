@@ -1,9 +1,8 @@
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 import os
 from dotenv import load_dotenv
 import time
 import textwrap
-from mcp import ListToolsResult
 
 
 class LLM:
@@ -11,7 +10,7 @@ class LLM:
         The link between agent and api
     """
     def __init__(self, api_url: str, model_name: str, env_key: str,
-                 system_content: str, tools):
+                 system_content: str):
         """Initialise the llm Api
         Args:
             api_url (str): Url of the providers
@@ -22,27 +21,16 @@ class LLM:
         self._api_key = self._get_from_env(env_key)
 
         self.client = self._load_llm()
-        self._system_content = system_content
+
         self._previous_interaction = None
-        self.sandbox_output = None   
-        self.tools = [] 
-        for tool in tools:
-            self.tools.append({
-                "type": "function",
-                "function": {
-                    "name": tool["name"],
-                    "description": tool.get("description", ""),
-                    "parameters": tool["inputSchema"],
-                }
-            })
+        self.sandbox_output = None
+        self._system_content = system_content
         self.messages = [
                     {
                         "role": "system",
                         "content": self._system_content
                     },
-                    
                 ]
-        self.mcp_output = False
 
     def _load_llm(self):
         try:
@@ -86,29 +74,22 @@ class LLM:
         Returns:
             dict: LLM output
         """
-        if not self.mcp_output:
+        if len(self.messages) <= 1:
             self.messages.append(
                 {
-                "role": "user",
-                "content": input
-            })
-        else:
-            self.mcp_output = False
+                    "role": "user",
+                    "content": input
+                }
+            )
 
         s = time.perf_counter()
         try:
-            if self.tools:
-                
-                completion = self.client.chat.completions.create(
-                                model=self.model_name,
-                                messages=self.messages,
-                                tools=self.tools
-                            )
-            else:
-                completion = self.client.chat.completions.create(
-                                model=self.model_name,
-                                messages=self.messages,
-                            )
+            completion = self.client.chat.completions.create(
+                            model=self.model_name,
+                            messages=self.messages,
+                        )
+        except RateLimitError:
+            raise ValueError("Wait for rate limit")
         except Exception:
             raise ValueError("Invalid Providers fields, Api connection failed")
         e = time.perf_counter()
@@ -117,7 +98,7 @@ class LLM:
         self.messages.append(response)
 
         self.save_response("response.json", completion)
-        
+
         if getattr(response, "content", None):
             if "</think>" in response.content:
                 response_split = response.content.split("</think>")
@@ -136,9 +117,9 @@ class LLM:
         else:
             thought = "No thought found"
             answer = response.content
-        tool_call = None
+        tool_call = False
         if getattr(response, "tool_calls", None):
-            tool_call = response.tool_calls[0]
+            tool_call = True
 
         return {
             "input_tokens": completion.usage.prompt_tokens,
@@ -158,3 +139,4 @@ class LLM:
 
             Adjust your code to solve the coding problem
             """)
+
