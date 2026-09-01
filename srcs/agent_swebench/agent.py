@@ -12,6 +12,8 @@ import re
 import datetime
 import textwrap
 import json
+import ast
+
 
 class SWEBench():
     def __init__(
@@ -68,39 +70,33 @@ class SWEBench():
                         "role": "user",
                         "content": "Do not call tools like that, write them in the python code"
                     })
-            # tool_call = self.llm_output_data.get("tool_calls")
-            # cli_agent.display_llm_tool_call(self.console, tool_call)
-            # mcp_output = self.sandbox.mcp_client.call_tool(tool_call.function.name, json.loads(tool_call.function.arguments))
-            # cli_agent.display_tool_result(self.console, mcp_output.get('result'))
-            # self.sandbox_data = False
-            # self.llm.mcp_output = True
-            # content = mcp_output.get('result')
-            # content_txt = content.get('content')[0].get('text')
-            # new_lines = [i for i, c in enumerate(content_txt) if c == '\n']
-            # if len(new_lines) > 20:
-            #     content = "Warning: output is too long; please be more specific to reduce the tool's output."
-
-            # self.llm.messages.append({
-            #     "role": "tool",
-            #     "tool_call_id": tool_call.id,
-            #     "content": str(content)
-            # })
         else:
             llm_answer = self.llm_output_data.get("answer")
             match = self.extract_python(llm_answer)
             self.py_code = match.group(1) if match else None
 
             cli_agent.display_llm_output(self.console,
-                                            self.llm_output_data,
-                                            llm_answer)
+                                         self.llm_output_data,
+                                         llm_answer)
             self.sandbox_data = self.sandbox.execute(self.py_code)
-            self.llm.messages.append({
-                "role": "user",
-                "content": f"Here is the result of the execution :\n{self.sandbox_data}"
-            })
+            try:
+                output = ast.literal_eval(self.sandbox_data.output)
+                new_output = output.get('structuredContent').get('result')
+                new_lines = [i for i, c in enumerate(new_output) if c == '\n']
+                max_lines = 40
+                if len(new_lines) > max_lines:
+                    new_output = new_output[:new_lines[max_lines]]
+                    new_output += f"\n({len(new_lines)-max_lines} Remaining Lines...)"
+                self.sandbox_data.output = new_output
+            except Exception:
+                pass
             cli_agent.display_sandbox(self.console,
-                                        self.sandbox_data,
-                                        self.py_code)
+                                    self.sandbox_data,
+                                    self.py_code)
+            self.llm.messages.append({
+                        "role": "user",
+                        "content": f"Tool result :\n{self.sandbox_data.output} \nSandbox Error: {self.sandbox_data.error}"
+            })
 
     def solve_task(self):
         while (True):
@@ -186,12 +182,16 @@ class SWEBench():
         mcp_tools = self.sandbox.list_tools()
         tools = ""
         for tool in mcp_tools:
-            tools += f"{mcp_tool_to_prototype(tool)}\n\n" 
+            tools += f"{mcp_tool_to_prototype(tool)}\n\n"
         return textwrap.dedent(f"""
 You are a software engineering agent solving SWE-bench issues, one tool call per turn.
 
-SANDBOX: You can ONLY call the tools listed below. No `import`, no `open()`, no writing your own
-scripts. Read/edit/test/run only through these tools.
+SANDBOX: You python code run inside, You can ONLY call the tools listed below. No `import`, no `open()`, no writing your own
+scripts. Process only through these tools.
+
+TOOLS:
+{tools}
+
 
 RULES:
 1. ONE tool call per turn. One ```python``` block, then STOP. No text after the block.
@@ -199,16 +199,11 @@ RULES:
 3. Never invent or guess a tool's output. Wait for the real result.
 4. Always store output in a variable and print() it.
 5. Always use keyword arguments: `read_file(filepath="...", start_line=1)`.
-6. Never write your own reproduction/test scripts. Use run_tests() to verify. If it fails from
-   environment/tooling issues (not a real pass/fail), retry once; if still stuck, say so plainly
-   instead of finalizing anyway.
-7. If a tool call fails twice the same way, change approach — don't repeat it a third time.
+6. Use run_tests() to verify your patch.
+7. If a tool call fails twice the same way, change approach.
 
-TOOLS:
-{tools}
 
-DONE: Call final_answer(get_patch()) only after run_tests() has shown a real pass — never on
-confidence alone.
+DONE: Call final_answer(get_patch()) only after run_tests() has shown a real pass
 
 FORMAT:
 Thought: <1-2 sentences>
@@ -216,7 +211,7 @@ Thought: <1-2 sentences>
 result = tool_name(keyword=value)
 print(result)
 ```
-            """)
+""")
 
 
 JSON_TO_PY = {
