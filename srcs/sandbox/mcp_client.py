@@ -3,7 +3,7 @@ import shlex
 import subprocess
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 from models.internal import McpSpec
 
@@ -18,7 +18,7 @@ class McpClient(ABC):
         self.transport: TransportMode = transport
         self._next_id: int = 1
 
-    def initialize_session(self) -> Dict[str, Any]:
+    def initialize_session(self) -> dict[str, Any]:
         init_request = self._build_request(
             "initialize",
             params={
@@ -43,8 +43,8 @@ class McpClient(ABC):
 
         return server_response if server_response else {}
 
-    def call_tool(self, tool_name: str, arguments: Dict[str, Any]
-                  ) -> Optional[Dict[str, Any]]:
+    def call_tool(self, tool_name: str, arguments: dict[str, Any]
+                  ) -> dict[str, Any] | None:
         """Call an MCP tools."""
         req = self._build_request(
             "tools/call",
@@ -55,8 +55,8 @@ class McpClient(ABC):
     def _build_request(
             self,
             method: str,
-            params: Optional[Dict[str, Any]] = None
-            ) -> Dict[str, Any]:
+            params: dict[str, Any] | None = None
+            ) -> dict[str, Any]:
         """Build JSON-RPC 2.0 request with ID incrementation."""
         req = {
             "jsonrpc": "2.0",
@@ -71,10 +71,10 @@ class McpClient(ABC):
     @staticmethod
     def _build_notification(
         method: str,
-        params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Build notification JSON-RPC 2.0 (no ID)"""
-        notif: Dict[str, Any] = {
+        notif: dict[str, Any] = {
             "jsonrpc": "2.0",
             "method": method,
         }
@@ -85,15 +85,13 @@ class McpClient(ABC):
     @abstractmethod
     def send_message(
         self,
-        message: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+        message: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Send a message to the server and return response."""
-        pass
 
     @abstractmethod
     def connect(self) -> None:
         """Starting the process to connection to the server"""
-        pass
 
     @abstractmethod
     def close(self) -> None:
@@ -107,8 +105,8 @@ class McpHttp(McpClient):
 
     def send_message(
         self,
-        message: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+        message: dict[str, Any]
+    ) -> dict[str, Any] | None:
         # TODO: not implemented yet — HTTP transport is not usable.
         pass
 
@@ -136,7 +134,7 @@ class McpStdio(McpClient):
 
     def send_message(
         self,
-        message: Dict[str, Any]
+        message: dict[str, Any]
     ) -> Any | None:
         """Send a message to the server and return response."""
         if (not self.process or
@@ -171,7 +169,7 @@ class McpStdio(McpClient):
             self.process.wait()
 
 
-def create_mcp_client(spec: Optional[McpSpec]) -> Optional[McpClient]:
+def create_mcp_client(spec: McpSpec | None) -> McpClient | None:
     """Choosing the right client with McpSpec"""
     if not spec:
         return None

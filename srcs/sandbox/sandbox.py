@@ -1,11 +1,12 @@
 import builtins
+import multiprocessing as mp
 import os
-import types
 import resource
 import socket
-import multiprocessing as mp
+import types
+from collections.abc import Callable
 from multiprocessing.connection import Connection
-from typing import Any, Callable, IO
+from typing import IO, Any
 
 from models.sandbox import SandboxConfig, SandboxResult
 from sandbox.mcp_client import McpClient
@@ -13,12 +14,10 @@ from sandbox.mcp_client import McpClient
 
 class SecurityError(PermissionError):
     """Security Rules are not respected"""
-    pass
 
 
 class TimeoutError(Exception):
     """Execution time limit exceeded"""
-    pass
 
 
 def _timeout_handler(signum: int, frame: types.FrameType | None) -> None:
@@ -34,16 +33,16 @@ SAFE_BUILTINS = {
 }
 
 
-class Sandbox():
+class Sandbox:
     def __init__(
             self,
             mcp_client: McpClient | None = None,
-            config: SandboxConfig = SandboxConfig()
+            config: SandboxConfig | None = None,
             ) -> None:
         """
         Sandbox to execute code that can be vulnerable
         """
-        self.config = config
+        self.config = config if config is not None else SandboxConfig()
         self.mcp_client = mcp_client
         self.namespace: dict[str, Any] = {}
         self.tools: list[dict[str, Any]] = []
@@ -153,7 +152,6 @@ class Sandbox():
         end = kwargs.get("end", "\n")
         text = sep.join(str(a) for a in args) + end
         self.stdout.append(text)
-        return None
 
     def _final_answer_tool(self, answer: str) -> str:
         """
@@ -247,22 +245,51 @@ class Sandbox():
             self._limit_resource()
             self._block_network()
 
-            exec(code, self.namespace)
+            compiled_code = compile(code, filename="<sandbox>", mode="exec")
+            exec(compiled_code, self.namespace)
 
             conn.send({
                 "success": True,
                 "output": "".join(self.stdout),
                 "error": None,
                 "final_answer": self.final_answer_value,
-                "finished": self.has_finished
+                "finished": self.has_finished,
+            })
+        except SyntaxError as e:
+            conn.send({
+                "success": False,
+                "output": "".join(self.stdout),
+                "error": (f"SyntaxError: {e.msg} (line {e.lineno}, "
+                          f"col {e.offset})"),
+                "final_answer": self.final_answer_value,
+                "finished": False,
+            })
+        except SecurityError as e:
+            conn.send({
+                "success": False,
+                "output": "".join(self.stdout),
+                "error": f"SecurityError: {e!s}",
+                "final_answer": self.final_answer_value,
+                "finished": False,
+            })
+        except MemoryError:
+            conn.send({
+                "success": False,
+                "output": "".join(self.stdout),
+                "error": (
+                    "MemoryError: RAM limit exceeded ("
+                    f"{self.config.max_memory_mb} MB limit)"
+                ),
+                "final_answer": self.final_answer_value,
+                "finished": False,
             })
         except Exception as e:
             conn.send({
                 "success": False,
                 "output": "".join(self.stdout),
-                "error": f"{type(e).__name__}: {str(e)}",
+                "error": f"{type(e).__name__}: {e!s}",
                 "final_answer": self.final_answer_value,
-                "finished": False
+                "finished": False,
             })
 
     def execute(self, code: str) -> SandboxResult:
@@ -276,7 +303,19 @@ class Sandbox():
         """
         parent_conn, child_conn = mp.Pipe()
         process = mp.Process(target=self._worker, args=(code, child_conn))
-        process.start()
+        try:
+            process.start()
+        except (mp.ProcessError, TypeError) as e:
+            return SandboxResult.model_validate({
+                "success": False,
+                "output": "",
+                "error": (
+                    "ProcessCreationFailed: Failed to spawn sandbox "
+                    f"worker process: {e!s}"
+                ),
+                "final_answer": None,
+                "finished": False
+            })
 
         process.join(timeout=self.config.max_execution_time_seconds)
 
@@ -286,7 +325,10 @@ class Sandbox():
             return SandboxResult.model_validate({
                 "success": False,
                 "output": "",
-                "error": "TimeoutError: Execution timed out",
+                "error": (
+                    "TimeoutError: Execution time limit exceeded ("
+                    f"{self.config.max_execution_time_seconds}s limit)"
+                ),
                 "final_answer": None,
                 "finished": False
             })
@@ -295,10 +337,21 @@ class Sandbox():
             res_dict = parent_conn.recv()
             return SandboxResult.model_validate(res_dict)
 
+        exit_code = process.exitcode
+        error_msg = (
+            "ProcessCrashed: Process terminated abruptly with exit "
+            f"code {exit_code}."
+        )
+        if exit_code == -9:
+            error_msg += (
+                " (Likely killed by OS OOM killer for exceeding "
+                f"memory limit of {self.config.max_memory_mb} MB)"
+            )
+
         return SandboxResult.model_validate({
             "success": False,
             "output": "",
-            "error": "ProcessError: Child process terminated unexpectedly",
+            "error": error_msg,
             "final_answer": None,
             "finished": False
         })

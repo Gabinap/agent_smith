@@ -1,13 +1,13 @@
 """Interactive CLI for the sandbox REPL (uv run sandbox)."""
 
-import sys
 import argparse
-from pydantic import ValidationError
+import sys
+
 from models.internal import McpSpec
 from models.sandbox import SandboxConfig, SandboxResult
-from sandbox.sandbox import Sandbox
+from pydantic import ValidationError
 from sandbox.mcp_client import McpClient, create_mcp_client
-from typing import Optional
+from sandbox.sandbox import Sandbox
 
 
 class CLI_Sandbox:
@@ -21,7 +21,7 @@ class CLI_Sandbox:
             return
         self.mcp_spec = self._get_mcp_spec(self.args)
         self._get_sandbox_config(self.args)
-        self.mcp_client: Optional[McpClient] = create_mcp_client(self.mcp_spec)
+        self.mcp_client: McpClient | None = create_mcp_client(self.mcp_spec)
         self.sandbox = Sandbox(
             mcp_client=self.mcp_client,
             config=self.config
@@ -75,7 +75,7 @@ class CLI_Sandbox:
             self.config = SandboxConfig()
 
     @staticmethod
-    def _get_mcp_spec(args: argparse.Namespace) -> Optional[McpSpec]:
+    def _get_mcp_spec(args: argparse.Namespace) -> McpSpec | None:
         """Build the McpSpec from --mcp-stdio/--mcp-server, or None."""
         if args.mcp_server:
             return McpSpec(transport="http", url=args.mcp_server)
