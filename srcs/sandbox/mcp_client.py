@@ -1,7 +1,6 @@
 import json
 import shlex
 import subprocess
-import sys
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Dict, Optional
@@ -171,6 +170,7 @@ class McpStdio(McpClient):
             self.process.terminate()
             self.process.wait()
 
+
 def create_mcp_client(spec: Optional[McpSpec]) -> Optional[McpClient]:
     """Choosing the right client with McpSpec"""
     if not spec:
@@ -187,6 +187,8 @@ def create_mcp_client(spec: Optional[McpSpec]) -> Optional[McpClient]:
         return McpHttp(url=spec.url)
 
     raise ValueError(f"Unknown transport method: {spec.transport}")
+
+
 # ================ ============ ================ #
 # ================ ============ ================ #
 # ================ SERVEUR MOCK ================ #
