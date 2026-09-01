@@ -230,7 +230,7 @@ def run_tests(
     Returns:
         Combined stdout and stderr, unmodified.
     """
-    result = backend.run(eval_script, workdir=workdir, timeout=timeout)
+    result = backend.run(eval_script, workdir=workdir, timeout=timeout, bash=True)
     return result.stdout + result.stderr
 
 
