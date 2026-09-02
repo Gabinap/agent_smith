@@ -100,7 +100,14 @@ class McpClient(ABC):
 
 
 class McpHttp(McpClient):
+    """ MCP HTTP client implementation """
+
     def __init__(self, url: str) -> None:
+        """
+        Initialize the HTTP MCP client
+        Args:
+            url: str = target server endpoint URL
+        """
         super().__init__(TransportMode.HTTP)
         self.endpoint_url: str = url.rstrip("/")
         if not self.endpoint_url.endswith("/mcp"):
@@ -110,16 +117,26 @@ class McpHttp(McpClient):
         self._http_client: httpx.Client | None = None
 
     def send_message(self, message: dict[str, Any]) -> Any | None:
-        if not self._http_client:
-            raise RuntimeError("HTTP Client not connected. "
-                               "Call connect() first.")
+        """
+        Send a JSON-RPC message to the server
+        Args:
+            message: dict[str, Any] = payload to send to the server
+        Return:
+            Any | None = parsed response data or None for notifications
+        """
+        if self._http_client is None:
+            raise RuntimeError(
+                "HTTP Client not connected. "
+                "Call connect() first."
+            )
 
+        client = self._http_client
         headers = {"Content-Type": "application/json"}
 
         if self.session_id:
             headers["Mcp-Session-Id"] = self.session_id
 
-        response = self._http_client.post(
+        response = client.post(
             self.endpoint_url,
             json=message,
             headers=headers,
@@ -128,32 +145,29 @@ class McpHttp(McpClient):
 
         if not self.session_id and "mcp-session-id" in response.headers:
             self.session_id = response.headers["mcp-session-id"]
-            print(f"[INFO] MCP Session established with ID: {self.session_id}")
 
-        if "id" in message:
-            text = response.text.strip()
+        if "id" not in message:
+            return None
 
-            if "data: " in text:
-                for line in text.splitlines():
-                    if line.startswith("data: "):
-                        raw_json = line[6:].strip()
-                        data = json.loads(raw_json)
-                        print("response: '", data, "'")
-                        return data
+        text = response.text.strip()
+        if "data: " in text:
+            for line in text.splitlines():
+                if line.startswith("data: "):
+                    raw_json = line.removeprefix("data: ").strip()
+                    return json.loads(raw_json)
 
-            data = response.json()
-            print("response: '", data, "'")
-            return data
-
-        return None
+        return response.json() if text else None
 
     def connect(self) -> None:
+        """ Establish HTTP client connection """
         self._http_client = httpx.Client(timeout=30.0)
         print(f"[INFO] Client ready for endpoint: {self.endpoint_url}")
 
     def close(self) -> None:
-        if self._http_client:
+        """ Close the underlying HTTP client session """
+        if self._http_client is not None:
             self._http_client.close()
+            self._http_client = None
 
 
 class McpStdio(McpClient):
