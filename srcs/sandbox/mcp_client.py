@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any
 
 import httpx
-from models.internal import McpSpec
+from internal import McpSpec
 
 
 class TransportMode(Enum):
@@ -241,7 +241,7 @@ def create_mcp_client(spec: McpSpec | None) -> McpClient | None:
 # =====================================================================
 # HTTP TEST of use example
 # =====================================================================
-'''def main() -> None:
+def main() -> None:
     target_url = "http://127.0.0.1:8000"
     print(f"=== Testing McpHttp on {target_url} ===")
 
@@ -326,7 +326,7 @@ def create_mcp_client(spec: McpSpec | None) -> McpClient | None:
 
 if __name__ == "__main__":
     main()
-'''
+
 
 # ================ ================== ================ #
 # ================ ================== ================ #
