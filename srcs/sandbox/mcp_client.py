@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any
 
+import httpx
 from models.internal import McpSpec
 
 
@@ -101,22 +102,58 @@ class McpClient(ABC):
 class McpHttp(McpClient):
     def __init__(self, url: str) -> None:
         super().__init__(TransportMode.HTTP)
-        self.url = url
+        self.endpoint_url: str = url.rstrip("/")
+        if not self.endpoint_url.endswith("/mcp"):
+            self.endpoint_url += "/mcp"
 
-    def send_message(
-        self,
-        message: dict[str, Any]
-    ) -> dict[str, Any] | None:
-        # TODO: not implemented yet — HTTP transport is not usable.
-        pass
+        self.session_id: str | None = None
+        self._http_client: httpx.Client | None = None
+
+    def send_message(self, message: dict[str, Any]) -> Any | None:
+        if not self._http_client:
+            raise RuntimeError("HTTP Client not connected. "
+                               "Call connect() first.")
+
+        headers = {"Content-Type": "application/json"}
+
+        if self.session_id:
+            headers["Mcp-Session-Id"] = self.session_id
+
+        response = self._http_client.post(
+            self.endpoint_url,
+            json=message,
+            headers=headers,
+        )
+        response.raise_for_status()
+
+        if not self.session_id and "mcp-session-id" in response.headers:
+            self.session_id = response.headers["mcp-session-id"]
+            print(f"[INFO] MCP Session established with ID: {self.session_id}")
+
+        if "id" in message:
+            text = response.text.strip()
+
+            if "data: " in text:
+                for line in text.splitlines():
+                    if line.startswith("data: "):
+                        raw_json = line[6:].strip()
+                        data = json.loads(raw_json)
+                        print("response: '", data, "'")
+                        return data
+
+            data = response.json()
+            print("response: '", data, "'")
+            return data
+
+        return None
 
     def connect(self) -> None:
-        # TODO: not implemented yet — HTTP transport is not usable.
-        pass
+        self._http_client = httpx.Client(timeout=30.0)
+        print(f"[INFO] Client ready for endpoint: {self.endpoint_url}")
 
     def close(self) -> None:
-        # TODO: not implemented yet — HTTP transport is not usable.
-        pass
+        if self._http_client:
+            self._http_client.close()
 
 
 class McpStdio(McpClient):
@@ -187,11 +224,101 @@ def create_mcp_client(spec: McpSpec | None) -> McpClient | None:
     raise ValueError(f"Unknown transport method: {spec.transport}")
 
 
-# ================ ============ ================ #
-# ================ ============ ================ #
-# ================ SERVEUR MOCK ================ #
-# ================ ============ ================ #
-# ================ ============ ================ #
+# =====================================================================
+# HTTP TEST of use example
+# =====================================================================
+'''def main() -> None:
+    target_url = "http://127.0.0.1:8000"
+    print(f"=== Testing McpHttp on {target_url} ===")
+
+    client = McpHttp(url=target_url)
+
+    try:
+        # Step 1: Establish HTTP Connection
+        print("\n1. Connecting...")
+        client.connect()
+
+        # Step 2: Initialize MCP Session via JSON-RPC
+        print("\n2. Sending 'initialize' message...")
+        init_message = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "test-client", "version": "1.0.0"},
+            },
+        }
+        init_res = client.send_message(init_message)
+        print(f"   Initialize response: {init_res}")
+
+        # Send initialization confirmation notification
+        # (no 'id', no response expected)
+        client.send_message(
+            {"jsonrpc": "2.0", "method": "notifications/initialized"}
+        )
+
+        # Step 3: List Available Tools
+        print("\n===================== Raw 'tools/list' =====================")
+        list_message = {"jsonrpc": "2.0", "id": 2, "method": "tools/list"}
+        tools_res = client.send_message(list_message)
+
+        tools = tools_res.get(
+            "result", {}).get("tools", []) if tools_res else []
+        print(f"\n============ {len(tools)} tool(s) formatted ============")
+        for tool in tools:
+            print(f"   - {tool.get('name')}: {tool.get('description')}")
+
+        # Step 4: Call a Tool via 'tools/call'
+        print("\n4. Sending 'tools/call' message...")
+        target_tool = next(
+            (t["name"] for t in tools if t.get("name") == "run_command"),
+            tools[0]["name"] if tools else None,
+        )
+
+        if target_tool:
+            call_message = {
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tools/call",
+                "params": {
+                    "name": target_tool,
+                    "arguments": {
+                        "command": 'echo "Echo Echa"',
+                        "workdir": "./",
+                    },
+                },
+            }
+            res = client.send_message(call_message)
+
+            print("\n============= TOOL RESPONSE =============")
+            if res and "result" in res:
+                content = res["result"].get("content", [{}])[0].get("text", "")
+                is_error = res["result"].get("isError", False)
+                print(f"isError: {is_error}")
+                print(f"Content:\n{content}")
+            else:
+                print(f"Raw response: {res}")
+
+    except Exception as e:
+        print(f"\n[ERROR] Test failed: {type(e).__name__}: {e}")
+
+    finally:
+        # Step 5: Clean Up
+        print("\n5. Closing connection...")
+        client.close()
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+# ================ ================== ================ #
+# ================ ================== ================ #
+# ================ SERVEUR MOCK STDIO ================ #
+# ================ ================== ================ #
+# ================ ================== ================ #
 
 '''
 def run_mock_server():
