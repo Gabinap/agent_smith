@@ -24,7 +24,8 @@ class LocalExecBackend:
         self.root = Path(root).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
 
-    def run(self, cmd: str, workdir: str, timeout: int) -> CommandResult:
+    def run(self, cmd: str, workdir: str, timeout: int,
+            bash: bool = False) -> CommandResult:
         """Run a shell command and return its result."""
         try:
             cwd = self._resolve(workdir)
@@ -34,6 +35,7 @@ class LocalExecBackend:
             result = subprocess.run(
                 cmd, shell=True, cwd=cwd,
                 capture_output=True, text=True, timeout=timeout,
+                executable="/bin/bash" if bash else None,
             )
         except subprocess.TimeoutExpired as e:
             return CommandResult(
