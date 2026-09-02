@@ -30,6 +30,7 @@ SAFE_BUILTINS = {
     "len": len, "list": list, "map": map, "max": max, "min": min,
     "range": range, "set": set, "str": str, "sum": sum, "tuple": tuple,
     "zip": zip, "True": True, "False": False, "None": None,
+    "SystemExit": SystemExit, "KeyboardInterrupt": KeyboardInterrupt,
 }
 
 
@@ -255,6 +256,12 @@ class Sandbox:
                 "final_answer": self.final_answer_value,
                 "finished": self.has_finished,
             })
+        except SystemExit as e:
+            # Must reach the caller of execute(), not be swallowed
+            # here — report it so the parent can re-raise it itself.
+            conn.send({"__control__": "SystemExit", "code": e.code})
+        except KeyboardInterrupt:
+            conn.send({"__control__": "KeyboardInterrupt"})
         except SyntaxError as e:
             conn.send({
                 "success": False,
@@ -335,6 +342,11 @@ class Sandbox:
 
         if parent_conn.poll():
             res_dict = parent_conn.recv()
+            control = res_dict.get("__control__")
+            if control == "SystemExit":
+                raise SystemExit(res_dict.get("code"))
+            if control == "KeyboardInterrupt":
+                raise KeyboardInterrupt()
             return SandboxResult.model_validate(res_dict)
 
         exit_code = process.exitcode
