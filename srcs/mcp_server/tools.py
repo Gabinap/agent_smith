@@ -230,8 +230,9 @@ def run_tests(
     Returns:
         Combined stdout and stderr, unmodified.
     """
-    result = backend.run(eval_script, workdir=workdir, timeout=timeout, bash=True)
-    return result.stdout + result.stderr
+    result = backend.run(eval_script, workdir=workdir, timeout=timeout,
+                         bash=True)
+    return f"{result.stdout}  {result.stderr} exit_code:{result.exit_code}"
 
 
 def get_patch(backend: ExecBackend) -> str:
