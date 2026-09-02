@@ -3,6 +3,7 @@ import multiprocessing as mp
 import os
 import resource
 import socket
+import sys
 import types
 from collections.abc import Callable
 from multiprocessing.connection import Connection
@@ -151,7 +152,23 @@ class Sandbox:
         sep = kwargs.get("sep", " ")
         end = kwargs.get("end", "\n")
         text = sep.join(str(a) for a in args) + end
-        self.stdout.append(text)
+
+        MAX_STDOUT_BYTES = 5 * 1024
+        current_bytes = sum(len(t.encode("utf-8")) for t in self.stdout)
+
+        if current_bytes >= MAX_STDOUT_BYTES:
+            return
+
+        text_bytes = text.encode("utf-8")
+        if current_bytes + len(text_bytes) <= MAX_STDOUT_BYTES:
+            self.stdout.append(text)
+        
+        else:
+            remaining_bytes = MAX_STDOUT_BYTES - current_bytes
+            
+            truncated_text = text_bytes[:remaining_bytes].decode("utf-8", errors="ignore")
+            self.stdout.append(truncated_text)
+            self.stdout.append("\n[... stdout truncated]\n")
 
     def _final_answer_tool(self, answer: str) -> str:
         """
