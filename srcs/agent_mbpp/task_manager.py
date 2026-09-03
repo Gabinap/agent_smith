@@ -3,7 +3,7 @@
 from models.tasks import MBPPTaskInput
 
 
-class Task():
+class Task:
     """Hold the MBPP task loaded from a JSON file."""
 
     def __init__(self, input_file: str) -> None:

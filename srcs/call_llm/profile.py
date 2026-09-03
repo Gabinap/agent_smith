@@ -1,10 +1,11 @@
 """Interactive selection of an LLM provider and model."""
 
-import questionary
 import json
 
+import questionary
 
-class Profile():
+
+class Profile:
     """Resolve which LLM provider, model, and API key to use."""
 
     def __init__(self, mode, provider_url, model_name):
