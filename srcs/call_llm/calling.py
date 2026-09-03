@@ -41,6 +41,7 @@ class LLM:
                         "content": self._system_content
                     },
                 ]
+        print(self._system_content)
 
     def _load_llm(self):
         try:
@@ -99,7 +100,6 @@ class LLM:
                 completion = self.client.chat.completions.create(
                                 model=self.model_name,
                                 messages=self.messages,
-                                tools=self.tools
                             )
             else:
                 completion = self.client.chat.completions.create(
