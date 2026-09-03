@@ -115,6 +115,7 @@ class McpHttp(McpClient):
 
         self.session_id: str | None = None
         self._http_client: httpx.Client | None = None
+        self.connect()
 
     def send_message(self, message: dict[str, Any]) -> Any | None:
         """
