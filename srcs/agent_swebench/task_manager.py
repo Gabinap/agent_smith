@@ -1,7 +1,7 @@
 from models.tasks import SWEBenchTaskInput
 
 
-class Task():
+class Task:
     def __init__(self, input_file: str):
         """Initialiaze the task from the json file.
 

@@ -1,8 +1,8 @@
-from rich.console import Console, Group
-from rich.text import Text
-from rich.syntax import Syntax
-from rich.panel import Panel
 from models.tasks import MBPPTaskInput, SWEBenchTaskInput
+from rich.console import Console, Group
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.text import Text
 
 
 def display_mbpp_task(console: Console, task: MBPPTaskInput):

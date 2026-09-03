@@ -1,7 +1,7 @@
 """MCP tool implementations: file, search, and execute operations."""
 
-import shlex
 import re
+import shlex
 
 from srcs.models import ExecBackend
 

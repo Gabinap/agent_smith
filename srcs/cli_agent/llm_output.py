@@ -1,9 +1,11 @@
-from rich.table import Table
-from rich.console import Console, Group
-from rich.text import Text
-from rich.syntax import Syntax
-from rich.panel import Panel
 import json
+
+from rich.console import Console, Group
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.table import Table
+from rich.text import Text
+
 
 def display_llm_output(console: Console, llm_output_data: dict, py_code: str):
     table = Table(padding=1).grid(padding=(0, 2))

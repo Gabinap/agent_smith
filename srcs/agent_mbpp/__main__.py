@@ -1,12 +1,11 @@
 """CLI entry point for the MBPP agent: `python -m agent_mbpp`."""
 
-from agent_mbpp.agent import Mbpp
-from rich.console import Console
+import argparse
 
 import cli_agent
+from agent_mbpp.agent import Mbpp
 from call_llm.profile import Profile
-
-import argparse
+from rich.console import Console
 
 
 def main() -> None:

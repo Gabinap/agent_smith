@@ -1,8 +1,8 @@
-from rich.console import Console, Group
-from rich.text import Text
-from rich.syntax import Syntax
-from rich.panel import Panel
 from models.metrics import SolutionOutput
+from rich.console import Console, Group
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.text import Text
 
 
 def display_solution(console:Console, output: SolutionOutput):
@@ -13,4 +13,4 @@ def display_solution(console:Console, output: SolutionOutput):
             Text("\nSolution:", style="bold white", end="\n\n"),
             Syntax(output.solution, "python", theme="stata-dark"),
         )
-    console.print(Panel(content, title=f"[bold green3]Solution output", border_style="green3"))
+    console.print(Panel(content, title="[bold green3]Solution output", border_style="green3"))

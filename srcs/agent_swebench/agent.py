@@ -1,24 +1,23 @@
-from call_llm.calling import LLM
-from models.metrics import StepMetrics, SolutionOutput
-from models.tasks import SWEBenchTaskInput
-from sandbox.sandbox import Sandbox, SandboxConfig
-from sandbox.mcp_client import create_mcp_client
-from models import McpSpec
-from typing import Any, Dict
-from openai.types.chat.chat_completion_message_function_tool_call import (
-    ChatCompletionMessageFunctionToolCall
-)
-
-from rich.console import Console
-import cli_agent
-import re
-import datetime
-import textwrap
-import json
 import ast
+import datetime
+import json
+import re
+import textwrap
+
+import cli_agent
+from call_llm.calling import LLM
+from models import McpSpec
+from models.metrics import SolutionOutput, StepMetrics
+from models.tasks import SWEBenchTaskInput
+from openai.types.chat.chat_completion_message_function_tool_call import (
+    ChatCompletionMessageFunctionToolCall,
+)
+from rich.console import Console
+from sandbox.mcp_client import create_mcp_client
+from sandbox.sandbox import Sandbox, SandboxConfig
 
 
-class SWEBench():
+class SWEBench:
     def __init__(
         self,
         task: SWEBenchTaskInput,
@@ -122,7 +121,7 @@ class SWEBench():
         fct_call = tool_call.function
         args = []
         for name, val in json.loads(fct_call.arguments).items():
-            args.append(f"{name}={repr(val)}")
+            args.append(f"{name}={val!r}")
         args_txt = ", ".join(args)
         py_code = f"result = {fct_call.name}({args_txt})\nprint(result)"
         return py_code
