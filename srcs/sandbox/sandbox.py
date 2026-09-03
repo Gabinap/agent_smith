@@ -159,7 +159,6 @@ class Sandbox:
 
         if current_bytes >= MAX_STDOUT_BYTES:
             return
-
         text_bytes = text.encode("utf-8")
         if current_bytes + len(text_bytes) <= MAX_STDOUT_BYTES:
             self.stdout.append(text)
@@ -170,6 +169,11 @@ class Sandbox:
             truncated_text = text_bytes[:remaining_bytes].decode("utf-8", errors="ignore")
             self.stdout.append(truncated_text)
             self.stdout.append("\n[... stdout truncated]\n")
+            final_part = text[-20:]
+            if "exit_code: 0" in final_part or "exit_code:0" in final_part:
+                self.stdout.append("\nexit_code: 0")
+            if "exit_code: 1" in final_part or "exit_code:1" in final_part:
+                self.stdout.append("\nexit_code: 1")
 
     def _final_answer_tool(self, answer: str) -> str:
         """
