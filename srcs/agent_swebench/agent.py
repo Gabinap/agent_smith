@@ -49,10 +49,15 @@ class SWEBench():
         self.total_requests = 0
         self.console = console
         spec = McpSpec(transport="stdio", command="python3 ../mcp_tools_swebench.py")
+        # spec = McpSpec(transport="http", url="http://localhost:8000")
         client = create_mcp_client(spec)
         self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
+        self.py_code = "result = run_tests()\nprint(result)"
+        result = self.sandbox.execute(self.py_code)
+        print(result)
+        # print(self.sandbox.mcp_client.call_tool("run_tests", {}))
+
         self.max_iteration = max_iteration
-        print(self._system_content())
         self.llm = LLM(self.api_url, self.model_name, self.env_key,
                        self._system_content(), self.sandbox.list_tools())
 
@@ -79,28 +84,28 @@ class SWEBench():
             cli_agent.display_llm_output(self.console,
                                          self.llm_output_data,
                                          llm_answer)
-        
         self.sandbox_data = self.sandbox.execute(self.py_code)
-        
-
         try:
             output = ast.literal_eval(self.sandbox_data.output)
-            new_output = output.get('structuredContent').get('result')
-            
+            new_output:str = output.get('structuredContent').get('result')
+
             if "run_tests()" in self.py_code:
-                cli_agent.display_sandbox(self.console,
-                    self.sandbox_data,
-                    new_output)
-                match = re.search(r"== tests finished: (.+?) ==", output)
-                if match:
-                    result = match.group(1)
-                    self.llm.messages.append({
-                                        "role": "user",
-                                        "content": f"test output: {result}"
-                            })
-                    return
-                    
-            
+
+                all = new_output.split("exit_code:")
+                result: str = all[-1]
+                if int(result.strip()) == 0:
+                    message = "Test Failed"
+                else:
+                    message = "Test Passed"
+                self.llm.messages.append({
+                    "role": "user",
+                    "content": message
+                })
+                cli_agent.display_sandbox_tests(self.console,
+                    new_output,
+                    message,
+                    self.py_code)
+                return
             new_lines = [i for i, c in enumerate(new_output) if c == '\n']
             max_lines = 20
             if len(new_lines) > max_lines:
@@ -114,8 +119,8 @@ class SWEBench():
                     "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nTool result :\n{self.sandbox_data.output}"
         })
         cli_agent.display_sandbox(self.console,
-                    self.sandbox_data,
-                    self.py_code)
+                                  self.sandbox_data,
+                                  self.py_code)
 
     def python_block_gen(self,
                          tool_call: ChatCompletionMessageFunctionToolCall):
@@ -158,6 +163,9 @@ class SWEBench():
 
     def get_prompt(self):
         return f"""
+
+{self.task.hints_text}
+
 Here is the problem
 {self.task.problem_statement}
 
@@ -209,85 +217,54 @@ Here is the problem
         )
 
     def _system_content(self) -> str:
-        return textwrap.dedent("""
-        You are an expert Python software engineer resolving bugs step by step.
+        list_tools = self.sandbox.list_tools()
+        tools = build_tool_docs(list_tools)
+        return textwrap.dedent(f"""
+You are an expert Python software engineer tasked with troubleshooting a bug step by step.
 
-        Your goal is to fixes the bug.
-        
-        If you think that you solve the bug, run the tool 'run_tests()',
-        if succes, use final_answer(get_patch()) to finish your work.
-        
-        When you call a tool, always explicitly specify the values of all arguments, never rely on their default values.
-        
-        Use ONLY the tools, NO import, No install.
+# Objective
+Identify and fix the bug in the provided code.
 
+# Rules
+1. You have only to communicate by writing Python code in a single ```python ``` block each turn.
+2. Only one tool call per code block (never multiple in a row).
+3. You may ONLY use the tools listed below—no other actions are permitted.
+4. After each call, the sandbox runs your code and returns the output (what was printed using `print`). Use this output to decide on the next step.
+5. Explore and understand the code before modifying it (list the files, read the files).
+6. Once you think you have fixed the bug, call `run_tests()` to verify that the fix is valid.
+7. If the tests pass, finish by calling `final_answer(get_patch())`.
+
+# Expected Format
+Always return EXACTLY one block of Python code containing a SINGLE tool call, for example:
+
+​```python
+result = list_files(directory=“.”, pattern="*")
+print(result)
+​```
+
+# Available Tools
+{tools}
 """)
 
 
-# JSON_TO_PY = {
-#     "string": "str",
-#     "integer": "int",
-#     "number": "float",
-#     "boolean": "bool",
-#     "array": "list",
-#     "object": "dict",
-#     "null": "None",
-# }
-
-
-# def get_type(arg: Dict[str, Any]) -> str:
-#     """Résout une propriété JSON Schema en annotation de type Python."""
-#     if "anyOf" in arg:
-#         multi_types = [get_type(p) for p in arg["anyOf"]]
-#         non_null = [type for type in multi_types if type != "None"]
-#         if "None" in multi_types:
-#             return f"Optional[{non_null[0]}]" if len(non_null) == 1 else f"Optional[Union[{', '.join(non_null)}]]"
-#         return f"Union[{', '.join(multi_types)}]"
-#     return JSON_TO_PY.get(arg.get("type", "Any"), "Any")
-
-
-# def format_default(value: Any) -> str:
-#     """Formate une valeur par défaut JSON en littéral Python."""
-#     if value is None or value == "null":
-#         return "None"
-#     if isinstance(value, bool):
-#         return str(value)
-#     if isinstance(value, str):
-#         return repr(value)
-#     return repr(value)
-
-
-# def mcp_tool_to_prototype(tool: Dict[str, Any]) -> str:
-#     name = tool["name"]
-#     description = tool.get("description", "")
-#     schema = tool["inputSchema"]
-#     args = schema.get("properties", {})
-#     required = set(schema.get("required", []))
-
-#     ordered = [k for k in args if k in required] + [k for k in args if k not in required]
-
-#     params_src = []
-#     needs_optional = needs_union = False
-
-
-#     for key in ordered:
-#         prop = args[key]
-#         py_type = get_type(prop)
-#         needs_optional |= py_type.startswith("Optional")
-#         needs_union |= "Union[" in py_type
-
-#         if key in required:
-#             params_src.append(f"{key}: {py_type}")
-#         else:
-#             params_src.append(f"{key}: {py_type} = {format_default(prop.get('default'))}")
-
-
-#     out_props = tool.get("outputSchema", {}).get("properties", {})
-#     return_type = get_type(out_props["result"]) if list(out_props) == ["result"] else "dict"
-
-#     params_joined = ", ".join(params_src)
-#     return (
-#         f"def {name}({params_joined}) -> {return_type}:\n"
-#         f'    """{description}\n'
-#         f'    """\n'
-#     )
+def build_tool_docs(list_tools) -> str:
+    schemas = list_tools
+    lines: list[str] = []
+    for schema in schemas:
+        name = schema.get("name", "")
+        description = schema.get("description", "")
+        props = schema.get("inputSchema", {}).get("properties", {})
+        params = ", ".join(
+            f"{k}: {v.get('type', 'str')}"
+            for k, v in props.items()
+        )
+        line_text = (
+            f"- {name}({params}): "
+            f"{description}"
+        )
+        lines.append(line_text)
+    lines.append(
+        "- final_answer(answer): Submit the final solution (patch string) "
+        "and stop"
+    )
+    return "\n".join(lines)
