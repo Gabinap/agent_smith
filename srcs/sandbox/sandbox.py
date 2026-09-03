@@ -159,9 +159,9 @@ class Sandbox:
             Access recursivly to each part of the result to find text to delete diff lines.
         """
         if isinstance(data, dict):
-            return {k: self.process_response(v) for k, v in data.items()}
+            return {k: self._process_response(v) for k, v in data.items()}
         elif isinstance(data, list):
-            return [self.process_response(item) for item in data]
+            return [self._process_response(item) for item in data]
         elif isinstance(data, str):
             return self._clean_git_diff(data)
         return data
