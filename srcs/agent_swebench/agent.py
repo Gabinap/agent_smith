@@ -16,7 +16,7 @@ from rich.console import Console
 from sandbox.mcp_client import create_mcp_client
 from sandbox.sandbox import Sandbox, SandboxConfig
 from .prompt import get_prompt, system_content
-from .code_gen import extract_python, python_block_gen
+from .code_gen import extract_python, python_block_gen, clean_run_tests
 
 
 class SWEBench:
@@ -99,10 +99,10 @@ class SWEBench:
                     "role": "user",
                     "content": message
                 })
+                clean_output = clean_run_tests(new_output)
                 cli_agent.display_sandbox_tests(self.console,
-                    new_output,
-                    message,
-                    self.py_code)
+                    clean_output,
+                    message)
                 return
             new_lines = [i for i, c in enumerate(new_output) if c == '\n']
             max_lines = 30
