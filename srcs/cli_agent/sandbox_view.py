@@ -26,14 +26,13 @@ def display_sandbox(console: Console, sandbox_data: SandboxResult,
 
 
 def display_sandbox_tests(console: Console, output: str,
-                          result: str, py_code: str):
+                          result: str):
+    
     sandbox_cli = Group(
-        Text("Input:", style="bold white", end="\n\n"),
-        Syntax(py_code, "python", theme="stata-dark"),
         Text("\nOutput:", style="bold white", end="\n\n"),
         Syntax(output, "python", theme="stata-dark"),
         Text("\nResult:", style="bold white", end="\n\n"),
         Syntax(result, "python", theme="stata-dark"),
     )
-    console.print(Panel(sandbox_cli, title="[bold orange1]SANDBOX output",
-                        border_style="orange1"))
+    console.print(Panel(sandbox_cli, title="[bold orange_red1]SANDBOX Run tests",
+                        border_style="orange_red1"))

@@ -17,3 +17,9 @@ def python_block_gen(tool_call: ChatCompletionMessageFunctionToolCall) -> str:
     args_txt = ", ".join(args)
     py_code = f"result = {fct_call.name}({args_txt})\nprint(result)"
     return py_code
+
+def clean_run_tests(text: str) -> str:
+    pattern = re.compile(r'^\s*(\+|export |building extension|Link requires)')
+    lines = text.splitlines()
+    filtered = [line for line in lines if not pattern.match(line)]
+    return "\n".join(filtered)
