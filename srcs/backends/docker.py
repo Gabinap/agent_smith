@@ -1,12 +1,15 @@
 """Docker implementation of ExecBackend — no host involved."""
 
 from __future__ import annotations
+
 import atexit
 import io
 import posixpath
 import tarfile
 import time
+
 import docker
+
 from srcs.models import CommandResult
 
 

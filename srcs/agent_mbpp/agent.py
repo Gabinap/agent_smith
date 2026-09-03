@@ -1,18 +1,19 @@
 """Autonomous agent loop that solves a single MBPP task."""
 
-from .task_manager import Task
-from call_llm.calling import LLM
-from models.metrics import StepMetrics, SolutionOutput
-from sandbox.sandbox import Sandbox
-
-from rich.console import Console
-import cli_agent
-import re
 import datetime
+import re
 import textwrap
 
+import cli_agent
+from call_llm.calling import LLM
+from models.metrics import SolutionOutput, StepMetrics
+from rich.console import Console
+from sandbox.sandbox import Sandbox
 
-class Mbpp():
+from .task_manager import Task
+
+
+class Mbpp:
     """Run the generate/execute loop for one MBPP task."""
 
     def __init__(

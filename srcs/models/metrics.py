@@ -7,7 +7,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-__all__ = ["StepMetrics", "SolutionOutput"]
+__all__ = ["SolutionOutput", "StepMetrics"]
 
 
 class StepMetrics(BaseModel):

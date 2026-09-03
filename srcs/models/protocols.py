@@ -6,11 +6,10 @@ from __future__ import annotations
 from typing import Protocol
 
 from .internal import CommandResult, LLMResponse, McpSpec
-from .tasks import TaskInput
 from .sandbox import SandboxConfig
+from .tasks import TaskInput
 
-
-__all__ = ["ExecBackend", "LLMClient", "BenchmarkAdapter"]
+__all__ = ["BenchmarkAdapter", "ExecBackend", "LLMClient"]
 
 
 # TODO: may adapt timeout

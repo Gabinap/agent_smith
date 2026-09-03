@@ -1,8 +1,9 @@
-from openai import OpenAI, RateLimitError
 import os
-from dotenv import load_dotenv
-import time
 import textwrap
+import time
+
+from dotenv import load_dotenv
+from openai import OpenAI, RateLimitError
 
 
 class LLM:
