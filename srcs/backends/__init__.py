@@ -1,6 +1,6 @@
 """Concrete ExecBackend implementations."""
 
-from .local import LocalExecBackend
 from .docker import DockerExecBackend
+from .local import LocalExecBackend
 
-__all__ = ["LocalExecBackend", "DockerExecBackend"]
+__all__ = ["DockerExecBackend", "LocalExecBackend"]
