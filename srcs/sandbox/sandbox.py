@@ -180,7 +180,6 @@ class Sandbox:
         # Formatage du texte final
         text = sep.join(str(a) for a in cleaned_args) + end
 
-        print(text, end="")
         self.stdout.append(text)
 
     def _final_answer_tool(self, answer: str) -> str:
@@ -239,7 +238,9 @@ class Sandbox:
                     if self.mcp_client is None:
                         return None
                     res = self.mcp_client.call_tool(name, kwargs)
-                    return res.get("result") if res else None
+                    result = res.get("result", {}) if res else {}
+                    content = result.get("content", [])
+                    return content[0].get("text", "") if content else ""
                 return tool_wrapper
 
             self.namespace[tool_name] = make_tool_wrapper(tool_name)
