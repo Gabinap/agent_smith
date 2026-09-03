@@ -1,22 +1,18 @@
-import ast
+
 import datetime
 import json
 import re
-
-
 import cli_agent
 from call_llm.calling import LLM
 from models import McpSpec
 from models.metrics import SolutionOutput, StepMetrics
 from models.tasks import SWEBenchTaskInput
-from openai.types.chat.chat_completion_message_function_tool_call import (
-    ChatCompletionMessageFunctionToolCall,
-)
+
 from rich.console import Console
 from sandbox.mcp_client import create_mcp_client
 from sandbox.sandbox import Sandbox, SandboxConfig
 from .prompt import get_prompt, system_content
-from .code_gen import extract_python, python_block_gen, clean_run_tests
+from .code_gen import clean_run_tests, llm_output_code, truncate_output
 
 
 class SWEBench:
@@ -54,13 +50,14 @@ class SWEBench:
         client = create_mcp_client(spec)
         self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
 
-        # self.py_code = "result = run_tests()\nprint(result)"
+        # self.py_code = "result = get_patch()\nprint(result)"
         # result = self.sandbox.execute(self.py_code)
+        # print(result)
         # output = ast.literal_eval(result.output)
         # print("\n\n\n\n")
         # print(output.get('content')[0].get('text'))
         # print("\n\n\n\n")
-        # raise
+
 
         self.max_iteration = max_iteration
         list_tools = self.sandbox.list_tools()
@@ -79,39 +76,40 @@ class SWEBench:
             self.llm_output_data = self.llm.call(self.prompt)
         self.total_requests += 1
 
-        self.py_code = self.get_python_exec(self.llm_output_data)
+        self.py_code = llm_output_code(self.console, self.llm_output_data)
 
         self.sandbox_data = self.sandbox.execute(self.py_code)
-        try:
-            output = ast.literal_eval(self.sandbox_data.output)
-            new_output: str = output.get('structuredContent').get('result')
 
-            if "run_tests()" in self.py_code:
-                trace = output.get('content')[0].get('text')
+        if self.sandbox_data.error or not self.sandbox_data:
+            self.llm.messages.append({
+                                "role": "user",
+                                "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nTool result :\n{self.sandbox_data.output}"
+                    })
+            cli_agent.display_sandbox(self.console,
+                                        self.sandbox_data,
+                                        self.py_code)
+            return
+        
 
-                if '[FAIL]' in trace or 'FAILED' in trace:
-                    message = "Test Failed"
-                else:
-                    # [OK], OK
-                    message = "Test Passed"
+        if re.search(r'^[^#\n]*\brun_tests\s*\(', self.py_code, re.MULTILINE):
 
-                self.llm.messages.append({
-                    "role": "user",
-                    "content": message
-                })
-                clean_output = clean_run_tests(new_output)
-                cli_agent.display_sandbox_tests(self.console,
-                    clean_output,
-                    message)
-                return
-            new_lines = [i for i, c in enumerate(new_output) if c == '\n']
-            max_lines = 30
-            if len(new_lines) > max_lines:
-                new_output = new_output[:new_lines[max_lines]]
-                new_output += f"\n({len(new_lines)-max_lines} Remaining Lines...)"
-            self.sandbox_data.output = new_output
-        except Exception:
-            pass
+            if '[FAIL]' in self.sandbox_data.output or 'FAILED' in self.sandbox_data.output:
+                message = "Test Failed"
+            else:
+                # [OK], OK
+                message = "Test Passed"
+
+            self.llm.messages.append({
+                "role": "user",
+                "content": message
+            })
+            cli_agent.display_sandbox_tests(self.console,
+                clean_run_tests(self.sandbox_data.output),
+                message)
+            return
+        
+        self.sandbox_data.output = truncate_output(self.sandbox_data.output, max_lines=30)
+
         self.llm.messages.append({
                     "role": "user",
                     "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nTool result :\n{self.sandbox_data.output}"
@@ -120,19 +118,7 @@ class SWEBench:
                                   self.sandbox_data,
                                   self.py_code)
 
-    def get_python_exec(self, llm_output_data):
-        if llm_output_data.get("tool_calls"):
-            tool_call = llm_output_data.get("tool_calls")
-            cli_agent.display_llm_tool_call(self.console, tool_call)
-            py_code = python_block_gen(tool_call)
-        else:
-            llm_answer = llm_output_data.get("answer")
-            cli_agent.display_llm_output(self.console,
-                                         llm_output_data,
-                                         llm_answer)
-            match = extract_python(llm_answer)
-            py_code = match.group(1) if match else None
-        return py_code
+
 
     def solve_task(self):
         while (True):
@@ -162,6 +148,7 @@ class SWEBench:
         # cli_agent.display_solution(self.console, output)
         # self.save_output(output)
         print("ENDDDD")
+        print(self.sandbox_data.final_answer)
 
 
 
