@@ -1,7 +1,7 @@
-from rich.panel import Panel
-from rich.console import Console
-from rich.text import Text
 import questionary
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 
 
 def display_exit(console: Console, llm_output_data: dict, system_prompt):

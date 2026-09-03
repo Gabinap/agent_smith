@@ -3,6 +3,7 @@ import multiprocessing as mp
 import os
 import resource
 import socket
+import sys
 import types
 from collections.abc import Callable
 from multiprocessing.connection import Connection
@@ -30,6 +31,7 @@ SAFE_BUILTINS = {
     "len": len, "list": list, "map": map, "max": max, "min": min,
     "range": range, "set": set, "str": str, "sum": sum, "tuple": tuple,
     "zip": zip, "True": True, "False": False, "None": None,
+    "SystemExit": SystemExit, "KeyboardInterrupt": KeyboardInterrupt,
 }
 
 
@@ -151,7 +153,23 @@ class Sandbox:
         sep = kwargs.get("sep", " ")
         end = kwargs.get("end", "\n")
         text = sep.join(str(a) for a in args) + end
-        self.stdout.append(text)
+
+        MAX_STDOUT_BYTES = 5 * 1024
+        current_bytes = sum(len(t.encode("utf-8")) for t in self.stdout)
+
+        if current_bytes >= MAX_STDOUT_BYTES:
+            return
+
+        text_bytes = text.encode("utf-8")
+        if current_bytes + len(text_bytes) <= MAX_STDOUT_BYTES:
+            self.stdout.append(text)
+        
+        else:
+            remaining_bytes = MAX_STDOUT_BYTES - current_bytes
+            
+            truncated_text = text_bytes[:remaining_bytes].decode("utf-8", errors="ignore")
+            self.stdout.append(truncated_text)
+            self.stdout.append("\n[... stdout truncated]\n")
 
     def _final_answer_tool(self, answer: str) -> str:
         """
@@ -255,6 +273,12 @@ class Sandbox:
                 "final_answer": self.final_answer_value,
                 "finished": self.has_finished,
             })
+        except SystemExit as e:
+            # Must reach the caller of execute(), not be swallowed
+            # here — report it so the parent can re-raise it itself.
+            conn.send({"__control__": "SystemExit", "code": e.code})
+        except KeyboardInterrupt:
+            conn.send({"__control__": "KeyboardInterrupt"})
         except SyntaxError as e:
             conn.send({
                 "success": False,
@@ -335,6 +359,11 @@ class Sandbox:
 
         if parent_conn.poll():
             res_dict = parent_conn.recv()
+            control = res_dict.get("__control__")
+            if control == "SystemExit":
+                raise SystemExit(res_dict.get("code"))
+            if control == "KeyboardInterrupt":
+                raise KeyboardInterrupt()
             return SandboxResult.model_validate(res_dict)
 
         exit_code = process.exitcode

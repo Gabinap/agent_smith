@@ -1,11 +1,11 @@
-from agent_swebench.agent import SWEBench
-from rich.console import Console
-from .task_manager import Task
-import cli_agent
-from call_llm.profile import Profile
-
-
 import argparse
+
+import cli_agent
+from agent_swebench.agent import SWEBench
+from call_llm.profile import Profile
+from rich.console import Console
+
+from .task_manager import Task
 
 
 def main() -> None:

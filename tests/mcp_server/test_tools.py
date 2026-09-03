@@ -127,7 +127,8 @@ def test_find_references_invalid_line_returns_error(backend):
 # --- Execute tools ---
 
 def test_run_tests_success_has_empty_output(backend):
-    assert tools.run_tests(backend, "true", workdir=str(backend.root)) == ""
+    result = tools.run_tests(backend, "true", workdir=str(backend.root))
+    assert result.strip() == "exit_code:0"
 
 
 def test_run_tests_captures_stdout_and_stderr(backend):

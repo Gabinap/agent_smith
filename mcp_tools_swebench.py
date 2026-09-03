@@ -1,6 +1,7 @@
 """MCP server exposing the SWE-bench task's tools."""
 
 import os
+import signal
 import sys
 
 from mcp.server.mcpserver import MCPServer
@@ -83,19 +84,29 @@ def run_command(command: str, workdir: str) -> str:
     return tools.run_command(backend, command, workdir)
 
 
+def _handle_sigterm(signum: int, frame: object) -> None:
+    """Turn SIGTERM into a normal interpreter shutdown, so the
+    atexit-registered DockerExecBackend cleanup still runs instead
+    of the container being left orphaned. The exam harness kills the
+    agent's process tree with SIGTERM then SIGKILL on timeout — a
+    raw SIGTERM has no default Python handler and would otherwise
+    skip atexit entirely."""
+    sys.exit(143)  # 128 + SIGTERM, conventional exit code
+
+
 def main() -> None:
     """Load the task, pull/start the Docker backend, and start
     serving (blocks until the client disconnects) — kept out of
     module scope so importing this file never touches SWE_TASK_FILE
     or pulls/starts a container."""
+    signal.signal(signal.SIGTERM, _handle_sigterm)
+
     global task, backend
     with open(os.environ["SWE_TASK_FILE"]) as f:
         task = SWEBenchTaskInput.model_validate_json(f.read())
 
-    # /testbed is SWE-bench's conventional checkout path inside the
-    # image — the repo is already there, pre-baked at the buggy
-    # commit. Also matches SandboxConfig.allowed_directories' default.
-    backend = DockerExecBackend(task.docker_image, root="/testbed")
+    root = os.environ.get("TESTBED_PATH", "/testbed")
+    backend = DockerExecBackend(task.docker_image, root=root)
 
     transport = "streamable-http" if "--http" in sys.argv else "stdio"
     mcp.run(transport=transport)
