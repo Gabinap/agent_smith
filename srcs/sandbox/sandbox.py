@@ -1,9 +1,9 @@
 import builtins
 import multiprocessing as mp
 import os
+import re
 import resource
 import socket
-import sys
 import types
 from collections.abc import Callable
 from multiprocessing.connection import Connection
@@ -140,40 +140,48 @@ class Sandbox:
             )
         return builtins.open(file, mode, *args, **kwargs)
 
+    @staticmethod
+    def _clean_git_diff(text: str) -> str:
+        """delete unwanted lines (diff --git, old mode, new mode, etc.) and reformate."""
+        if not isinstance(text, str):
+            return text
+
+        pattern = r"(?:diff --git|old mode|new mode|sympy/[^\n\r]*?b/sympy/[^\n\r]*|nold mode)[^\n\r]*(\\n|\r?\n)?"
+        cleaned = re.sub(pattern, '', text)
+
+        if r'\n' in cleaned:
+            cleaned = cleaned.replace(r'\n', '\n')
+
+        return cleaned.strip()
+
+    def _process_response(self, data: Any) -> Any:
+        """
+            Access recursivly to each part of the result to find text to delete diff lines.
+        """
+        if isinstance(data, dict):
+            return {k: self.process_response(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self.process_response(item) for item in data]
+        elif isinstance(data, str):
+            return self._clean_git_diff(data)
+        return data
+
     def _custom_print(self, *args: Any, **kwargs: Any) -> None:
         """
         Rewriting the function print for the agent to capture
         the standard output and not printing it in the terminal
-        Args:
-            *args: other arguments that can be needed by open
-            **kwargs: other arguments that can be needed by open
-        Returns:
-            Any: the printed variable from the agent code
         """
         sep = kwargs.get("sep", " ")
         end = kwargs.get("end", "\n")
-        text = sep.join(str(a) for a in args) + end
 
-        MAX_STDOUT_BYTES = 5 * 1024
-        current_bytes = sum(len(t.encode("utf-8")) for t in self.stdout)
+        # Nettoyage des arguments (qu'il s'agisse de chaînes, dicts ou listes)
+        cleaned_args = [self._process_response(a) for a in args]
 
-        if current_bytes >= MAX_STDOUT_BYTES:
-            return
-        text_bytes = text.encode("utf-8")
-        if current_bytes + len(text_bytes) <= MAX_STDOUT_BYTES:
-            self.stdout.append(text)
-        
-        else:
-            remaining_bytes = MAX_STDOUT_BYTES - current_bytes
-            
-            truncated_text = text_bytes[:remaining_bytes].decode("utf-8", errors="ignore")
-            self.stdout.append(truncated_text)
-            self.stdout.append("\n[... stdout truncated]\n")
-            final_part = text[-20:]
-            if "exit_code: 0" in final_part or "exit_code:0" in final_part:
-                self.stdout.append("\nexit_code: 0")
-            if "exit_code: 1" in final_part or "exit_code:1" in final_part:
-                self.stdout.append("\nexit_code: 1")
+        # Formatage du texte final
+        text = sep.join(str(a) for a in cleaned_args) + end
+
+        print(text, end="")
+        self.stdout.append(text)
 
     def _final_answer_tool(self, answer: str) -> str:
         """
