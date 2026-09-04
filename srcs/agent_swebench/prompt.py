@@ -17,7 +17,7 @@ def system_content(list_tools: list[dict[str, Any]]) -> str:
 You are an expert Python software engineer tasked with troubleshooting a bug step by step.
 
 # Objective
-Identify and fix the bug in the provided code.
+Identify and fix the bug in the provided code, keeping in mind the hint, if there is one.
 
 # Rules
 1. You have only to communicate by writing Python code in a single ```python ``` block each turn.
