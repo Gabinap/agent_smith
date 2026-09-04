@@ -1,161 +1,156 @@
+"""The link between an agent and an OpenAI-compatible chat API."""
+
+import datetime
+import json
 import os
 import textwrap
 import time
+from typing import Any
 
 from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError
+from openai.types.chat import ChatCompletion
+
+RETRY_PROMPT = textwrap.dedent("""
+    The previous code was wrong
+    Errors: {error}
+    Final answer: {final_answer}
+
+    Adjust your code to solve the coding problem
+    """)
 
 
 class LLM:
-    """
-        The link between agent and api
-    """
-    def __init__(self, api_url: str, model_name: str, env_key: str,
-                 system_content: str, tools):
-        """Initialise the llm Api
+    """Hold one conversation with the model and its API keys."""
+
+    def __init__(self, api_url: str, model_name: str, env_keys: list[str],
+                 system_content: str, tools: Any = None) -> None:
+        """Resolve the API keys and open the chat with its system prompt.
+
         Args:
-            api_url (str): Url of the providers
-            model_name (str): name of the model
+            api_url: Base url of the provider.
+            model_name: Name of the model to call.
+            env_keys: Names of the .env variables holding the API keys.
+            system_content: System prompt opening the conversation.
+            tools: Unused, kept until agent_swebench stops passing it.
         """
         self.api_url = api_url
         self.model_name = model_name
-        self._api_key = self._get_from_env(env_key)
-
-        self.client = self._load_llm()
-
-        self._previous_interaction = None
-        self.sandbox_output = None
+        self.log_file: str | None = "llm_responses.jsonl"
+        self.sandbox_output: Any = None
         self._system_content = system_content
-        self.tools = []
-        for tool in tools:
-            self.tools.append({
-                "type": "function",
-                "function": {
-                    "name": tool["name"],
-                    "description": tool.get("description", ""),
-                    "parameters": tool["inputSchema"],
-                }
-            })
-        self.messages = [
-                    {
-                        "role": "system",
-                        "content": self._system_content
-                    },
-                ]
-        print(self._system_content)
+        self._api_keys = self._load_keys(env_keys)
+        self._key_index = 0
+        self.client = self._load_llm()
+        self.messages: list[Any] = [
+            {"role": "system", "content": system_content},
+        ]
 
-    def _load_llm(self):
-        try:
-            return OpenAI(
-                api_key=self._api_key,
-                base_url=self.api_url,
-                timeout=120.0
-            )
-        except Exception:
-            raise ValueError("Failed to load LLM, invalid URL or API key")
-
-    def _get_from_env(self, name: str) -> str:
-        """Load the .env
-
-        Args:
-            name (str): key to get in the .env
-
-        Returns:
-            str: value of the key.
-        """
+    def _load_keys(self, env_keys: list[str]) -> list[str]:
+        """Return the API keys the .env defines among `env_keys`."""
         load_dotenv()
-        return os.getenv(name)
+        keys = [key for name in env_keys if (key := os.getenv(name))]
+        if not keys:
+            raise ValueError(
+                f"No API key found in .env for: {', '.join(env_keys)}")
+        return keys
 
-    def save_response(self, log_file: str, completion: str):
-        """Save the LLM output in a Json file.
+    def _load_llm(self) -> OpenAI:
+        """Return a client bound to the currently selected API key."""
+        return OpenAI(
+            api_key=self._api_keys[self._key_index],
+            base_url=self.api_url,
+            timeout=120.0,
+        )
+
+    def _next_key(self) -> bool:
+        """Switch to the next API key, False when none is left."""
+        if self._key_index + 1 >= len(self._api_keys):
+            return False
+        self._key_index += 1
+        self.client = self._load_llm()
+        return True
+
+    def _append_prompt(self, prompt: str) -> None:
+        """Queue the first prompt, then the sandbox feedback."""
+        if len(self.messages) <= 1:
+            self.messages.append({"role": "user", "content": prompt})
+        elif self.sandbox_output is not None:
+            self.messages.append(
+                {"role": "user", "content": self._sandbox_error()})
+
+    def _create_completion(self) -> ChatCompletion:
+        """Send the conversation, rotating keys while rate limited."""
+        while True:
+            try:
+                return self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=self.messages,
+                )
+            except RateLimitError:
+                if not self._next_key():
+                    raise ValueError("Every API key is rate limited")
+            except Exception as error:
+                raise ValueError(f"Api connection failed: {error}")
+
+    @staticmethod
+    def _split_thought(response: Any) -> tuple[str, str]:
+        """Split a reply into its reasoning part and its answer."""
+        content = getattr(response, "content", None) or ""
+        reasoning = getattr(response, "reasoning", None)
+        for tag in ("</think>", "</thought>"):
+            if tag in content:
+                parts = content.split(tag)
+                return parts[0], parts[-1]
+        return reasoning or "No thought found", response.content
+
+    def _sandbox_error(self) -> str:
+        """Return the retry prompt describing the last sandbox run."""
+        return RETRY_PROMPT.format(
+            error=self.sandbox_output.error,
+            final_answer=self.sandbox_output.final_answer,
+        )
+
+    def log_response(self, completion: ChatCompletion) -> None:
+        """Append one API response to the JSONL log file."""
+        if not self.log_file:
+            return
+        entry = {
+            "timestamp": datetime.datetime.now().isoformat(
+                timespec="seconds"),
+            "model_name": self.model_name,
+            "completion": json.loads(completion.model_dump_json()),
+        }
+        with open(self.log_file, "a", encoding="utf-8") as file:
+            file.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    def call(self, prompt: str) -> dict[str, Any]:
+        """Call the LLM through the API and return its reply.
 
         Args:
-            log_file (str): Json saving file.
-            response (str): Api return
-        """
-        response = completion.model_dump_json(indent=2)
-        with (open(log_file, "w", encoding="utf-8") as file):
-            file.write(response)
-
-    def call(self, input: str) -> dict:
-        """Call the LLM throught the API.
-
-        Args:
-            input (str): Prompt input
+            prompt: Prompt input, used on the first call only.
 
         Returns:
-            dict: LLM output
+            The answer, its reasoning, and the call metrics.
         """
-        if len(self.messages) <= 1:
-            self.messages.append(
-                {
-                    "role": "user",
-                    "content": input
-                }
-            )
+        self._append_prompt(prompt)
 
-        s = time.perf_counter()
-        try:
-            if self.tools:
-
-                completion = self.client.chat.completions.create(
-                                model=self.model_name,
-                                messages=self.messages,
-                            )
-            else:
-                completion = self.client.chat.completions.create(
-                                model=self.model_name,
-                                messages=self.messages,
-                            )
-        except RateLimitError:
-            raise ValueError("Wait for rate limit")
-        except Exception:
-            raise ValueError("Invalid Providers fields, Api connection failed")
-        e = time.perf_counter()
+        start = time.perf_counter()
+        completion = self._create_completion()
+        elapsed = time.perf_counter() - start
 
         response = completion.choices[0].message
         self.messages.append(response)
-
-        self.save_response("response.json", completion)
-
-        if getattr(response, "content", None):
-            if "</think>" in response.content:
-                response_split = response.content.split("</think>")
-                thought = response_split[0]
-                answer = response_split[-1]
-            elif "</thought>" in response.content:
-                response_split = response.content.split("</thought>")
-                thought = response_split[0]
-                answer = response_split[-1]
-            else:
-                thought = "No thought found"
-                answer = response.content
-        elif getattr(response, "reasoning", None):
-            thought = response.reasoning
-            answer = response.content
-        else:
-            thought = "No thought found"
-            answer = response.content
-        tool_call = None
-        if getattr(response, "tool_calls", None):
-            tool_call = response.tool_calls[0]
+        self.log_response(completion)
+        thought, answer = self._split_thought(response)
+        usage = completion.usage  # some providers omit it
 
         return {
-            "input_tokens": completion.usage.prompt_tokens,
-            "output_tokens": completion.usage.completion_tokens,
+            "input_tokens": usage.prompt_tokens if usage else None,
+            "output_tokens": usage.completion_tokens if usage else None,
             "model_name": self.model_name,
             "thought": thought,
             "answer": answer,
-            "request_time": f"{e-s:.3f}",
-            "tool_calls": tool_call
+            "request_time": f"{elapsed:.3f}",
+            "tool_calls": None,  # TODO: drop with agent_swebench's branch
         }
-
-    def _sandbox_error(self):
-        return textwrap.dedent(f"""
-            The first code was wrong
-            Errors: {self.sandbox_output.error}
-            Final answer: {self.sandbox_output.final_answer}
-
-            Adjust your code to solve the coding problem
-            """)
-
