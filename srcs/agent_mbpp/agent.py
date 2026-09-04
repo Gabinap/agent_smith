@@ -11,6 +11,7 @@ from rich.console import Console
 from sandbox.sandbox import Sandbox
 
 from .task_manager import Task
+from .prompt import get_prompt
 
 
 class Mbpp:
@@ -29,7 +30,7 @@ class Mbpp:
         """Load the task and set up the LLM, sandbox, and console."""
         self.output_file = output_file
         self.task = Task(task_file).input
-        self.llm = LLM(api_url, model_name, env_key, self._system_content())
+        self.llm = LLM(api_url, model_name, env_key, self._system_content(), [])
         self.steps: list[StepMetrics] = []
         self.sandbox = Sandbox()
         self.step = 1
@@ -41,7 +42,7 @@ class Mbpp:
 
     def execute(self) -> None:
         """Run one generate -> extract -> sandbox-execute cycle."""
-        self.prompt = self.get_prompt()
+        self.prompt = get_prompt(self.task)
 
         with self.console.status("[bold blue]LMM Generation...",
                                  spinner_style="blue",
@@ -80,17 +81,7 @@ class Mbpp:
         cli_agent.display_solution(self.console, output)
         self.save_output(output)
 
-    def get_prompt(self) -> str:
-        """Build the user prompt describing the task and its tests."""
-        tests = '\n'.join(self.task.test_list)
-        return f"""
-{self.task.task_definition}
 
-Definition of the function: {self.task.function_definition}
-
-Tests to try:
-{tests}
-"""
 
     def extract_python(self, text: str | None) -> re.Match[str] | None:
         """Extract the first ```python fenced code block from `text`."""
