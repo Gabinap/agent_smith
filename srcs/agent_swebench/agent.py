@@ -13,6 +13,7 @@ from sandbox.mcp_client import create_mcp_client
 from sandbox.sandbox import Sandbox, SandboxConfig
 from .prompt import get_prompt, system_content
 from .code_gen import clean_run_tests, llm_output_code, truncate_output
+from .save_data import save_llm_messages, save_output
 
 
 class SWEBench:
@@ -24,7 +25,7 @@ class SWEBench:
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 25
+        max_iteration: int = 30
     ):
         """Load the task and the LLM
 
@@ -89,7 +90,7 @@ class SWEBench:
                                         self.sandbox_data,
                                         self.py_code)
             return
-        
+
 
         if re.search(r'^[^#\n]*\brun_tests\s*\(', self.py_code, re.MULTILINE):
 
@@ -107,7 +108,7 @@ class SWEBench:
                 clean_run_tests(self.sandbox_data.output),
                 message)
             return
-        
+
         self.sandbox_data.output = truncate_output(self.sandbox_data.output, max_lines=30)
 
         self.llm.messages.append({
@@ -118,49 +119,26 @@ class SWEBench:
                                   self.sandbox_data,
                                   self.py_code)
 
-
-
     def solve_task(self):
-        while (True):
-            if self.step > self.max_iteration:
-                break
-            self.execute()
-            # metric = self.get_step_metrics()
-            # self.steps.append(metric)
-            response = json.dumps(
-                [
-                    m.model_dump() if hasattr(m, "model_dump") else m
-                    for m in self.llm.messages
-                ],
-                indent=2,
-                ensure_ascii=False
-            )
+        self.error = None
+        try:
+            while (True):
+                if self.step > self.max_iteration:
+                    break
+                self.execute()
+                self.steps.append(self.get_step_metrics())
+                save_llm_messages(self.llm.messages)
 
-            with open("llm_messages.json", "w", encoding="utf-8") as file:
-                file.write(response)
-            if self.sandbox_data and self.sandbox_data.finished:
-                break
+                if self.sandbox_data and self.sandbox_data.finished:
+                    break
+                else:
+                    self.step += 1
+        except Exception as e:
+            self.error = e
 
-            else:
-                self.step += 1
-
-        # output = self.get_solution_output()
-        # cli_agent.display_solution(self.console, output)
-        # self.save_output(output)
-        print("ENDDDD")
-        print(self.sandbox_data.final_answer)
-
-
-
-
-
-    def save_output(self, output: SolutionOutput):
-        """Save the Agent output in a Json file.
-        Args:
-            output (SolutionOutput): solution output
-        """
-        with (open(self.output_file, "w", encoding="utf-8") as file):
-            file.write(output.model_dump_json(indent=2))
+        output = self.get_solution_output()
+        cli_agent.display_solution(self.console, output)
+        save_output(output, self.output_file)
 
     def get_step_metrics(self) -> StepMetrics:
         return StepMetrics(
@@ -176,11 +154,11 @@ class SWEBench:
         )
 
     def get_solution_output(self) -> SolutionOutput:
-        timestamp = datetime.datetime.now().isoformat()
+        succes = False if self.sandbox_data.final_answer is None else True
         return SolutionOutput(
-            task_id=str(self.task.task_id),
+            task_id=str(self.task.instance_id),
             benchmark="swebench",
-            success=True,
+            success=succes,
             solution=self.sandbox_data.final_answer,
             iterations=len(self.steps),
             total_requests=self.total_requests,
@@ -192,10 +170,5 @@ class SWEBench:
                                    for metric in self.steps),
             steps=self.steps,
             system_prompt=self.prompt,
-            error=None,
-            timestamp=timestamp
+            error=self.error
         )
-
-
-
-
