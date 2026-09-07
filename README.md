@@ -66,16 +66,15 @@ https://phase2online.com/insights/explain-it-like-i-m-five-what-the-heck-is-an-m
 **How AI was used ?**\
 Ai was used throughout this project as a support and learning assistant.
 
+- Organising:
+  - Split the project into multiple parts
+  - Suggest an organisation plan
+
 - Debugging:
-  -  Explain unexpected behaviors
+  - Explain unexpected behaviors
   - Suggest potential causes of bugs
 
-- Understanding Ursina:
-  - Get some example
-  - Complet the thin documentation of Ursina
-
 - Global Assistance:
-  - Clarify architectural decisions
   - Discuss best practices in project structure
   - Writing Docstrings
 
