@@ -41,7 +41,11 @@ class Mbpp:
         self.max_iteration = max_iteration
 
     def execute(self) -> None:
-        """Run one generate -> extract -> sandbox-execute cycle."""
+        """Run one generate -> extract -> sandbox-execute cycle.
+
+        `total_requests` counts API attempts, not iterations: a step
+        rate-limited twice costs three requests.
+        """
         self.prompt = get_prompt(self.task)
 
         with self.console.status("[bold blue]LMM Generation...",
@@ -49,7 +53,7 @@ class Mbpp:
                                  spinner="aesthetic",
                                  speed=0.5):
             self.llm_output_data = self.llm.call(self.prompt)
-        self.total_requests += 1
+        self.total_requests += 1 + self.llm_output_data.get("retries", 0)
 
         llm_answer = self.llm_output_data.get("answer")
         match = self.extract_python(llm_answer)
@@ -93,7 +97,11 @@ class Mbpp:
             file.write(output.model_dump_json(indent=2))
 
     def get_step_metrics(self) -> StepMetrics:
-        """Build the StepMetrics for the current step."""
+        """Build the StepMetrics for the current step.
+
+        `retries` is what the LLM call reported: 0 means its first
+        attempt went through.
+        """
         return StepMetrics(
                 step=self.step,
                 input_tokens=self.llm_output_data.get("input_tokens"),
@@ -104,6 +112,7 @@ class Mbpp:
                 llm_output=self.llm_output_data.get("answer"),
                 sandbox_input=self.py_code,
                 sandbox_output=self.sandbox_data.output,
+                retries=self.llm_output_data.get("retries", 0)
         )
 
     def get_solution_output(self) -> SolutionOutput:

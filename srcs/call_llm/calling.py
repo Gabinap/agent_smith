@@ -66,17 +66,26 @@ class LLM:
         if len(self.messages) <= 1:
             self.messages.append({"role": "user", "content": prompt})
 
-    def _create_completion(self) -> ChatCompletion:
-        """Send the conversation, rotating keys while rate limited."""
+    def _create_completion(self) -> tuple[ChatCompletion, int]:
+        """Send the conversation, rotating keys while rate limited.
+
+        Returns the completion and the retries it cost: one per
+        rejected attempt, for this API call only. The counter is local,
+        so it starts back at zero on the next call — unlike the key
+        index, which keeps moving forward.
+        """
+        retries = 0
         while True:
             try:
-                return self.client.chat.completions.create(
+                completion = self.client.chat.completions.create(
                     model=self.model_name,
                     messages=self.messages,
                 )
+                return completion, retries
             except RateLimitError:
                 if not self._next_key():
                     raise ValueError("Every API key is rate limited")
+                retries += 1
             except Exception as error:
                 raise ValueError(f"Api connection failed: {error}")
 
@@ -111,12 +120,15 @@ class LLM:
             prompt: Prompt input, used on the first call only.
 
         Returns:
-            The answer, its reasoning, and the call metrics.
+            The answer, its reasoning, and the metrics of this single
+            API call. `retries` covers this call alone; the agent
+            reports it in the StepMetrics of the loop step around it,
+            which spans every call that step made.
         """
         self._append_prompt(prompt)
 
         start = time.perf_counter()
-        completion = self._create_completion()
+        completion, retries = self._create_completion()
         elapsed = time.perf_counter() - start
 
         response = completion.choices[0].message
@@ -132,5 +144,6 @@ class LLM:
             "thought": thought,
             "answer": answer,
             "request_time": f"{elapsed:.3f}",
+            "retries": retries,
             "tool_calls": None,  # TODO: drop with agent_swebench's branch
         }
