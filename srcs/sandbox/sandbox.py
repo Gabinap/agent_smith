@@ -174,12 +174,8 @@ class Sandbox:
         sep = kwargs.get("sep", " ")
         end = kwargs.get("end", "\n")
 
-        # Nettoyage des arguments (qu'il s'agisse de chaînes, dicts ou listes)
         cleaned_args = [self._process_response(a) for a in args]
-
-        # Formatage du texte final
         text = sep.join(str(a) for a in cleaned_args) + end
-
         self.stdout.append(text)
 
     def _final_answer_tool(self, answer: str) -> str:
