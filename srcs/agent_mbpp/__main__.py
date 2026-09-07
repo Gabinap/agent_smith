@@ -3,9 +3,10 @@
 import argparse
 
 import cli_agent
-from agent_mbpp.agent import Mbpp
 from call_llm.profile import Profile
 from rich.console import Console
+
+from agent_mbpp.agent import Mbpp
 
 
 def main() -> None:

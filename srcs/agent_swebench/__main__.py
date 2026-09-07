@@ -1,9 +1,10 @@
 import argparse
 
 import cli_agent
-from agent_swebench.agent import SWEBench
 from call_llm.profile import Profile
 from rich.console import Console
+
+from agent_swebench.agent import SWEBench
 
 from .task_manager import Task
 

@@ -1,18 +1,17 @@
 
-import datetime
-import json
 import re
+
 import cli_agent
 from call_llm.calling import LLM
 from models import McpSpec
 from models.metrics import SolutionOutput, StepMetrics
 from models.tasks import SWEBenchTaskInput
-
 from rich.console import Console
 from sandbox.mcp_client import create_mcp_client
 from sandbox.sandbox import Sandbox, SandboxConfig
-from .prompt import get_prompt, system_content
+
 from .code_gen import clean_run_tests, llm_output_code, truncate_output
+from .prompt import get_prompt, system_content
 from .save_data import save_llm_messages, save_output
 
 

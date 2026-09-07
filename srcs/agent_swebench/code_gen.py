@@ -1,10 +1,10 @@
-import re
 import json
+import re
+
+import cli_agent
 from openai.types.chat.chat_completion_message_function_tool_call import (
     ChatCompletionMessageFunctionToolCall,
 )
-import cli_agent
-import ast
 
 
 def extract_python(text: str):
