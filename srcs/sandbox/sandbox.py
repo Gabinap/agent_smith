@@ -143,11 +143,15 @@ class Sandbox:
 
     @staticmethod
     def _clean_git_diff(text: str) -> str:
-        """delete unwanted lines (diff --git, old mode, new mode, etc.) and reformate."""
+        """delete unwanted lines (diff --git, old mode, new mode, etc.)
+        and reformate."""
         if not isinstance(text, str):
             return text
 
-        pattern = r"(?:diff --git|old mode|new mode|sympy/[^\n\r]*?b/sympy/[^\n\r]*|nold mode)[^\n\r]*(\\n|\r?\n)?"
+        pattern = (
+            r"(?:diff --git|old mode|new mode|sympy/[^\n\r]*?b/sympy/[^\n\r]*"
+            r"|nold mode)[^\n\r]*(\\n|\r?\n)?"
+        )
         cleaned = re.sub(pattern, '', text)
 
         if r'\n' in cleaned:
@@ -157,7 +161,8 @@ class Sandbox:
 
     def _process_response(self, data: Any) -> Any:
         """
-            Access recursivly to each part of the result to find text to delete diff lines.
+            Access recursivly to each part of the result to find text
+            to delete diff lines.
         """
         if isinstance(data, dict):
             return {k: self._process_response(v) for k, v in data.items()}
