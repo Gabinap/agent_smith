@@ -146,8 +146,35 @@ def test_call_rotates_to_the_next_key_on_rate_limit(llm, monkeypatch):
     result = llm.call("solve this")
 
     assert result["answer"] == "answer from the second key"
+    assert result["retries"] == 1
     assert llm._key_index == 1
     assert llm.client is second
+
+
+def test_call_counts_one_retry_per_rejected_attempt(llm, monkeypatch):
+    llm._api_keys = ["first-key", "second-key", "third-key"]
+    second = MagicMock()
+    second.chat.completions.create.side_effect = _rate_limit_error()
+    clients = iter([second, _mock_client("answer from the third key")])
+    monkeypatch.setattr(llm, "_load_llm", lambda: next(clients))
+    llm.client.chat.completions.create.side_effect = _rate_limit_error()
+
+    result = llm.call("solve this")
+
+    assert result["retries"] == 2
+    assert result["answer"] == "answer from the third key"
+    assert llm._key_index == 2
+
+
+def test_call_counter_restarts_on_the_next_call(llm, monkeypatch):
+    second = _mock_client("answer from the second key")
+    monkeypatch.setattr(llm, "_load_llm", lambda: second)
+    llm.client.chat.completions.create.side_effect = _rate_limit_error()
+    assert llm.call("solve this")["retries"] == 1
+
+    # the key index keeps moving forward, the retry counter does not
+    assert llm.call("solve this")["retries"] == 0
+    assert llm._key_index == 1
 
 
 def test_call_raises_once_every_key_is_rate_limited(llm):
@@ -233,6 +260,7 @@ def test_call_returns_token_counts_and_model_name(llm):
     assert result["input_tokens"] == 42
     assert result["output_tokens"] == 7
     assert result["model_name"] == "fake-model"
+    assert result["retries"] == 0
     assert result["tool_calls"] is None
 
 

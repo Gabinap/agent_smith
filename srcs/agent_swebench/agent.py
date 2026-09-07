@@ -66,6 +66,9 @@ class SWEBench:
 
     def execute(self):
         """Launch the loaded Task
+
+        `total_requests` counts API attempts, not iterations: a step
+        rate-limited twice costs three requests.
         """
         self.prompt = get_prompt(self.task)
 
@@ -74,7 +77,7 @@ class SWEBench:
                                  spinner="aesthetic",
                                  speed=0.5):
             self.llm_output_data = self.llm.call(self.prompt)
-        self.total_requests += 1
+        self.total_requests += 1 + self.llm_output_data.get("retries", 0)
 
         self.py_code = llm_output_code(self.console, self.llm_output_data)
 
@@ -140,6 +143,11 @@ class SWEBench:
         save_output(output, self.output_file)
 
     def get_step_metrics(self) -> StepMetrics:
+        """Build the StepMetrics for the current step.
+
+        `retries` is what the LLM call reported: 0 means its first
+        attempt went through.
+        """
         return StepMetrics(
                 step=self.step,
                 input_tokens=self.llm_output_data.get("input_tokens"),
@@ -150,6 +158,7 @@ class SWEBench:
                 llm_output=self.llm_output_data.get("answer"),
                 sandbox_input=self.py_code,
                 sandbox_output=self.sandbox_data.output,
+                retries=self.llm_output_data.get("retries", 0),
         )
 
     def get_solution_output(self) -> SolutionOutput:
