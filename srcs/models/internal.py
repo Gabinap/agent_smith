@@ -10,22 +10,9 @@ __all__ = [
     "CommandResult",
     "ExecutionResult",
     "ExtractedAction",
-    "LLMResponse",
     "McpSpec",
     "Observation",
 ]
-
-
-class LLMResponse(BaseModel):
-    """Hold the result of a single LLM completion call."""
-
-    text: str
-    input_tokens: int
-    output_tokens: int
-    request_time_ms: float
-    api_url: str
-    model_name: str
-    retries: int = 0
 
 
 class ExtractedAction(BaseModel):
