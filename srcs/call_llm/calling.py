@@ -3,21 +3,12 @@
 import datetime
 import json
 import os
-import textwrap
 import time
 from typing import Any
 
 from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
-
-RETRY_PROMPT = textwrap.dedent("""
-    The previous code was wrong
-    Errors: {error}
-    Final answer: {final_answer}
-
-    Adjust your code to solve the coding problem
-    """)
 
 
 class LLM:
@@ -37,7 +28,6 @@ class LLM:
         self.api_url = api_url
         self.model_name = model_name
         self.log_file: str | None = "llm_responses.jsonl"
-        self.sandbox_output: Any = None
         self._system_content = system_content
         self._api_keys = self._load_keys(env_keys)
         self._key_index = 0
@@ -72,12 +62,9 @@ class LLM:
         return True
 
     def _append_prompt(self, prompt: str) -> None:
-        """Queue the first prompt, then the sandbox feedback."""
+        """Queue `prompt` on the first call only."""
         if len(self.messages) <= 1:
             self.messages.append({"role": "user", "content": prompt})
-        elif self.sandbox_output is not None:
-            self.messages.append(
-                {"role": "user", "content": self._sandbox_error()})
 
     def _create_completion(self) -> ChatCompletion:
         """Send the conversation, rotating keys while rate limited."""
@@ -103,13 +90,6 @@ class LLM:
                 parts = content.split(tag)
                 return parts[0], parts[-1]
         return reasoning or "No thought found", response.content
-
-    def _sandbox_error(self) -> str:
-        """Return the retry prompt describing the last sandbox run."""
-        return RETRY_PROMPT.format(
-            error=self.sandbox_output.error,
-            final_answer=self.sandbox_output.final_answer,
-        )
 
     def log_response(self, completion: ChatCompletion) -> None:
         """Append one API response to the JSONL log file."""
