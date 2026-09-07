@@ -173,26 +173,26 @@ def test_call_first_call_has_system_and_user_only(llm):
     assert sent[0][1]["content"] == "solve this"
 
 
-def test_call_retry_appends_assistant_and_sandbox_error(llm):
+def test_call_keeps_the_reply_in_the_conversation(llm):
+    _set_response(llm, "first attempt")
+    llm.call("solve this")
+    sent = _set_response(llm, "second attempt")
+    llm.call("ignored, the agent owns the conversation from now on")
+
+    assert _roles(sent[0]) == ["system", "user", "assistant"]
+    assert sent[0][2].content == "first attempt"
+
+
+def test_call_forwards_what_the_agent_appended(llm):
     _set_response(llm, "first attempt")
     llm.call("solve this")
 
-    llm.sandbox_output = MagicMock(error="AssertionError", final_answer=None)
+    llm.messages.append({"role": "user", "content": "AssertionError: nope"})
     sent = _set_response(llm, "second attempt")
     llm.call("solve this")
 
     assert _roles(sent[0]) == ["system", "user", "assistant", "user"]
-    assert sent[0][2].content == "first attempt"
-    assert "AssertionError" in sent[0][3]["content"]
-
-
-def test_call_without_sandbox_output_appends_nothing(llm):
-    _set_response(llm, "first attempt")
-    llm.call("solve this")
-    sent = _set_response(llm, "second attempt")
-    llm.call("ignored, agent_swebench feeds the messages itself")
-
-    assert _roles(sent[0]) == ["system", "user", "assistant"]
+    assert sent[0][3]["content"] == "AssertionError: nope"
 
 
 # --- call(): thought/answer parsing ---
@@ -254,7 +254,6 @@ def test_log_response_appends_one_json_line_per_call(llm, tmp_path):
     _set_response(llm, "first")
     llm.call("x")
     _set_response(llm, "second")
-    llm.sandbox_output = MagicMock(error="err", final_answer=None)
     llm.call("x")
 
     lines = (tmp_path / "llm_responses.jsonl").read_text().splitlines()
@@ -270,23 +269,3 @@ def test_log_response_is_skipped_without_a_log_file(llm, tmp_path):
     _set_response(llm, "code")
     llm.call("x")
     assert list(tmp_path.iterdir()) == []
-
-
-# --- prompt helpers ---
-
-def test_sandbox_error_includes_error_and_final_answer(llm):
-    llm.sandbox_output = MagicMock(
-        error="NameError: x is not defined", final_answer="bad code",
-    )
-    message = llm._sandbox_error()
-    assert "NameError: x is not defined" in message
-    assert "bad code" in message
-
-
-def test_sandbox_error_stays_dedented_with_a_multiline_error(llm):
-    llm.sandbox_output = MagicMock(
-        error="Traceback:\n  line 1\n  line 2", final_answer=None,
-    )
-    message = llm._sandbox_error()
-    assert "\n    The previous code was wrong" not in message
-    assert message.startswith("\nThe previous code was wrong")
