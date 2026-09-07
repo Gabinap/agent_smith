@@ -10,8 +10,8 @@ from models.metrics import SolutionOutput, StepMetrics
 from rich.console import Console
 from sandbox.sandbox import Sandbox
 
-from .task_manager import Task
 from .prompt import get_prompt
+from .task_manager import Task
 
 
 class Mbpp:

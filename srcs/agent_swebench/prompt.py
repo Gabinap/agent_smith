@@ -1,6 +1,7 @@
-from models.tasks import SWEBenchTaskInput
-from typing import Any
 import textwrap
+from typing import Any
+
+from models.tasks import SWEBenchTaskInput
 
 
 def get_prompt(task: SWEBenchTaskInput):
@@ -31,10 +32,10 @@ Identify and fix the bug in the provided code, keeping in mind the hint, if ther
 # Expected Format
 Always return EXACTLY one block of Python code containing a SINGLE tool call, for example:
 
-​```python
+\u200b```python
 result = list_files(directory=“.”, pattern="*")
 print(result)
-​```
+\u200b```
 
 # Available Tools
 {tools}
