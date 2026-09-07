@@ -5,11 +5,11 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .internal import CommandResult, LLMResponse, McpSpec
+from .internal import CommandResult, McpSpec
 from .sandbox import SandboxConfig
 from .tasks import TaskInput
 
-__all__ = ["BenchmarkAdapter", "ExecBackend", "LLMClient"]
+__all__ = ["BenchmarkAdapter", "ExecBackend"]
 
 
 class ExecBackend(Protocol):
@@ -26,16 +26,6 @@ class ExecBackend(Protocol):
 
     def write_file(self, path: str, content: str) -> None:
         """Overwrite a file with the given content."""
-        ...
-
-
-class LLMClient(Protocol):
-    """Send chat completions to an LLM provider."""
-
-    def complete(
-        self, system: str, messages: list[dict], stop: list[str]
-    ) -> LLMResponse:
-        """Request a completion and return the parsed response."""
         ...
 
 
