@@ -94,9 +94,7 @@ Here is an example of how the agent operates:
   - Tool Access: If needed during execution, the sandbox calls external tools on the MCP server via the MCP client.
 
   - Evaluation Loop: The sandbox returns its output to the agent for evaluation:
-
     - If the solution fails or remains incomplete, the output is fed back into the loop to refine the code.
-
     - If all tests pass, the loop terminates successfully.
 
 ___
