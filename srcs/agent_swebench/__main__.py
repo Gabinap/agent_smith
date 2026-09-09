@@ -9,6 +9,7 @@ from models import McpSpec
 from agent_swebench.agent import SWEBench
 
 from .task_manager import Task
+import os
 
 
 def main() -> None:
@@ -38,9 +39,7 @@ def main() -> None:
     spec = McpSpec(
         transport="stdio",
         command="python3 ../mcp_tools_swebench.py",
-        env={
-            "SWE_TASK_FILE": args.task_file,
-        }
+        env={**os.environ, "SWE_TASK_FILE": args.task_file},
     )
     console.print("MCP server Started")
     # spec = McpSpec(transport="http", url="http://localhost:8000")
