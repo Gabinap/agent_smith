@@ -3,11 +3,11 @@ import re
 
 import cli_agent
 from call_llm.calling import LLM
-from models import McpSpec
+
 from models.metrics import SolutionOutput, StepMetrics
 from models.tasks import SWEBenchTaskInput
 from rich.console import Console
-from sandbox.mcp_client import create_mcp_client
+from sandbox.mcp_client import McpClient
 from sandbox.sandbox import Sandbox, SandboxConfig
 
 from .code_gen import clean_run_tests, llm_output_code, truncate_output
@@ -24,7 +24,8 @@ class SWEBench:
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 30
+        client: McpClient,
+        max_iteration: int = 30,
     ):
         """Load the task and the LLM
 
@@ -45,9 +46,7 @@ class SWEBench:
         self.py_code = ""
         self.total_requests = 0
         self.console = console
-        spec = McpSpec(transport="stdio", command="python3 ../mcp_tools_swebench.py")
-        # spec = McpSpec(transport="http", url="http://localhost:8000")
-        client = create_mcp_client(spec)
+
         self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
 
         # self.py_code = "result = get_patch()\nprint(result)"
@@ -80,6 +79,14 @@ class SWEBench:
         self.total_requests += 1 + self.llm_output_data.get("retries", 0)
 
         self.py_code = llm_output_code(self.console, self.llm_output_data)
+
+        if self.py_code == "":
+            self.llm.messages.append({
+                                            "role": "user",
+                                            "content": f"No python code generated, you have to write valid python block, example ```python #your code here ```"
+                                })
+            # Create a first visual
+            return
 
         self.sandbox_data = self.sandbox.execute(self.py_code)
 
@@ -136,6 +143,7 @@ class SWEBench:
                 else:
                     self.step += 1
         except Exception as e:
+            print(f"Error: {e}")
             self.error = e
 
         output = self.get_solution_output()
@@ -162,7 +170,10 @@ class SWEBench:
         )
 
     def get_solution_output(self) -> SolutionOutput:
+        if not getattr(self.sandbox_data, "final_answer"):
+            self.sandbox_data.final_answer = None
         succes = False if self.sandbox_data.final_answer is None else True
+
         return SolutionOutput(
             task_id=str(self.task.instance_id),
             benchmark="swebench",
