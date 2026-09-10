@@ -92,3 +92,20 @@ class LLMBenchmarkGraph:
 if __name__ == "__main__":
     graph = LLMBenchmarkGraph("srcs/llm_results.json")
     graph.build_graph()
+
+
+"""
+[
+  {"model": "Gemma", "success": true, "task_id": "11116s"},
+  {"model": "Gemma", "success": true, "task_id": "11115s"},
+  {"model": "Qwen", "success": true, "task_id": "11113s"},
+  {"model": "Gemma", "success": false, "task_id": "11114s"},
+  {"model": "Gemma", "success": true, "task_id": "11113s"},
+  {"model": "Gemma", "success": true, "task_id": "11112s"},
+  {"model": "Qwen", "success": false, "task_id": "11116s"},
+  {"model": "Qwen", "success": true, "task_id": "11115s"},
+  {"model": "Qwen", "success": false, "task_id": "11114s"},
+  {"model": "Qwen", "success": false, "task_id": "11112s"}
+]
+
+"""
