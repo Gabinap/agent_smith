@@ -1,6 +1,8 @@
 """Unit tests for srcs/sandbox/sandbox.py (the Sandbox security
 boundary)."""
 
+from types import ModuleType
+
 import pytest
 
 from srcs.models.sandbox import SandboxConfig
@@ -197,3 +199,18 @@ def test_an_escaped_payload_still_cannot_spawn_a_shell(sandbox, tmp_path):
     )
 
     assert not marker.exists()
+
+
+def test_injected_callables_lead_to_no_module_or_capability(sandbox):
+    """`injected.__globals__` is this module's globals: keep it a dead end.
+
+    Sandboxed code reaches it through any injected callable, so nothing
+    there may hand out a capability: no module, and no unrestricted
+    open() or __import__() bound at module level.
+    """
+    reachable = sandbox._final_answer_tool.__globals__
+
+    assert [k for k, v in reachable.items()
+            if isinstance(v, ModuleType)] == []
+    assert "_real_open" not in reachable
+    assert "_real_import" not in reachable

@@ -1,12 +1,13 @@
-import builtins
-import multiprocessing as mp
-import os
-import re
-import resource
-import socket
-import types
+# Every callable injected into the namespace is defined in this file, so
+# `injected.__globals__` hands sandboxed code whatever sits here. Nothing
+# that grants a capability is bound at module level: the real open() and
+# __import__(), and every module, are imported inside the methods that
+# use them, where they live as locals out of reach. __build_class__ is
+# the exception, and a harmless one: SAFE_BUILTINS grants it anyway.
+from builtins import __build_class__
 from collections.abc import Callable
 from multiprocessing.connection import Connection
+from types import FrameType
 from typing import IO, Any
 
 from models.sandbox import SandboxConfig, SandboxResult
@@ -22,7 +23,7 @@ class TimeoutError(Exception):
     """Execution time limit exceeded"""
 
 
-def _timeout_handler(signum: int, frame: types.FrameType | None) -> None:
+def _timeout_handler(signum: int, frame: FrameType | None) -> None:
     raise TimeoutError("Execution timed out")
 
 
@@ -39,7 +40,7 @@ SAFE_BUILTINS = {
     "zip": zip, "True": True, "False": False, "None": None,
     "SystemExit": SystemExit, "KeyboardInterrupt": KeyboardInterrupt,
     # new
-    "__build_class__": builtins.__build_class__,
+    "__build_class__": __build_class__,
     "sorted": sorted, "reversed": reversed, "isinstance": isinstance,
     "issubclass": issubclass, "round": round, "divmod": divmod,
     "pow": pow, "ord": ord, "chr": chr, "bin": bin, "hex": hex,
@@ -113,10 +114,12 @@ class Sandbox:
         Returns:
             module: The module required
         """
+        from builtins import __import__ as real_import
+
         if not self._is_import_allowed(name):
             raise SecurityError("Import forbidden by sandbox"
                                 f" policy: '{name}'")
-        return builtins.__import__(name, globals, locals, fromlist, level)
+        return real_import(name, globals, locals, fromlist, level)
 
     def _is_open_allowed(self, filepath: str) -> bool:
         """
@@ -126,10 +129,13 @@ class Sandbox:
         Returns:
             bool: True if opening this file is allowed, False otherwise
         """
+        from os import sep
+        from os.path import realpath
+
         for allowed_dir in self.config.allowed_directories:
-            real_allowed = os.path.realpath(allowed_dir)
+            real_allowed = realpath(allowed_dir)
             if filepath == real_allowed or filepath.startswith(
-                    real_allowed + os.sep):
+                    real_allowed + sep):
                 return True
         return False
 
@@ -150,18 +156,23 @@ class Sandbox:
         Returns:
             IO: Opened file stream
         """
-        filepath = os.path.realpath(str(file))
+        from builtins import open as real_open
+        from os.path import realpath
+
+        filepath = realpath(str(file))
         if not self._is_open_allowed(filepath):
             raise SecurityError(
                 f"Access denied to file path '{filepath}'."
                 f" Allowed directories: {self.config.allowed_directories}"
             )
-        return builtins.open(file, mode, *args, **kwargs)
+        return real_open(file, mode, *args, **kwargs)
 
     @staticmethod
     def _clean_git_diff(text: str) -> str:
         """delete unwanted lines (diff --git, old mode, new mode, etc.)
         and reformate."""
+        from re import sub
+
         if not isinstance(text, str):
             return text
 
@@ -169,7 +180,7 @@ class Sandbox:
             r"(?:diff --git|old mode|new mode|sympy/[^\n\r]*?b/sympy/[^\n\r]*"
             r"|nold mode)[^\n\r]*(\\n|\r?\n)?"
         )
-        cleaned = re.sub(pattern, '', text)
+        cleaned = sub(pattern, '', text)
 
         if r'\n' in cleaned:
             cleaned = cleaned.replace(r'\n', '\n')
@@ -277,6 +288,8 @@ class Sandbox:
         Platforms missing the limit, and hard limits already stricter
         than ours, are left alone.
         """
+        import resource
+
         kind = getattr(resource, name, None)
         if kind is None:
             return
@@ -313,6 +326,8 @@ class Sandbox:
 
     def _block_network(self) -> None:
         """Blocking the network access to the child process"""
+        import socket
+
         def dummy_socket(*args: Any, **kwargs: Any) -> None:
             raise SecurityError("Network access is blocked by sandbox policy")
         socket.socket = dummy_socket  # type: ignore
@@ -394,12 +409,14 @@ class Sandbox:
             SandboxResult = The return of the executed code in the
                 SandboxResult class
         """
-        parent_conn, child_conn = mp.Pipe()
-        process = mp.Process(target=self._worker, args=(code, child_conn))
+        from multiprocessing import Pipe, Process, ProcessError
+
+        parent_conn, child_conn = Pipe()
+        process = Process(target=self._worker, args=(code, child_conn))
         process.daemon = True
         try:
             process.start()
-        except (mp.ProcessError, TypeError) as e:
+        except (ProcessError, TypeError) as e:
             return SandboxResult.model_validate({
                 "success": False,
                 "output": "",
