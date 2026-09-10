@@ -26,6 +26,11 @@ def _timeout_handler(signum: int, frame: types.FrameType | None) -> None:
     raise TimeoutError("Execution timed out")
 
 
+MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+MAX_OPEN_FILES = 256
+CPU_GRACE_SECONDS = 5
+
+
 SAFE_BUILTINS = {
     "abs": abs, "all": all, "any": any, "bool": bool, "dict": dict,
     "enumerate": enumerate, "filter": filter, "float": float, "int": int,
@@ -33,6 +38,18 @@ SAFE_BUILTINS = {
     "range": range, "set": set, "str": str, "sum": sum, "tuple": tuple,
     "zip": zip, "True": True, "False": False, "None": None,
     "SystemExit": SystemExit, "KeyboardInterrupt": KeyboardInterrupt,
+    # new
+    "__build_class__": builtins.__build_class__,
+    "sorted": sorted, "reversed": reversed, "isinstance": isinstance,
+    "issubclass": issubclass, "round": round, "divmod": divmod,
+    "pow": pow, "ord": ord, "chr": chr, "bin": bin, "hex": hex,
+    "repr": repr, "hash": hash, "iter": iter, "next": next,
+    "slice": slice, "frozenset": frozenset, "format": format,
+    "Exception": Exception, "ValueError": ValueError,
+    "TypeError": TypeError, "KeyError": KeyError,
+    "IndexError": IndexError, "ZeroDivisionError": ZeroDivisionError,
+    "AttributeError": AttributeError, "StopIteration": StopIteration,
+    "RuntimeError": RuntimeError, "AssertionError": AssertionError,
 }
 
 
@@ -251,11 +268,48 @@ class Sandbox:
         """Return the discovered MCP tool specs, or [] if none."""
         return self.tools
 
+    @staticmethod
+    def _setrlimit(name: str, value: int) -> None:
+        """Apply one kernel limit, as both the soft and the hard one.
+
+        Equal soft and hard values make the limit a one-way door: a
+        process may lower its limits, never raise the hard one back.
+        Platforms missing the limit, and hard limits already stricter
+        than ours, are left alone.
+        """
+        kind = getattr(resource, name, None)
+        if kind is None:
+            return
+        try:
+            resource.setrlimit(kind, (value, value))
+        except (ValueError, OSError):
+            pass
+
     def _limit_resource(self) -> None:
-        """Resource limitation (RAM)"""
-        if hasattr(resource, "RLIMIT_AS"):
-            max_bytes = self.config.max_memory_mb * 1024 * 1024
-            resource.setrlimit(resource.RLIMIT_AS, (max_bytes, max_bytes))
+        """Cap what the sandboxed process may consume, kernel-side.
+
+        Called after the fork, so only the child is bound and the agent
+        keeps its own limits. These caps do not prevent an escape from
+        the namespace; they bound the damage one could do.
+        """
+        # Virtual address space: a bigger allocation fails as MemoryError.
+        self._setrlimit(
+            "RLIMIT_AS", self.config.max_memory_mb * 1024 * 1024)
+        # No fork: os.system() and subprocess cannot spawn a shell, which
+        # is what _block_network() alone cannot cover (a child process
+        # would carry its own, unpatched network stack).
+        self._setrlimit("RLIMIT_NPROC", 0)
+        # Cap what a single file may grow to, and how many stay open.
+        self._setrlimit("RLIMIT_FSIZE", MAX_FILE_SIZE_BYTES)
+        self._setrlimit("RLIMIT_NOFILE", MAX_OPEN_FILES)
+        # No multi-gigabyte core dump when the child is killed.
+        self._setrlimit("RLIMIT_CORE", 0)
+        # Deliberately above the wall-clock timeout: execute() should be
+        # the one reporting a timeout, this is only the backstop for
+        # when the parent itself is stuck.
+        self._setrlimit(
+            "RLIMIT_CPU",
+            self.config.max_execution_time_seconds + CPU_GRACE_SECONDS)
 
     def _block_network(self) -> None:
         """Blocking the network access to the child process"""
@@ -342,6 +396,7 @@ class Sandbox:
         """
         parent_conn, child_conn = mp.Pipe()
         process = mp.Process(target=self._worker, args=(code, child_conn))
+        process.daemon = True
         try:
             process.start()
         except (mp.ProcessError, TypeError) as e:
@@ -360,7 +415,10 @@ class Sandbox:
 
         if process.is_alive():
             process.terminate()
-            process.join()
+            process.join(timeout=5)
+            if process.is_alive():
+                process.kill()
+                process.join()
             return SandboxResult.model_validate({
                 "success": False,
                 "output": "",
