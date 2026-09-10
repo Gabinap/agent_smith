@@ -31,6 +31,9 @@ sandbox-mbpp:
 sandbox-swebench:
 	uv run sandbox --mcp-stdio "python mcp_tools_swebench.py" sandbox_template.json
 
+graph:
+	uv run srcs/build_graph.py
+
 # ========================= dev commands =========================
 
 install:
@@ -59,5 +62,5 @@ clean:
 	rm -rf __pycache__ .mypy_cache .pytest_cache .python-version .vscode
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
-.PHONY: run-mbpp run-swebench sandbox sandbox-mbpp sandbox-swebench \
+.PHONY: run-mbpp run-swebench sandbox sandbox-mbpp sandbox-swebench graph \
 	install test lint lint-strict debug clean
