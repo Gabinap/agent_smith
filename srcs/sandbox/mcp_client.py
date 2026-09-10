@@ -172,7 +172,7 @@ class McpHttp(McpClient):
 
 
 class McpStdio(McpClient):
-    def __init__(self, command: str) -> None:
+    def __init__(self, command: str, env: dict[str, str] | None = None) -> None:
         """
         MCP stdio client
         Args:
@@ -182,6 +182,7 @@ class McpStdio(McpClient):
         """
         super().__init__(TransportMode.STDIO)
         self.command: str = command
+        self.env = env
         self.connect()
 
     def send_message(
@@ -212,7 +213,8 @@ class McpStdio(McpClient):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True,
-            bufsize=1
+            bufsize=1,
+            env=self.env,
         )
 
     def close(self) -> None:
@@ -229,7 +231,7 @@ def create_mcp_client(spec: McpSpec | None) -> McpClient | None:
     if spec.transport == "stdio":
         if not spec.command:
             raise ValueError("A command is required for the stdio Client.")
-        return McpStdio(command=spec.command)
+        return McpStdio(command=spec.command, env=spec.env)
 
     if spec.transport == "http":
         if not spec.url:
