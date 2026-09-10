@@ -1,4 +1,7 @@
 import argparse
+import shlex
+import sys
+from pathlib import Path
 
 import cli_agent
 from call_llm.profile import Profile
@@ -12,12 +15,15 @@ from .task_manager import Task
 import os
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
         "--task-file",
-        default="../moulinette/task.json",
+        default=str(PROJECT_ROOT / "moulinette" / "task.json"),
     )
     parser.add_argument(
         "--output",
@@ -34,12 +40,16 @@ def main() -> None:
 
     console = Console()
     args = parser.parse_args()
+    task_file = Path(args.task_file).expanduser().resolve()
+    args.task_file = str(task_file)
     profile = Profile("SWEBench", args.provider_url, args.model_name)
     console.print("Starting MCP server")
     spec = McpSpec(
         transport="stdio",
-        command="python3 ../mcp_tools_swebench.py",
-        env={**os.environ, "SWE_TASK_FILE": args.task_file},
+        command=shlex.join(
+            [sys.executable, str(PROJECT_ROOT / "mcp_tools_swebench.py")]
+        ),
+        env={**os.environ, "SWE_TASK_FILE": str(task_file)},
     )
     console.print("MCP server Started")
     # spec = McpSpec(transport="http", url="http://localhost:8000")
@@ -49,7 +59,7 @@ def main() -> None:
 
 def launch_agent(profile, console, args, client_mcp):
     # try:
-        task = Task(args.task_file).input
+        task = Task(str(Path(args.task_file).expanduser().resolve())).input
         agent = SWEBench(
             task=task,
             output_file=args.output,

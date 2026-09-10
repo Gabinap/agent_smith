@@ -57,6 +57,9 @@ class McpSpec(BaseModel):
     """Describe how to reach the MCP server relevant to a given task."""
 
     transport: Literal["stdio", "http"]
+    env: dict[str, str] | None = Field(
+        default=None, description="Environment variables for stdio transport."
+    )
     command: str | None = Field(
         default=None, description="Shell command for stdio transport."
     )
