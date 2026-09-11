@@ -5,7 +5,7 @@ from termgraph import Args, BarChart, Data
 
 
 class LLMBenchmarkGraph:
-    def __init__(self, input_file: str = "srcs/llm_responses.json"):
+    def __init__(self, input_file: str = "cache/llm_results.json"):
         """
         Create the graph for the benchmark
         Args:
@@ -90,7 +90,7 @@ class LLMBenchmarkGraph:
 
 
 if __name__ == "__main__":
-    graph = LLMBenchmarkGraph("srcs/llm_results.json")
+    graph = LLMBenchmarkGraph("cache/llm_results.json")
     graph.build_graph()
 
 
