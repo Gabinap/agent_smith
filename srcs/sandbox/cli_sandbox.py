@@ -111,6 +111,9 @@ class CLI_Sandbox:
                 self.mcp_client.close()
 
 
-if __name__ == "__main__":
+def main() -> None:
     manual_sandbox = CLI_Sandbox()
     manual_sandbox.execute()
+
+if __name__ == "__main__":
+    main()

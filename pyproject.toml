@@ -16,6 +16,10 @@ dependencies = [
     "rich>=15.0.0",
 ]
 
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [dependency-groups]
 dev = [
     "flake8>=7.3.0",
@@ -25,3 +29,10 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = [".", "srcs"]
+
+[project.scripts]
+sandbox = "sandbox.cli_sandbox:main"
+
+[tool.setuptools.packages.find]
+where = ["srcs"]
+

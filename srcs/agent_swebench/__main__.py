@@ -1,12 +1,21 @@
 import argparse
+import os
+import shlex
+import sys
+from pathlib import Path
 
 import cli_agent
 from call_llm.profile import Profile
+from models import McpSpec
 from rich.console import Console
+from sandbox.mcp_client import create_mcp_client
 
 from agent_swebench.agent import SWEBench
 
 from .task_manager import Task
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def main() -> None:
@@ -14,11 +23,11 @@ def main() -> None:
 
     parser.add_argument(
         "--task-file",
-        default="../moulinette/task.json",
+        default=str(PROJECT_ROOT / "moulinette" / "task.json"),
     )
     parser.add_argument(
         "--output",
-        default="../mbpp_solution.json",
+        default="../swebench_solution.json",
     )
     parser.add_argument(
         "--model-name",
@@ -31,20 +40,34 @@ def main() -> None:
 
     console = Console()
     args = parser.parse_args()
+    task_file = Path(args.task_file).expanduser().resolve()
+    args.task_file = str(task_file)
     profile = Profile("SWEBench", args.provider_url, args.model_name)
-    launch_agent(profile, console, args)
+    console.print("Starting MCP server")
+    spec = McpSpec(
+        transport="stdio",
+        command=shlex.join(
+            [sys.executable, str(PROJECT_ROOT / "mcp_tools_swebench.py")]
+        ),
+        env={**os.environ, "SWE_TASK_FILE": str(task_file)},
+    )
+    console.print("MCP server Started")
+    # spec = McpSpec(transport="http", url="http://localhost:8000")
+    client_mcp = create_mcp_client(spec)
+    launch_agent(profile, console, args, client_mcp)
 
 
-def launch_agent(profile, console, args):
+def launch_agent(profile, console, args, client_mcp):
     # try:
-        task = Task(args.task_file).input
+        task = Task(str(Path(args.task_file).expanduser().resolve())).input
         agent = SWEBench(
             task=task,
             output_file=args.output,
             api_url=profile.provider_url,
             model_name=profile.model_name,
             env_key=profile.key_name,
-            console=console
+            console=console,
+            client=client_mcp
         )
 
         cli_agent.display_header(console, profile)

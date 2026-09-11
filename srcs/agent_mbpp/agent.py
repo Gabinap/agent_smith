@@ -10,7 +10,7 @@ from models.metrics import SolutionOutput, StepMetrics
 from rich.console import Console
 from sandbox.sandbox import Sandbox
 
-from .prompt import get_prompt
+from .prompt import get_prompt, system_content
 from .task_manager import Task
 
 
@@ -25,12 +25,12 @@ class Mbpp:
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 2
+        max_iteration: int = 5
     ) -> None:
         """Load the task and set up the LLM, sandbox, and console."""
         self.output_file = output_file
         self.task = Task(task_file).input
-        self.llm = LLM(api_url, model_name, env_key, self._system_content(), [])
+        self.llm = LLM(api_url, model_name, env_key, system_content(), [])
         self.steps: list[StepMetrics] = []
         self.sandbox = Sandbox()
         self.step = 1
@@ -57,29 +57,37 @@ class Mbpp:
 
         llm_answer = self.llm_output_data.get("answer")
         match = self.extract_python(llm_answer)
-        self.py_code = match.group(1) if match else None
+        self.py_code = match.group(1) if match else "# No python code"
 
         cli_agent.display_llm_output(self.console,
                                      self.llm_output_data,
                                      llm_answer)
         self.sandbox_data = self.sandbox.execute(self.py_code)
+        self.llm.messages.append({
+                            "role": "user",
+                            "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nTool result :\n{self.sandbox_data.output}"
+        })
         cli_agent.display_sandbox(self.console,
                                   self.sandbox_data,
                                   self.py_code)
 
     def solve_task(self) -> None:
         """Iterate until the task is solved or max_iteration is hit."""
-        while (True):
-            if self.step > self.max_iteration:
-                break
-            self.execute()
-            metric = self.get_step_metrics()
-            self.steps.append(metric)
-            if self.sandbox_data.finished:
-                break
-            else:
-                self.step += 1
-                self.llm.sandbox_output = self.sandbox_data
+        self.error = None
+        try:
+            while (True):
+                if self.step > self.max_iteration:
+                    break
+                self.execute()
+                self.steps.append(self.get_step_metrics())
+                if self.sandbox_data and self.sandbox_data.finished:
+                    break
+                else:
+                    self.step += 1
+                
+        except Exception as e:
+            print(f"Error: {e}")
+            self.error = e
 
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
@@ -137,32 +145,4 @@ class Mbpp:
             timestamp=timestamp
         )
 
-    def _system_content(self) -> str:
-        return textwrap.dedent("""
-            You are a Python agent. You solve basics coding problems.
-            Write in a ```python ... ``` block.
-
-            Do not comment the code and go straight to the point.
-            The sandbox injects a callable named `final_answer`,
-            to validate the coding problem,
-            You MUST pass only the function solution code as a
-            **Python String** to this function.
-
-            Here is the EXACT format your output must follow:
-
-            ```python
-            # 1. Write your function
-            def your_function_name(args):
-                return ...
-
-            # 2. Add the tests
-            assert your_function_name(test_arg) == expected_result
-
-            # 3. Pass the exact code as a string to final_answer
-            code_string = \"\"\"
-            def your_function_name(args):
-                return ...
-            \"\"\"
-            final_answer(code_string)
-            ```
-            """)
+    

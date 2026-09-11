@@ -33,25 +33,25 @@ def main() -> None:
     console = Console()
     args = parser.parse_args()
 
-    try:
-        profile = Profile("MBPP", args.provider_url, args.model_name)
+    # try:
+    profile = Profile("MBPP", args.provider_url, args.model_name)
 
-        agent = Mbpp(
-            task_file=args.task_file,
-            output_file=args.output,
-            api_url=profile.provider_url,
-            model_name=profile.model_name,
-            env_key=profile.key_name,
-            console=console
-        )
+    agent = Mbpp(
+        task_file=args.task_file,
+        output_file=args.output,
+        api_url=profile.provider_url,
+        model_name=profile.model_name,
+        env_key=profile.key_name,
+        console=console
+    )
 
-        cli_agent.display_header(console, profile)
-        cli_agent.display_mbpp_task(console, agent.task)
-        agent.solve_task()
-        cli_agent.display_exit(console, agent.llm_output_data, agent.prompt)
-    except Exception as e:
-        # console.print_exception(show_locals=True)
-        console.print("[bold red] Error:", e)
+    cli_agent.display_header(console, profile)
+    cli_agent.display_mbpp_task(console, agent.task)
+    agent.solve_task()
+    cli_agent.display_exit(console, agent.llm_output_data, agent.prompt)
+    # except Exception as e:
+    #     # console.print_exception(show_locals=True)
+    #     console.print("[bold red] Error:", e)
 
 
 if __name__ == "__main__":
