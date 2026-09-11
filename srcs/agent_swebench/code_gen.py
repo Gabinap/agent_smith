@@ -37,9 +37,9 @@ def llm_output_code(console, llm_output_data):
                                          llm_output_data,
                                          llm_answer)
             match = extract_python(llm_answer)
-            py_code = match.group(1) if match else None
+            py_code = match.group(1) if match else ""
         return py_code
-    
+
 def truncate_output(result: str, max_lines: int):
     new_lines = [i for i, c in enumerate(result) if c == '\n']
     if len(new_lines) > max_lines:

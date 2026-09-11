@@ -3,11 +3,10 @@ import re
 
 import cli_agent
 from call_llm.calling import LLM
-from models import McpSpec
 from models.metrics import SolutionOutput, StepMetrics
 from models.tasks import SWEBenchTaskInput
 from rich.console import Console
-from sandbox.mcp_client import create_mcp_client
+from sandbox.mcp_client import McpClient
 from sandbox.sandbox import Sandbox, SandboxConfig
 
 from .code_gen import clean_run_tests, llm_output_code, truncate_output
@@ -24,7 +23,8 @@ class SWEBench:
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 30
+        client: McpClient,
+        max_iteration: int = 30,
     ):
         """Load the task and the LLM
 
@@ -45,9 +45,7 @@ class SWEBench:
         self.py_code = ""
         self.total_requests = 0
         self.console = console
-        spec = McpSpec(transport="stdio", command="python3 ../mcp_tools_swebench.py")
-        # spec = McpSpec(transport="http", url="http://localhost:8000")
-        client = create_mcp_client(spec)
+
         self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
 
         # self.py_code = "result = get_patch()\nprint(result)"
@@ -80,6 +78,14 @@ class SWEBench:
         self.total_requests += 1 + self.llm_output_data.get("retries", 0)
 
         self.py_code = llm_output_code(self.console, self.llm_output_data)
+
+        if self.py_code == "":
+            self.llm.messages.append({
+                                            "role": "user",
+                                            "content": "No python code generated, you have to write valid python block, example ```python #your code here ```"
+                                })
+            # Create a first visual
+            return
 
         self.sandbox_data = self.sandbox.execute(self.py_code)
 
@@ -136,11 +142,42 @@ class SWEBench:
                 else:
                     self.step += 1
         except Exception as e:
+            print(f"Error: {e}")
             self.error = e
 
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         save_output(output, self.output_file)
+        self.create_benchmark_data(output.success, output.task_id)
+
+    def create_benchmark_data(self, success: bool, task_id: str):
+        """
+        Add the solution to the datafiles
+        Args:
+            success: bool = True if the task is completed else false
+            task_id: str = the id of the task
+        """
+        filepath = "cache/llm_results.json"
+        import json
+        import os
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        data = []
+        if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+            with open(filepath, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = []
+
+        bench_data = {
+            "model": self.model_name,
+            "success": success,
+            "task_id": task_id,
+        }
+        data.append(bench_data)
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
 
     def get_step_metrics(self) -> StepMetrics:
         """Build the StepMetrics for the current step.
@@ -162,7 +199,10 @@ class SWEBench:
         )
 
     def get_solution_output(self) -> SolutionOutput:
+        if not self.sandbox_data.final_answer:
+            self.sandbox_data.final_answer = None
         succes = False if self.sandbox_data.final_answer is None else True
+
         return SolutionOutput(
             task_id=str(self.task.instance_id),
             benchmark="swebench",

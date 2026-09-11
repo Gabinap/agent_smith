@@ -130,10 +130,10 @@ class LLM:
         start = time.perf_counter()
         completion, retries = self._create_completion()
         elapsed = time.perf_counter() - start
-
+        self.log_response(completion)
         response = completion.choices[0].message
         self.messages.append(response)
-        self.log_response(completion)
+
         thought, answer = self._split_thought(response)
         usage = completion.usage  # some providers omit it
 
