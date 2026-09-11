@@ -1,15 +1,15 @@
 import argparse
+import os
 
 import cli_agent
 from call_llm.profile import Profile
+from models import McpSpec
 from rich.console import Console
 from sandbox.mcp_client import create_mcp_client
-from models import McpSpec
 
 from agent_swebench.agent import SWEBench
 
 from .task_manager import Task
-import os
 
 
 def main() -> None:

@@ -3,7 +3,6 @@ import re
 
 import cli_agent
 from call_llm.calling import LLM
-
 from models.metrics import SolutionOutput, StepMetrics
 from models.tasks import SWEBenchTaskInput
 from rich.console import Console
@@ -83,7 +82,7 @@ class SWEBench:
         if self.py_code == "":
             self.llm.messages.append({
                                             "role": "user",
-                                            "content": f"No python code generated, you have to write valid python block, example ```python #your code here ```"
+                                            "content": "No python code generated, you have to write valid python block, example ```python #your code here ```"
                                 })
             # Create a first visual
             return
@@ -149,6 +148,36 @@ class SWEBench:
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         save_output(output, self.output_file)
+        self.create_benchmark_data(output.success, output.task_id)
+
+    def create_benchmark_data(self, success: bool, task_id: str):
+        """
+        Add the solution to the datafiles
+        Args:
+            success: bool = True if the task is completed else false
+            task_id: str = the id of the task
+        """
+        filepath = "cache/llm_results.json"
+        import json
+        import os
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        data = []
+        if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+            with open(filepath, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = []
+
+        bench_data = {
+            "model": self.model_name,
+            "success": success,
+            "task_id": task_id,
+        }
+        data.append(bench_data)
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
 
     def get_step_metrics(self) -> StepMetrics:
         """Build the StepMetrics for the current step.
@@ -170,7 +199,7 @@ class SWEBench:
         )
 
     def get_solution_output(self) -> SolutionOutput:
-        if not getattr(self.sandbox_data, "final_answer"):
+        if not self.sandbox_data.final_answer:
             self.sandbox_data.final_answer = None
         succes = False if self.sandbox_data.final_answer is None else True
 
