@@ -3,15 +3,17 @@
 import datetime
 import re
 import textwrap
+import json
 
 import cli_agent
 from call_llm.calling import LLM
 from models.metrics import SolutionOutput, StepMetrics
 from rich.console import Console
-from sandbox.sandbox import Sandbox
+from sandbox.sandbox import Sandbox, SandboxConfig
 
 from .prompt import get_prompt, system_content
 from .task_manager import Task
+from sandbox.mcp_client import McpClient
 
 
 class Mbpp:
@@ -19,20 +21,21 @@ class Mbpp:
 
     def __init__(
         self,
-        task_file: str,
+        task: Task,
         output_file: str,
         api_url: str,
         model_name: str,
         env_key: str,
         console: Console,
-        max_iteration: int = 5
+        client: McpClient,
+        max_iteration: int = 5,
     ) -> None:
         """Load the task and set up the LLM, sandbox, and console."""
         self.output_file = output_file
-        self.task = Task(task_file).input
+        self.task = task
         self.llm = LLM(api_url, model_name, env_key, system_content(), [])
         self.steps: list[StepMetrics] = []
-        self.sandbox = Sandbox()
+        self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
         self.step = 1
         self.sandbox_data = None
         self.py_code = ""
@@ -65,7 +68,7 @@ class Mbpp:
         self.sandbox_data = self.sandbox.execute(self.py_code)
         self.llm.messages.append({
                             "role": "user",
-                            "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nTool result :\n{self.sandbox_data.output}"
+                            "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nOutput :\n{self.sandbox_data.output}"
         })
         cli_agent.display_sandbox(self.console,
                                   self.sandbox_data,
@@ -80,6 +83,18 @@ class Mbpp:
                     break
                 self.execute()
                 self.steps.append(self.get_step_metrics())
+                response = json.dumps(
+                    [
+                        m.model_dump() if hasattr(m, "model_dump") else m
+                        for m in self.llm.messages
+                    ],
+                    indent=2,
+                    ensure_ascii=False
+                )
+                
+                with open("llm_messages.json", "w", encoding="utf-8") as file:
+                    file.write(response)
+                
                 if self.sandbox_data and self.sandbox_data.finished:
                     break
                 else:
