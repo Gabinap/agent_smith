@@ -171,7 +171,7 @@ class Sandbox:
     def _clean_git_diff(text: str) -> str:
         """delete unwanted lines (diff --git, old mode, new mode, etc.)
         and reformate."""
-        from re import sub
+        import re
 
         if not isinstance(text, str):
             return text
