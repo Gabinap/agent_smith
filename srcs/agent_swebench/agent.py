@@ -39,25 +39,14 @@ class SWEBench:
         self.model_name = model_name
         self.env_key = env_key
         self.steps: list[StepMetrics] = []
-
         self.step = 1
         self.sandbox_data = None
         self.py_code = ""
         self.total_requests = 0
         self.console = console
-
-        self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
-
-        # self.py_code = "result = get_patch()\nprint(result)"
-        # result = self.sandbox.execute(self.py_code)
-        # print(result)
-        # output = ast.literal_eval(result.output)
-        # print("\n\n\n\n")
-        # print(output.get('content')[0].get('text'))
-        # print("\n\n\n\n")
-
-
         self.max_iteration = max_iteration
+        self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
+        
         list_tools = self.sandbox.list_tools()
         self.llm = LLM(self.api_url, self.model_name, self.env_key,
                        system_content(list_tools), list_tools)
@@ -84,7 +73,6 @@ class SWEBench:
                                             "role": "user",
                                             "content": "No python code generated, you have to write valid python block, example ```python #your code here ```"
                                 })
-            # Create a first visual
             return
 
         self.sandbox_data = self.sandbox.execute(self.py_code)
@@ -105,7 +93,6 @@ class SWEBench:
             if '[FAIL]' in self.sandbox_data.output or 'FAILED' in self.sandbox_data.output:
                 message = "Test Failed"
             else:
-                # [OK], OK
                 message = "Test Passed"
 
             self.llm.messages.append({
@@ -142,7 +129,7 @@ class SWEBench:
                 else:
                     self.step += 1
         except Exception as e:
-            print(f"Error: {e}")
+            self.console.print("[bold red] Agentic Loop Error:", e)
             self.error = e
 
         output = self.get_solution_output()

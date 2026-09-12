@@ -37,29 +37,39 @@ def main() -> None:
         "--provider-url",
         default="",
     )
+    parser.add_argument(
+        "--http",
+        action="store_true",
+    )
 
     console = Console()
     args = parser.parse_args()
     task_file = Path(args.task_file).expanduser().resolve()
     args.task_file = str(task_file)
     profile = Profile("SWEBench", args.provider_url, args.model_name)
+    
     console.print("Starting MCP server")
-    spec = McpSpec(
-        transport="stdio",
-        command=shlex.join(
-            [sys.executable, str(PROJECT_ROOT / "mcp_tools_swebench.py")]
-        ),
-        env={**os.environ, "SWE_TASK_FILE": str(task_file)},
-    )
-    console.print("MCP server Started")
-    # spec = McpSpec(transport="http", url="http://localhost:8000")
+    if args.http:
+        spec = McpSpec(transport="http", url="http://localhost:8000")
+    else:
+        spec = McpSpec(
+            transport="stdio",
+            command=shlex.join(
+                [sys.executable, str(PROJECT_ROOT / "mcp_tools_swebench.py")]
+            ),
+            env={**os.environ, "SWE_TASK_FILE": str(task_file)},
+        )
     client_mcp = create_mcp_client(spec)
+    console.print(f"MCP {spec.transport} server Started")
+    
     launch_agent(profile, console, args, client_mcp)
 
 
 def launch_agent(profile, console, args, client_mcp):
-    # try:
+    try:
+        cli_agent.display_header(console, profile)
         task = Task(str(Path(args.task_file).expanduser().resolve())).input
+        cli_agent.display_swebench_task(console, task)
         agent = SWEBench(
             task=task,
             output_file=args.output,
@@ -69,15 +79,12 @@ def launch_agent(profile, console, args, client_mcp):
             console=console,
             client=client_mcp
         )
-
-        cli_agent.display_header(console, profile)
-        cli_agent.display_swebench_task(console, agent.task)
         agent.solve_task()
-        # cli_agent.display_exit(console, agent.llm_output_data, agent.prompt)
+        if profile.new == True:
+            cli_agent.display_exit(console, agent.llm_output_data, agent.prompt)
 
-    # except Exception as e:
-    #     console.print_exception(show_locals=True)
-    #     console.print("[bold red] Error:", e)
+    except Exception as e:
+        console.print("[bold red] Error:", e)
 
 
 if __name__ == "__main__":
