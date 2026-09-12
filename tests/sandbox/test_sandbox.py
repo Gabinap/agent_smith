@@ -66,7 +66,10 @@ def test_is_import_allowed_exact_and_wildcard(sandbox):
 def test_dangerous_builtins_are_removed(sandbox, name):
     result = sandbox.execute(f"{name}('x')")
     assert result.success is False
-    assert "NameError" in result.error
+    # eval/exec/compile are refused by the AST guard before running;
+    # input is simply absent from the builtins.
+    assert ("forbidden by sandbox policy" in result.error
+            or "NameError" in result.error)
 
 
 # --- File access allowlist ---
@@ -214,3 +217,71 @@ def test_injected_callables_lead_to_no_module_or_capability(sandbox):
             if isinstance(v, ModuleType)] == []
     assert "_real_open" not in reachable
     assert "_real_import" not in reachable
+
+
+# --- Layer 1: AST escape guard (_EscapeVisitor) ---
+
+BLOCKED_PAYLOADS = {
+    "subclasses": "().__class__.__bases__[0].__subclasses__()",
+    "func_globals": "print(final_answer.__globals__)",
+    "builtins_bare": "__builtins__['__import__']('os')",
+    "import_bare": "__import__('os')",
+    "eval_call": "eval('1+1')",
+    "getattr_bypass": "getattr((), '__class__')",
+    "format_dunder": '"{0.__class__}".format(())',
+    "super_thisclass": (
+        "class A:\n"
+        "    def f(self):\n"
+        "        return super().__thisclass__\n"
+        "A().f()"
+    ),
+    "traceback_walk": (
+        "try:\n"
+        "    1 / 0\n"
+        "except Exception as e:\n"
+        "    print(e.__traceback__.tb_frame.f_globals)"
+    ),
+}
+
+
+@pytest.mark.parametrize("code", BLOCKED_PAYLOADS.values(),
+                         ids=BLOCKED_PAYLOADS.keys())
+def test_escape_payloads_are_rejected(sandbox, code):
+    result = sandbox.execute(code)
+    assert result.success is False
+    assert "forbidden by sandbox policy" in result.error
+
+
+LEGITIMATE_CODE = {
+    "class_with_init": (
+        "class Point:\n"
+        "    def __init__(self, x):\n"
+        "        self.x = x\n"
+        "print(Point(3).x)"
+    ),
+    "super_call": (
+        "class A:\n"
+        "    def __init__(self):\n"
+        "        self.v = 1\n"
+        "class B(A):\n"
+        "    def __init__(self):\n"
+        "        super().__init__()\n"
+        "print(B().v)"
+    ),
+    "name_main_guard": (
+        "def solve():\n"
+        "    return 42\n"
+        "if __name__ == '__main__':\n"
+        "    print(solve())"
+    ),
+    "fstring": "x = 5\nprint(f'value is {x}')",
+    "format_normal": "print('{} + {} = {}'.format(1, 2, 3))",
+    "dunder_in_a_plain_string": "print('rename self.__class__ here')",
+}
+
+
+@pytest.mark.parametrize("code", LEGITIMATE_CODE.values(),
+                         ids=LEGITIMATE_CODE.keys())
+def test_legitimate_code_still_runs(sandbox, code):
+    result = sandbox.execute(code)
+    assert result.success is True, result.error

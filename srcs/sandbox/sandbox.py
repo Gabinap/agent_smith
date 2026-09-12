@@ -32,6 +32,58 @@ MAX_OPEN_FILES = 256
 CPU_GRACE_SECONDS = 5
 
 
+# Attributes that walk from any object back to the process (its classes,
+# the real builtins, a frame's globals). Blocked as a denylist so plain
+# dunders like __init__ or __str__ stay usable: x.__init__ passes,
+# x.__init__.__globals__ is stopped on the second hop.
+DENIED_ATTRS = frozenset({
+    # object-graph traversal
+    "__globals__", "__class__", "__bases__", "__base__", "__subclasses__",
+    "__mro__", "__code__", "__closure__", "__func__", "__self__", "__dict__",
+    "__builtins__", "__getattribute__", "__reduce__", "__reduce_ex__",
+    "__loader__", "__spec__", "__import__", "__traceback__",
+    "__thisclass__", "__self_class__",  # what super() proxies point to
+    # frame / generator / coroutine internals (not dunders, hence listed)
+    "gi_frame", "gi_code", "cr_frame", "ag_frame",
+    "f_globals", "f_builtins", "f_locals", "f_back",
+    "tb_frame", "tb_next",
+})
+
+# Names that grant execution or attribute access by string, plus the
+# DENIED_ATTRS that are also usable bare (`__builtins__`, `__import__`,
+# `__class__`). __name__ is deliberately absent: class bodies read it.
+DENIED_NAMES = frozenset({
+    "eval", "exec", "compile", "globals", "locals", "vars", "dir",
+    "getattr", "setattr", "delattr", "breakpoint",
+}) | DENIED_ATTRS
+
+
+def _reject_escapes(code: str) -> Any:
+    """Parse `code` and refuse the syntax that escapes the namespace."""
+    import ast
+
+    def deny(name: str, node: Any) -> None:
+        raise SecurityError(
+            f"'{name}' is forbidden by sandbox policy "
+            f"(line {getattr(node, 'lineno', '?')})")
+
+    tree = ast.parse(code)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and node.attr in DENIED_ATTRS:
+            deny(node.attr, node)
+        elif isinstance(node, ast.Name) and node.id in DENIED_NAMES:
+            deny(node.id, node)
+        elif (isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr in ("format", "format_map")
+                and isinstance(node.func.value, ast.Constant)
+                and isinstance(node.func.value.value, str)):
+            for attr in DENIED_ATTRS:
+                if attr in node.func.value.value:
+                    deny(attr, node)
+    return tree
+
+
 SAFE_BUILTINS = {
     "abs": abs, "all": all, "any": any, "bool": bool, "dict": dict,
     "enumerate": enumerate, "filter": filter, "float": float, "int": int,
@@ -40,7 +92,7 @@ SAFE_BUILTINS = {
     "zip": zip, "True": True, "False": False, "None": None,
     "SystemExit": SystemExit, "KeyboardInterrupt": KeyboardInterrupt,
     # new
-    "__build_class__": __build_class__,
+    "__build_class__": __build_class__, "super": super,
     "sorted": sorted, "reversed": reversed, "isinstance": isinstance,
     "issubclass": issubclass, "round": round, "divmod": divmod,
     "pow": pow, "ord": ord, "chr": chr, "bin": bin, "hex": hex,
@@ -248,6 +300,9 @@ class Sandbox:
 
         self.namespace = {
             "__builtins__": authorized_builtins,
+            # Every class body reads __name__ to set __module__; "__main__"
+            # also lets the usual `if __name__ == "__main__":` block run.
+            "__name__": "__main__",
             "final_answer": self._final_answer_tool,
         }
 
@@ -347,7 +402,8 @@ class Sandbox:
             self._limit_resource()
             self._block_network()
 
-            compiled_code = compile(code, filename="<sandbox>", mode="exec")
+            tree = _reject_escapes(code)
+            compiled_code = compile(tree, filename="<sandbox>", mode="exec")
             exec(compiled_code, self.namespace)
 
             conn.send({
