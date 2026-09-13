@@ -1,12 +1,22 @@
 {
 "Google AI Studio": {
 	"url": "https://generativelanguage.googleapis.com/v1beta/openai/",
-	"keys": ["GOOGLE_API_KEY"],
+	"keys": ["GOOGLE_STUDIO_1", "GOOGLE_STUDIO_2"],
 	"model": ["gemma-4-31b-it", "gemma-4-26b-a4b-it"]
 },
 "Open Router": {
 	"url": "https://openrouter.ai/api/v1",
-	"keys": ["OPEN_ROUTER_KEY_1", "OPEN_ROUTER_KEY_2"],
-	"model": ["google/gemma-4-31b-it:free","qwen/qwen3.5-flash-02-23", "dots-studio/dots-3-note-preview:free", "nvidia/nemotron-3-super-120b-a12b:free", "cohere/north-mini-code:free"]
+	"keys": ["OPEN_ROUTER_1", "OPEN_ROUTER_2"],
+	"model": ["google/gemma-4-31b-it:free", "dots-studio/dots-3-note-preview:free", "nvidia/nemotron-3-super-120b-a12b:free", "cohere/north-mini-code:free"]
+},
+"Mistral Studio": {
+	"url": "https://api.mistral.ai/v1",
+	"keys": ["MISTRAL_STUDIO_1", "MISTRAL_STUDIO_2"],
+	"model": ["codestral-latest", "mistral-small-latest", "mistral-medium-latest", "ministral-3b-latest", "ministral-8b-latest", "ministral-14b-latest"]
+},
+"Groq Console": {
+	"url": "https://api.groq.com/openai/v1",
+	"keys":["GROQ_CONSOLE_1", "GROQ_CONSOLE_2"],
+	"model": ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.6-27b"]
 }
 }
