@@ -136,14 +136,14 @@ class Sandbox:
         Returns:
             bool: True if the module import is allowed, False otherwise
         """
-        base_pkg = name.split(".")[0]
         for pattern in self.config.authorized_imports:
             if pattern.endswith(".*"):
                 pkg = pattern[:-2]
-                if base_pkg == pkg or name.startswith(f"{pkg}."):
+                if name == pkg or name.startswith(f"{pkg}."):
                     return True
-            elif name == pattern or base_pkg == pattern:
-                return True
+            else:
+                if name == pattern:
+                    return True
         return False
 
     def _custom_import(
@@ -223,7 +223,7 @@ class Sandbox:
     def _clean_git_diff(text: str) -> str:
         """delete unwanted lines (diff --git, old mode, new mode, etc.)
         and reformate."""
-        from re import sub
+        import re
 
         if not isinstance(text, str):
             return text
@@ -232,7 +232,9 @@ class Sandbox:
             r"(?:diff --git|old mode|new mode|sympy/[^\n\r]*?b/sympy/[^\n\r]*"
             r"|nold mode)[^\n\r]*(\\n|\r?\n)?"
         )
-        cleaned = sub(pattern, '', text)
+        second_pattern = r'^\s*(\+|export |building extension|Link requires)'
+        cleaned = re.sub(pattern, '', text)
+        cleaned = re.sub(second_pattern, '', cleaned, flags=re.MULTILINE)
 
         if r'\n' in cleaned:
             cleaned = cleaned.replace(r'\n', '\n')
@@ -312,23 +314,22 @@ class Sandbox:
             return
 
         tools_res = self.mcp_client.initialize_session()
-        tools = tools_res.get("result", {}).get("tools", [])  # depend
+        tools = tools_res.get("result", {}).get("tools", [])
         self.tools = tools
 
+        def create_wrapper(tool_name: str) -> Callable[..., Any]:
+            def tool_wrapper(**kwargs: Any) -> Any:
+                if self.mcp_client is None:
+                    return None
+                res = self.mcp_client.call_tool(tool_name, kwargs)
+                result = res.get("result", {}) if res else {}
+                content = result.get("content", [])
+                return content[0].get("text", "") if content else ""
+            return tool_wrapper
+
         for tool in tools:
-            tool_name = tool["name"]
-
-            def make_tool_wrapper(name: str) -> Callable:
-                def tool_wrapper(**kwargs: Any) -> Any:
-                    if self.mcp_client is None:
-                        return None
-                    res = self.mcp_client.call_tool(name, kwargs)
-                    result = res.get("result", {}) if res else {}
-                    content = result.get("content", [])
-                    return content[0].get("text", "") if content else ""
-                return tool_wrapper
-
-            self.namespace[tool_name] = make_tool_wrapper(tool_name)
+            t_name = tool["name"]
+            self.namespace[t_name] = create_wrapper(t_name)
 
     def list_tools(self) -> list[dict[str, Any]]:
         """Return the discovered MCP tool specs, or [] if none."""

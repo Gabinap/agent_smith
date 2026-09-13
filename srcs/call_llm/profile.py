@@ -21,6 +21,7 @@ class Profile:
         self.provider: dict[str, Any] = {}
         self.provider_url = provider_url
         self.model_name = model_name
+        self.new = True
 
         if model_name == "" or provider_url == "":
             self.provider_name = self.provider_selection()
@@ -29,6 +30,7 @@ class Profile:
             self.provider_url = self.provider.get("url", "")
         else:
             self.provider = self._provider_from_url(provider_url)
+            self.new = False
 
         self.keys: list[str] = self.provider.get("keys", list(DEFAULT_KEYS))
         self.key_name = self.keys  # TODO: drop once the agents read .keys

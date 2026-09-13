@@ -3,7 +3,6 @@ import re
 
 import cli_agent
 from call_llm.calling import LLM
-
 from models.metrics import SolutionOutput, StepMetrics
 from models.tasks import SWEBenchTaskInput
 from rich.console import Console
@@ -40,25 +39,14 @@ class SWEBench:
         self.model_name = model_name
         self.env_key = env_key
         self.steps: list[StepMetrics] = []
-
         self.step = 1
         self.sandbox_data = None
         self.py_code = ""
         self.total_requests = 0
         self.console = console
-
-        self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
-
-        # self.py_code = "result = get_patch()\nprint(result)"
-        # result = self.sandbox.execute(self.py_code)
-        # print(result)
-        # output = ast.literal_eval(result.output)
-        # print("\n\n\n\n")
-        # print(output.get('content')[0].get('text'))
-        # print("\n\n\n\n")
-
-
         self.max_iteration = max_iteration
+        self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
+        
         list_tools = self.sandbox.list_tools()
         self.llm = LLM(self.api_url, self.model_name, self.env_key,
                        system_content(list_tools), list_tools)
@@ -83,9 +71,8 @@ class SWEBench:
         if self.py_code == "":
             self.llm.messages.append({
                                             "role": "user",
-                                            "content": f"No python code generated, you have to write valid python block, example ```python #your code here ```"
+                                            "content": "No python code generated, you have to write valid python block, example ```python #your code here ```"
                                 })
-            # Create a first visual
             return
 
         self.sandbox_data = self.sandbox.execute(self.py_code)
@@ -106,7 +93,6 @@ class SWEBench:
             if '[FAIL]' in self.sandbox_data.output or 'FAILED' in self.sandbox_data.output:
                 message = "Test Failed"
             else:
-                # [OK], OK
                 message = "Test Passed"
 
             self.llm.messages.append({
@@ -143,12 +129,42 @@ class SWEBench:
                 else:
                     self.step += 1
         except Exception as e:
-            print(f"Error: {e}")
+            self.console.print("[bold red] Agentic Loop Error:", e)
             self.error = e
 
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         save_output(output, self.output_file)
+        self.create_benchmark_data(output.success, output.task_id)
+
+    def create_benchmark_data(self, success: bool, task_id: str):
+        """
+        Add the solution to the datafiles
+        Args:
+            success: bool = True if the task is completed else false
+            task_id: str = the id of the task
+        """
+        filepath = "cache/llm_results.json"
+        import json
+        import os
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        data = []
+        if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+            with open(filepath, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = []
+
+        bench_data = {
+            "model": self.model_name,
+            "success": success,
+            "task_id": task_id,
+        }
+        data.append(bench_data)
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
 
     def get_step_metrics(self) -> StepMetrics:
         """Build the StepMetrics for the current step.
@@ -170,7 +186,7 @@ class SWEBench:
         )
 
     def get_solution_output(self) -> SolutionOutput:
-        if not getattr(self.sandbox_data, "final_answer"):
+        if not self.sandbox_data.final_answer:
             self.sandbox_data.final_answer = None
         succes = False if self.sandbox_data.final_answer is None else True
 
