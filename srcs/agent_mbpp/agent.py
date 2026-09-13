@@ -1,21 +1,23 @@
 """Autonomous agent loop that solves a single MBPP task."""
 
 import datetime
-import re
-import textwrap
 import json
+import logging
+import os
+import re
+import tempfile
 
 import cli_agent
 from call_llm.calling import LLM
 from models.metrics import SolutionOutput, StepMetrics
 from rich.console import Console
+from sandbox.mcp_client import McpClient
 from sandbox.sandbox import Sandbox, SandboxConfig
 
 from .prompt import get_prompt, system_content
 from .task_manager import Task
-from sandbox.mcp_client import McpClient
 
-
+logger = logging.getLogger(__name__)
 class Mbpp:
     """Run the generate/execute loop for one MBPP task."""
 
@@ -107,8 +109,63 @@ class Mbpp:
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         self.save_output(output)
+        self.create_benchmark_data(success=output.success,
+                                   task_id=output.task_id)
 
+    def create_benchmark_data(self, success: bool, task_id: str):
+        """
+        Add the solution to the datafiles
+        Args:
+            success: bool = True if the task is completed else false
+            task_id: str = the id of the task
+        filepath = "cache/llm_results.json"
+        """
+        filepath = "cache/llm_results.json"
+        try:
+            if not hasattr(self, "llm") or not hasattr(self.llm, "model_name"):
+                raise AttributeError("No model name found")
 
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            data = []
+
+            if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+                try:
+                    with open(filepath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if not isinstance(data, list):
+                            logger.warning(
+                                "the %s file was not a list.", filepath
+                            )
+                            data = []
+                except json.JSONDecodeError as e:
+                    logger.warning(
+                        "corrupt json file or wrong format (%s) : %s. New list created.", 
+                        filepath, e
+                    )
+                    data = []
+
+            bench_data = {
+                "model": self.llm.model_name,
+                "success": success,
+                "task_id": task_id,
+            }
+            data.append(bench_data)
+
+            dir_name = os.path.dirname(filepath)
+            with tempfile.NamedTemporaryFile("w", dir=dir_name, delete=False, encoding="utf-8") as temp_file:
+                json.dump(data, temp_file, indent=2, ensure_ascii=False)
+                temp_path = temp_file.name
+            os.replace(temp_path, filepath)
+            logger.info("Benchmark data saved, task_id: %s", task_id)
+        except OSError as e:
+            logger.error("OSError target file: %s : %s", filepath, e, exc_info=True)
+            self.error = e
+        except AttributeError as e:
+            logger.error("Error, bad configuration of the model : %s", e, exc_info=True)
+            self.error = e
+        except Exception as e:
+            logger.critical("Error: %s", e, exc_info=True)
+            self.error = e
 
     def extract_python(self, text: str | None) -> re.Match[str] | None:
         """Extract the first ```python fenced code block from `text`."""
