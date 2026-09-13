@@ -1,32 +1,53 @@
 import json
+import pathlib
 from collections import defaultdict
 
+from paths import MATRIX_LOG, RUNS
 from termgraph import Args, BarChart, Data
 
 
 class LLMBenchmarkGraph:
-    def __init__(self, input_file: str = "cache/llm_results.json"):
+    def __init__(self, runs_dir: pathlib.Path = RUNS):
         """
         Create the graph for the benchmark
         Args:
-            input_file: str = data file where llm results are stored
+            runs_dir: Path = directory holding one solution per run
         """
-        self.input_file = input_file
+        self.runs_dir = runs_dir
         self.raw_data = self._load_data()
 
     def _load_data(self) -> list[dict]:
         """
-        Get data from the input file
+        Get data from every solution file produced by a run.
+
+        The solution files are the only source: the model, the outcome
+        and the task are already in each one, so there is no second
+        file to keep in sync with them.
+
         Returns:
             List of llm results
         """
-        try:
-            with open(self.input_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"File not found {self.input_file}")
-        except json.JSONDecodeError:
-            raise ValueError(f"Invalid file {self.input_file}")
+        if not self.runs_dir.is_dir():
+            raise FileNotFoundError(f"No run directory {self.runs_dir}")
+
+        results = []
+        for path in sorted(self.runs_dir.glob("*.json")):
+            if path.name == MATRIX_LOG.name:
+                continue
+            try:
+                run = json.loads(path.read_text(encoding="utf-8"))
+                results.append({
+                    "model": run["steps"][0]["model_name"],
+                    "success": run["success"],
+                    "task_id": run["task_id"],
+                })
+            except json.JSONDecodeError:
+                raise ValueError(f"Invalid file {path}")
+            except (KeyError, IndexError):
+                # A run that never completed a step records no model,
+                # so there is nothing to attribute its outcome to.
+                print(f"Skipping {path.name}: no step to read a model from")
+        return results
 
     def _validate_and_process_data(self) -> tuple[dict[str, int], int]:
         """
@@ -90,22 +111,5 @@ class LLMBenchmarkGraph:
 
 
 if __name__ == "__main__":
-    graph = LLMBenchmarkGraph("cache/llm_results.json")
+    graph = LLMBenchmarkGraph()
     graph.build_graph()
-
-
-"""
-[
-  {"model": "Gemma", "success": true, "task_id": "11116s"},
-  {"model": "Gemma", "success": true, "task_id": "11115s"},
-  {"model": "Qwen", "success": true, "task_id": "11113s"},
-  {"model": "Gemma", "success": false, "task_id": "11114s"},
-  {"model": "Gemma", "success": true, "task_id": "11113s"},
-  {"model": "Gemma", "success": true, "task_id": "11112s"},
-  {"model": "Qwen", "success": false, "task_id": "11116s"},
-  {"model": "Qwen", "success": true, "task_id": "11115s"},
-  {"model": "Qwen", "success": false, "task_id": "11114s"},
-  {"model": "Qwen", "success": false, "task_id": "11112s"}
-]
-
-"""

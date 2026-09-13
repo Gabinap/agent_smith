@@ -34,6 +34,12 @@ sandbox-swebench:
 graph:
 	uv run srcs/build_graph.py
 
+# one solution.json per (model, task); re-running skips what is done
+# make bench MODELS="codestral-latest,openai/gpt-oss-20b" TASKS="cache/a.json"
+bench:
+	uv run srcs/bench_matrix.py $(if $(MODELS),--models "$(MODELS)") \
+		$(if $(TASKS),--tasks $(TASKS))
+
 # ========================= dev commands =========================
 
 install:
@@ -62,5 +68,5 @@ clean:
 	rm -rf __pycache__ .mypy_cache .pytest_cache .python-version .vscode
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
-.PHONY: run-mbpp run-swebench sandbox sandbox-mbpp sandbox-swebench graph \
+.PHONY: run-mbpp run-swebench sandbox sandbox-mbpp sandbox-swebench graph bench \
 	install test lint lint-strict debug clean

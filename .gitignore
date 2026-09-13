@@ -220,3 +220,13 @@ __marimo__/
 .streamlit/secrets.toml
 
 moulinette
+
+# Run artifacts. runs/*.json holds the benchmark evidence and IS meant
+# to be committed: Q12 asks to trace a report row back to its
+# solution.json, and those files are also what the graph reads.
+# Ignored below: what the moulinette re-dumps, and the debug traces.
+cache/
+runs/logs/
+runs/llm_responses.jsonl
+mbpp_solution.json
+swebench_solution.json

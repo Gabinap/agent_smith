@@ -12,7 +12,7 @@ from sandbox.sandbox import Sandbox, SandboxConfig
 
 from .code_gen import clean_run_tests, llm_output_code, truncate_output
 from .prompt import get_prompt, system_content
-from .save_data import save_llm_messages, save_output
+from .save_data import save_output
 
 
 class SWEBench:
@@ -134,7 +134,6 @@ class SWEBench:
                     break
                 self.execute()
                 self.steps.append(self.get_step_metrics())
-                save_llm_messages(self.llm.messages)
 
                 if self.sandbox_data and self.sandbox_data.finished:
                     break
@@ -148,36 +147,6 @@ class SWEBench:
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         save_output(output, self.output_file)
-        self.create_benchmark_data(output.success, output.task_id)
-
-    def create_benchmark_data(self, success: bool, task_id: str):
-        """
-        Add the solution to the datafiles
-        Args:
-            success: bool = True if the task is completed else false
-            task_id: str = the id of the task
-        """
-        filepath = "cache/llm_results.json"
-        import json
-        import os
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        data = []
-        if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
-            with open(filepath, "r", encoding="utf-8") as f:
-                try:
-                    data = json.load(f)
-                except json.JSONDecodeError:
-                    data = []
-
-        bench_data = {
-            "model": self.model_name,
-            "success": success,
-            "task_id": task_id,
-        }
-        data.append(bench_data)
-
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
 
     def get_step_metrics(self) -> StepMetrics:
         """Build the StepMetrics for the current step.
@@ -189,7 +158,7 @@ class SWEBench:
                 step=self.step,
                 input_tokens=self.llm_output_data.get("input_tokens"),
                 output_tokens=self.llm_output_data.get("output_tokens"),
-                request_time_ms=self.llm_output_data.get("request_time"),
+                request_time_ms=self.llm_output_data.get("request_time_ms"),
                 api_url=self.llm.api_url,
                 model_name=self.llm.model_name,
                 llm_output=self.llm_output_data.get("answer"),

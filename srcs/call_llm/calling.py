@@ -3,12 +3,14 @@
 import datetime
 import json
 import os
+import pathlib
 import time
 from typing import Any
 
 from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
+from paths import LLM_RESPONSES
 
 
 class LLM:
@@ -27,7 +29,7 @@ class LLM:
         """
         self.api_url = api_url
         self.model_name = model_name
-        self.log_file: str | None = "llm_responses.jsonl"
+        self.log_file: str | None = str(LLM_RESPONSES)
         self._system_content = system_content
         self._api_keys = self._load_keys(env_keys)
         self._key_index = 0
@@ -110,7 +112,9 @@ class LLM:
             "model_name": self.model_name,
             "completion": json.loads(completion.model_dump_json()),
         }
-        with open(self.log_file, "a", encoding="utf-8") as file:
+        log = pathlib.Path(self.log_file)
+        log.parent.mkdir(parents=True, exist_ok=True)
+        with open(log, "a", encoding="utf-8") as file:
             file.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
     def call(self, prompt: str) -> dict[str, Any]:
@@ -143,7 +147,7 @@ class LLM:
             "model_name": self.model_name,
             "thought": thought,
             "answer": answer,
-            "request_time": f"{elapsed:.3f}",
+            "request_time_ms": elapsed * 1000,
             "retries": retries,
             "tool_calls": None,  # TODO: drop with agent_swebench's branch
         }

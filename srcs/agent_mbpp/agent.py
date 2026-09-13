@@ -1,11 +1,7 @@
 """Autonomous agent loop that solves a single MBPP task."""
 
 import datetime
-import json
-import logging
-import os
 import re
-import tempfile
 import time
 
 import cli_agent
@@ -17,8 +13,6 @@ from sandbox.sandbox import Sandbox, SandboxConfig
 
 from .prompt import get_prompt, system_content
 from .task_manager import Task
-
-logger = logging.getLogger(__name__)
 
 
 class Mbpp:
@@ -93,17 +87,6 @@ class Mbpp:
                     break
                 self.execute()
                 self.steps.append(self.get_step_metrics())
-                response = json.dumps(
-                    [
-                        m.model_dump() if hasattr(m, "model_dump") else m
-                        for m in self.llm.messages
-                    ],
-                    indent=2,
-                    ensure_ascii=False
-                )
-
-                with open("llm_messages.json", "w", encoding="utf-8") as file:
-                    file.write(response)
 
                 if self.sandbox_data and self.sandbox_data.finished:
                     break
@@ -118,68 +101,6 @@ class Mbpp:
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         self.save_output(output)
-        self.create_benchmark_data(success=output.success,
-                                   task_id=output.task_id)
-
-    def create_benchmark_data(self, success: bool, task_id: str):
-        """
-        Add the solution to the datafiles
-        Args:
-            success: bool = True if the task is completed else false
-            task_id: str = the id of the task
-        filepath = "cache/llm_results.json"
-        """
-        filepath = "cache/llm_results.json"
-        try:
-            if not hasattr(self, "llm") or not hasattr(self.llm, "model_name"):
-                raise AttributeError("No model name found")
-
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            data = []
-
-            if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
-                try:
-                    with open(filepath, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                        if not isinstance(data, list):
-                            logger.warning(
-                                "the %s file was not a list.", filepath
-                            )
-                            data = []
-                except json.JSONDecodeError as e:
-                    logger.warning(
-                        "corrupt json file or wrong format "
-                        "(%s) : %s. New list created.",
-                        filepath, e
-                    )
-                    data = []
-
-            bench_data = {
-                "model": self.llm.model_name,
-                "success": success,
-                "task_id": task_id,
-            }
-            data.append(bench_data)
-
-            dir_name = os.path.dirname(filepath)
-            with tempfile.NamedTemporaryFile(
-                    "w", dir=dir_name, delete=False,
-                    encoding="utf-8") as temp_file:
-                json.dump(data, temp_file, indent=2, ensure_ascii=False)
-                temp_path = temp_file.name
-            os.replace(temp_path, filepath)
-            logger.info("Benchmark data saved, task_id: %s", task_id)
-        except OSError as e:
-            logger.error("OSError target file: %s : %s",
-                         filepath, e, exc_info=True)
-            self.error = e
-        except AttributeError as e:
-            logger.error("Error, bad configuration of the model : %s",
-                         e, exc_info=True)
-            self.error = e
-        except Exception as e:
-            logger.critical("Error: %s", e, exc_info=True)
-            self.error = e
 
     def extract_python(self, text: str | None) -> re.Match[str] | None:
         """Extract the first ```python fenced code block from `text`."""
@@ -200,7 +121,7 @@ class Mbpp:
                 step=self.step,
                 input_tokens=self.llm_output_data.get("input_tokens"),
                 output_tokens=self.llm_output_data.get("output_tokens"),
-                request_time_ms=self.llm_output_data.get("request_time"),
+                request_time_ms=self.llm_output_data.get("request_time_ms"),
                 api_url=self.llm.api_url,
                 model_name=self.llm.model_name,
                 llm_output=self.llm_output_data.get("answer"),

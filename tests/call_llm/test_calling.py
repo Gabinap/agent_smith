@@ -7,6 +7,7 @@ import httpx
 import pytest
 from openai import RateLimitError
 
+from srcs.call_llm import calling
 from srcs.call_llm.calling import LLM
 
 SYSTEM = "you are a python agent"
@@ -70,6 +71,8 @@ def llm(monkeypatch, tmp_path):
         system_content=SYSTEM,
     )
     instance.client = MagicMock()
+    # the default is an absolute path under runs/: keep the suite out of it
+    instance.log_file = str(tmp_path / "llm_responses.jsonl")
     return instance
 
 
@@ -297,3 +300,14 @@ def test_log_response_is_skipped_without_a_log_file(llm, tmp_path):
     _set_response(llm, "code")
     llm.call("x")
     assert list(tmp_path.iterdir()) == []
+
+
+def test_call_reports_the_request_time_in_milliseconds(llm, monkeypatch):
+    """The field is named _ms and StepMetrics stores it as such."""
+    _set_response(llm, "code")
+    ticks = iter([10.0, 11.5])  # a 1.5 second call
+    monkeypatch.setattr(calling.time, "perf_counter", lambda: next(ticks))
+
+    result = llm.call("x")
+
+    assert result["request_time_ms"] == 1500.0
