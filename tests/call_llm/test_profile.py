@@ -8,6 +8,8 @@ from srcs.call_llm import profile as profile_module
 from srcs.call_llm.profile import Profile
 
 OPEN_ROUTER_URL = "https://openrouter.ai/api/v1"
+# Read from the catalog, so adding a provider never breaks these tests.
+OPEN_ROUTER = Profile._load_providers()["Open Router"]
 
 
 @pytest.fixture
@@ -24,14 +26,15 @@ def pick(monkeypatch):
 # --- the interactive path ---
 
 def test_prompts_when_model_or_url_missing(pick):
-    pick("Open Router", "qwen/qwen3.5-flash-02-23")
+    model = OPEN_ROUTER["model"][0]
+    pick("Open Router", model)
 
     p = Profile(mode="cli", provider_url="", model_name="")
 
     assert p.provider_name == "Open Router"
-    assert p.model_name == "qwen/qwen3.5-flash-02-23"
+    assert p.model_name == model
     assert p.provider_url == OPEN_ROUTER_URL
-    assert p.keys == ["OPEN_ROUTER_KEY_1", "OPEN_ROUTER_KEY_2"]
+    assert p.keys == OPEN_ROUTER["keys"]
 
 
 def test_provider_selection_raises_on_cancel(pick):
@@ -58,7 +61,7 @@ def test_skips_prompts_when_model_and_url_given():
     assert p.provider_url == OPEN_ROUTER_URL
     assert p.model_name == "m"
     assert p.provider_name == "Open Router"
-    assert p.keys == ["OPEN_ROUTER_KEY_1", "OPEN_ROUTER_KEY_2"]
+    assert p.keys == OPEN_ROUTER["keys"]
 
 
 def test_unknown_url_falls_back_to_the_default_key():

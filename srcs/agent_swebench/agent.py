@@ -1,5 +1,6 @@
 
 import re
+import time
 
 import cli_agent
 from call_llm.calling import LLM
@@ -45,6 +46,8 @@ class SWEBench:
         self.total_requests = 0
         self.console = console
         self.max_iteration = max_iteration
+        self.error: Exception | None = None
+        self.elapsed_seconds = 0.0
         self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
         
         list_tools = self.sandbox.list_tools()
@@ -116,6 +119,7 @@ class SWEBench:
 
     def solve_task(self):
         self.error = None
+        start = time.perf_counter()
         try:
             while (True):
                 if self.step > self.max_iteration:
@@ -132,6 +136,7 @@ class SWEBench:
             self.console.print("[bold red] Agentic Loop Error:", e)
             self.error = e
 
+        self.elapsed_seconds = time.perf_counter() - start
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         save_output(output, self.output_file)
@@ -186,24 +191,27 @@ class SWEBench:
         )
 
     def get_solution_output(self) -> SolutionOutput:
-        if not self.sandbox_data.final_answer:
-            self.sandbox_data.final_answer = None
-        succes = False if self.sandbox_data.final_answer is None else True
+        """Assemble the final SolutionOutput for this run.
+
+        A run that never reached final_answer is a normal outcome, not
+        a crash: report success=False with an empty solution rather
+        than handing None to a field typed as a required str.
+        """
+        answer = self.sandbox_data.final_answer if self.sandbox_data else None
 
         return SolutionOutput(
             task_id=str(self.task.instance_id),
             benchmark="swebench",
-            success=succes,
-            solution=self.sandbox_data.final_answer,
+            success=answer is not None,
+            solution=answer or "",
             iterations=len(self.steps),
             total_requests=self.total_requests,
             total_input_tokens=sum(metric.input_tokens or 0
                                    for metric in self.steps),
             total_output_tokens=sum(metric.output_tokens or 0
                                     for metric in self.steps),
-            total_time_seconds=sum(metric.request_time_ms or 0
-                                   for metric in self.steps),
+            total_time_seconds=self.elapsed_seconds,
             steps=self.steps,
             system_prompt=self.prompt,
-            error=self.error
+            error=str(self.error) if self.error else None
         )

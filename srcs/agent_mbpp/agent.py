@@ -2,6 +2,7 @@
 
 import datetime
 import re
+import time
 import textwrap
 import json
 
@@ -42,6 +43,8 @@ class Mbpp:
         self.total_requests = 0
         self.console = console
         self.max_iteration = max_iteration
+        self.error: Exception | None = None
+        self.elapsed_seconds = 0.0
 
     def execute(self) -> None:
         """Run one generate -> extract -> sandbox-execute cycle.
@@ -77,6 +80,7 @@ class Mbpp:
     def solve_task(self) -> None:
         """Iterate until the task is solved or max_iteration is hit."""
         self.error = None
+        start = time.perf_counter()
         try:
             while (True):
                 if self.step > self.max_iteration:
@@ -104,6 +108,7 @@ class Mbpp:
             print(f"Error: {e}")
             self.error = e
 
+        self.elapsed_seconds = time.perf_counter() - start
         output = self.get_solution_output()
         cli_agent.display_solution(self.console, output)
         self.save_output(output)
@@ -139,25 +144,28 @@ class Mbpp:
         )
 
     def get_solution_output(self) -> SolutionOutput:
-        """Assemble the final SolutionOutput for this run."""
+        """Assemble the final SolutionOutput for this run.
+
+        A run that never reached final_answer is a normal outcome, not
+        a crash: report success=False with an empty solution rather
+        than handing None to a field typed as a required str.
+        """
         timestamp = datetime.datetime.now().isoformat()
+        answer = self.sandbox_data.final_answer if self.sandbox_data else None
         return SolutionOutput(
             task_id=str(self.task.task_id),
             benchmark="mbpp",
-            success=True,
-            solution=self.sandbox_data.final_answer,
+            success=answer is not None,
+            solution=answer or "",
             iterations=len(self.steps),
             total_requests=self.total_requests,
             total_input_tokens=sum(metric.input_tokens or 0
                                    for metric in self.steps),
             total_output_tokens=sum(metric.output_tokens or 0
                                     for metric in self.steps),
-            total_time_seconds=sum(metric.request_time_ms or 0
-                                   for metric in self.steps),
+            total_time_seconds=self.elapsed_seconds,
             steps=self.steps,
             system_prompt=self.prompt,
-            error=None,
+            error=str(self.error) if self.error else None,
             timestamp=timestamp
         )
-
-    

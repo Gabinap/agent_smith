@@ -5,7 +5,7 @@ requires-python = ">=3.10.18, <3.11"
 [[package]]
 name = "agent-smith"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "docker" },
     { name = "httpx" },
@@ -16,6 +16,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "questionary" },
     { name = "rich" },
+    { name = "termgraph" },
 ]
 
 [package.dev-dependencies]
@@ -36,6 +37,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "questionary", specifier = ">=2.1.1" },
     { name = "rich", specifier = ">=15.0.0" },
+    { name = "termgraph", specifier = ">=0.7.6" },
 ]
 
 [package.metadata.requires-dev]
@@ -907,6 +909,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b5/b4/205b0d5241d934e8add0c38aa924c4f9fb7330834ff11e5444db964ec3f9/starlette-1.6.0.tar.gz", hash = "sha256:d4e3ac5e546444960c710297a3c9fc3f7ebae1b7e963f3d36173b49da535be9b", size = 2716969, upload-time = "2026-08-08T18:27:57.512Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/cb/6a6a47d5b464bd08695d254f3da6e7986cc70c9fa5d778eda57538edfe56/starlette-1.6.0-py3-none-any.whl", hash = "sha256:a86dd39d14bb45f85a3d18525215a9ef0cfd1f192ac793220e72598c90335f0c", size = 75969, upload-time = "2026-08-08T18:27:56.196Z" },
+]
+
+[[package]]
+name = "termgraph"
+version = "0.7.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/38/d6/43a42797431d299a4b09b3b9fcdbcdea9a762231f6037c5660a9125e33f0/termgraph-0.7.6.tar.gz", hash = "sha256:0a86f6033cec461785ca4ffae19b394c788820fa9beab17f9d2eb83068e1fe60", size = 463933, upload-time = "2026-03-25T05:19:25.831Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/34/02/7d15699fc4d431443e6f1217c22a130b129a866a5f88164fedfab7fe39f2/termgraph-0.7.6-py3-none-any.whl", hash = "sha256:c9dc8b10189462b511ba076c484cf6e3c389e7c2d40f170f09489dd101148398", size = 18627, upload-time = "2026-03-25T05:19:24.682Z" },
 ]
 
 [[package]]

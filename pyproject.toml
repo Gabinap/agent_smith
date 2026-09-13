@@ -14,6 +14,7 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "questionary>=2.1.1",
     "rich>=15.0.0",
+    "termgraph>=0.7.6",
 ]
 
 [build-system]
@@ -29,6 +30,8 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = [".", "srcs"]
+# Only our suite: moulinette/ ships its own tests and is not ours to run.
+testpaths = ["tests"]
 
 [project.scripts]
 sandbox = "sandbox.cli_sandbox:main"
