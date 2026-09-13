@@ -172,7 +172,8 @@ class McpHttp(McpClient):
 
 
 class McpStdio(McpClient):
-    def __init__(self, command: str, env: dict[str, str] | None = None) -> None:
+    def __init__(self, command: str,
+                 env: dict[str, str] | None = None) -> None:
         """
         MCP stdio client
         Args:

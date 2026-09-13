@@ -49,7 +49,7 @@ class SWEBench:
         self.error: Exception | None = None
         self.elapsed_seconds = 0.0
         self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
-        
+
         list_tools = self.sandbox.list_tools()
         self.llm = LLM(self.api_url, self.model_name, self.env_key,
                        system_content(list_tools), list_tools)
@@ -73,9 +73,11 @@ class SWEBench:
 
         if self.py_code == "":
             self.llm.messages.append({
-                                            "role": "user",
-                                            "content": "No python code generated, you have to write valid python block, example ```python #your code here ```"
-                                })
+                "role": "user",
+                "content": "No python code generated, you have to "
+                           "write valid python block, example "
+                           "```python #your code here ```"
+            })
             return
 
         self.sandbox_data = self.sandbox.execute(self.py_code)
@@ -83,17 +85,19 @@ class SWEBench:
         if self.sandbox_data.error or not self.sandbox_data:
             self.llm.messages.append({
                                 "role": "user",
-                                "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nTool result :\n{self.sandbox_data.output}"
+                                "content": f"Input: {self.py_code}\n"
+                                f"Sandbox Error: {self.sandbox_data.error}\n"
+                                f"Tool result :\n{self.sandbox_data.output}"
                     })
             cli_agent.display_sandbox(self.console,
-                                        self.sandbox_data,
-                                        self.py_code)
+                                      self.sandbox_data,
+                                      self.py_code)
             return
-
 
         if re.search(r'^[^#\n]*\brun_tests\s*\(', self.py_code, re.MULTILINE):
 
-            if '[FAIL]' in self.sandbox_data.output or 'FAILED' in self.sandbox_data.output:
+            if ('[FAIL]' in self.sandbox_data.output
+                    or 'FAILED' in self.sandbox_data.output):
                 message = "Test Failed"
             else:
                 message = "Test Passed"
@@ -103,15 +107,19 @@ class SWEBench:
                 "content": message
             })
             cli_agent.display_sandbox_tests(self.console,
-                clean_run_tests(self.sandbox_data.output),
-                message)
+                                            clean_run_tests(
+                                                self.sandbox_data.output),
+                                            message)
             return
 
-        self.sandbox_data.output = truncate_output(self.sandbox_data.output, max_lines=30)
+        self.sandbox_data.output = truncate_output(
+            self.sandbox_data.output, max_lines=30)
 
         self.llm.messages.append({
                     "role": "user",
-                    "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nTool result :\n{self.sandbox_data.output}"
+                    "content": f"Input: {self.py_code}\n"
+                    f"Sandbox Error: {self.sandbox_data.error}\n"
+                    f"Tool result :\n{self.sandbox_data.output}"
         })
         cli_agent.display_sandbox(self.console,
                                   self.sandbox_data,

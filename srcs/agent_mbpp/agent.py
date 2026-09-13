@@ -19,6 +19,8 @@ from .prompt import get_prompt, system_content
 from .task_manager import Task
 
 logger = logging.getLogger(__name__)
+
+
 class Mbpp:
     """Run the generate/execute loop for one MBPP task."""
 
@@ -73,7 +75,9 @@ class Mbpp:
         self.sandbox_data = self.sandbox.execute(self.py_code)
         self.llm.messages.append({
                             "role": "user",
-                            "content": f"Input: {self.py_code}\nSandbox Error: {self.sandbox_data.error}\nOutput :\n{self.sandbox_data.output}"
+                            "content": f"Input: {self.py_code}\n"
+                            f"Sandbox Error: {self.sandbox_data.error}\n"
+                            f"Output :\n{self.sandbox_data.output}"
         })
         cli_agent.display_sandbox(self.console,
                                   self.sandbox_data,
@@ -97,15 +101,15 @@ class Mbpp:
                     indent=2,
                     ensure_ascii=False
                 )
-                
+
                 with open("llm_messages.json", "w", encoding="utf-8") as file:
                     file.write(response)
-                
+
                 if self.sandbox_data and self.sandbox_data.finished:
                     break
                 else:
                     self.step += 1
-                
+
         except Exception as e:
             print(f"Error: {e}")
             self.error = e
@@ -144,7 +148,8 @@ class Mbpp:
                             data = []
                 except json.JSONDecodeError as e:
                     logger.warning(
-                        "corrupt json file or wrong format (%s) : %s. New list created.", 
+                        "corrupt json file or wrong format "
+                        "(%s) : %s. New list created.",
                         filepath, e
                     )
                     data = []
@@ -157,16 +162,20 @@ class Mbpp:
             data.append(bench_data)
 
             dir_name = os.path.dirname(filepath)
-            with tempfile.NamedTemporaryFile("w", dir=dir_name, delete=False, encoding="utf-8") as temp_file:
+            with tempfile.NamedTemporaryFile(
+                    "w", dir=dir_name, delete=False,
+                    encoding="utf-8") as temp_file:
                 json.dump(data, temp_file, indent=2, ensure_ascii=False)
                 temp_path = temp_file.name
             os.replace(temp_path, filepath)
             logger.info("Benchmark data saved, task_id: %s", task_id)
         except OSError as e:
-            logger.error("OSError target file: %s : %s", filepath, e, exc_info=True)
+            logger.error("OSError target file: %s : %s",
+                         filepath, e, exc_info=True)
             self.error = e
         except AttributeError as e:
-            logger.error("Error, bad configuration of the model : %s", e, exc_info=True)
+            logger.error("Error, bad configuration of the model : %s",
+                         e, exc_info=True)
             self.error = e
         except Exception as e:
             logger.critical("Error: %s", e, exc_info=True)

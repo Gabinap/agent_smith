@@ -43,12 +43,11 @@ def main() -> None:
             action="store_true",
         )
 
-
         args = parser.parse_args()
         task_file = Path(args.task_file).expanduser().resolve()
         args.task_file = str(task_file)
         profile = Profile("SWEBench", args.provider_url, args.model_name)
-        
+
         console.print("Starting MCP server")
         if args.http:
             spec = McpSpec(transport="http", url="http://localhost:8000")
@@ -56,13 +55,14 @@ def main() -> None:
             spec = McpSpec(
                 transport="stdio",
                 command=shlex.join(
-                    [sys.executable, str(PROJECT_ROOT / "mcp_tools_swebench.py")]
+                    [sys.executable,
+                     str(PROJECT_ROOT / "mcp_tools_swebench.py")]
                 ),
                 env={**os.environ, "SWE_TASK_FILE": str(task_file)},
             )
         mcp_client = create_mcp_client(spec)
         console.print(f"MCP {spec.transport} server Started")
-        
+
         launch_agent(profile, console, args, mcp_client)
 
     except Exception as e:
@@ -83,8 +83,9 @@ def launch_agent(profile, console, args, mcp_client):
         client=mcp_client
     )
     agent.solve_task()
-    if profile.new == True:
+    if profile.new:
         cli_agent.display_exit(console, agent.llm_output_data, agent.prompt)
+
 
 if __name__ == "__main__":
     main()

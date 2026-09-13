@@ -20,25 +20,28 @@ def python_block_gen(tool_call: ChatCompletionMessageFunctionToolCall) -> str:
     py_code = f"result = {fct_call.name}({args_txt})\nprint(result)"
     return py_code
 
+
 def clean_run_tests(text: str) -> str:
     pattern = re.compile(r'^\s*(\+|export |building extension|Link requires)')
     lines = text.splitlines()
     filtered = [line for line in lines if not pattern.match(line)]
     return "\n".join(filtered)
 
+
 def llm_output_code(console, llm_output_data):
-        if llm_output_data.get("tool_calls"):
-            tool_call = llm_output_data.get("tool_calls")
-            cli_agent.display_llm_tool_call(console, tool_call)
-            py_code = python_block_gen(tool_call)
-        else:
-            llm_answer = llm_output_data.get("answer")
-            cli_agent.display_llm_output(console,
-                                         llm_output_data,
-                                         llm_answer)
-            match = extract_python(llm_answer)
-            py_code = match.group(1) if match else ""
-        return py_code
+    if llm_output_data.get("tool_calls"):
+        tool_call = llm_output_data.get("tool_calls")
+        cli_agent.display_llm_tool_call(console, tool_call)
+        py_code = python_block_gen(tool_call)
+    else:
+        llm_answer = llm_output_data.get("answer")
+        cli_agent.display_llm_output(console,
+                                     llm_output_data,
+                                     llm_answer)
+        match = extract_python(llm_answer)
+        py_code = match.group(1) if match else ""
+    return py_code
+
 
 def truncate_output(result: str, max_lines: int):
     new_lines = [i for i, c in enumerate(result) if c == '\n']
@@ -46,4 +49,3 @@ def truncate_output(result: str, max_lines: int):
         result = result[:new_lines[max_lines]]
         result += f"\n({len(new_lines)-max_lines} Remaining Lines...)"
     return result
-

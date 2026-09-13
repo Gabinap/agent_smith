@@ -67,7 +67,6 @@ def read_file(
     )
 
 
-# TODO: old str not foud (trouver un truc qui reseembl ?)
 def edit_file(
         backend: ExecBackend, filepath: str, old_str: str, new_str: str
         ) -> str:
