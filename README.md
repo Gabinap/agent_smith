@@ -26,10 +26,12 @@ To let agents modify, create, write and read files, execute python code, we must
     Sandbox: The sandbox use the python function "exec" to create another executed code with restricted acces. It is restricted in many ways:
      - import restriction
      - builtin restriction
+     - escape syntax rejected before the code is compiled
      - network block
      - path restrict
      - time limit
      - memory limit
+     - no process creation
      - MCP protocol
 
     McpServer: Mcp Server is a local server where the agent can use tools in to succeed the tasks.
@@ -43,19 +45,49 @@ To run the project, you must install all the dependencies
 make install
 ```
 
-And then:
+## Running an agent
+
+Each agent reads a task file dumped by the moulinette and writes its
+solution as JSON. Both are run from `srcs/`, which the Makefile does
+for you:
+
 ```sh
-make run
+make run-mbpp
+make run-swebench
 ```
 
-To check the type-hint
+To pick the model without the interactive prompt:
+
 ```sh
-make lint
+make run-mbpp MODEL="codestral-latest" PROVIDER="https://api.mistral.ai/v1"
 ```
 
-To check the type-hint with strict flag
+## Running the sandbox on its own
+
+The sandbox is also a standalone REPL: it opens a prompt, executes what
+you type under the same restrictions, and exits on `exit` or Ctrl-D.
+
 ```sh
-make lint-strict
+uv run sandbox                                   # built-in policy
+uv run sandbox sandbox_template.json             # explicit policy
+make sandbox-mbpp                                # with the MBPP tools
+make sandbox-swebench                            # with the SWE-bench tools
+```
+
+## Benchmark
+
+```sh
+make bench                    # every catalogued model on every cached task
+make bench MODELS="codestral-latest,openai/gpt-oss-20b"
+make graph                    # success rate per model
+```
+
+## Checks
+
+```sh
+make test          # the test suite
+make lint          # flake8, then mypy
+make lint-strict   # same, with mypy --strict
 ```
 
 ___
@@ -112,10 +144,153 @@ To achieve this, the class builds an execution environment with a restricted dic
 
 Finally, the child process sends the execution results back to the main process via IPC (Inter-Process Communication), allowing the agent to interpret the response and either refine its code or confirm task completion.
 
+## Why a restricted namespace is not enough
+
+Handing `exec()` a dictionary without `os` filters **names**. CPython's
+object graph is not addressed by name but by attributes, and from any
+value at all you can walk back to the interpreter:
+
+```python
+().__class__.__bases__[0].__subclasses__()   # every class in the process
+final_answer.__globals__["os"]               # the module that defined it
+```
+
+Neither line imports anything, so an import allowlist never sees them.
+Three layers answer this, each covering what the others cannot.
+
+**1. The source is inspected before it is compiled.** The code is parsed
+into an abstract syntax tree and refused if it contains an attribute
+that leads out — `__globals__`, `__class__`, `__subclasses__`, `__mro__`
+and the frame internals `gi_frame`, `tb_frame`, `f_globals` — or a name
+that grants execution or attribute access by string: `eval`, `exec`,
+`compile`, `getattr`, `vars`. A denylist rather than an allowlist, so
+that `super().__init__()` and `def __init__` keep working. The very tree
+that was inspected is the one compiled, never a second parse. Format
+templates get the same treatment, because `"{0.__class__}".format(x)`
+hides its dots inside a string literal.
+
+**2. The namespace hands out no capability.** Builtins are replaced by a
+small allowlist in which `__import__`, `open` and `print` are our own
+guarded versions. More subtly, the module that defines those functions
+keeps **no module and no real builtin in its own globals**: every import
+it needs happens inside the function that uses it. This matters because
+`injected_function.__globals__` is exactly that dictionary — if `os` sat
+there, one attribute lookup would be enough.
+
+**3. The kernel caps what an escape could do.** The child process sets
+its own limits before running anything, each as both the soft and the
+hard value so nothing can raise them back: address space
+(`RLIMIT_AS`), **no fork at all** (`RLIMIT_NPROC`), maximum file size,
+open file descriptors, no core dumps, and CPU time as a backstop above
+the wall-clock timeout. Forbidding `fork` is what closes the gap left by
+neutralising `socket`: a patched socket only protects this process,
+while a shell spawned through `os.system` would carry its own network
+stack.
+
+## The policy is data
+
+Imports, readable directories, per-execution timeout and memory ceiling
+all come from a `SandboxConfig`, loaded from a JSON template. Each
+benchmark gets the policy it needs — MBPP never touches the filesystem,
+so it runs with no readable directory at all — and a missing or
+malformed template falls back to the built-in policy, which is
+restrictive. `sandbox_strict.json` exists to demonstrate the point: it
+allows `math` and nothing else, without a line of code changing.
+
 ___
 # Tool implementation details
 
-gagulhon
+## Two MCP servers, one per benchmark
+
+Tools are exposed to the agent through an MCP server started as a child
+process and spoken to over stdio (or HTTP with `--http`).
+
+- `mcp_tools_mbpp.py` exposes a single tool, `run_tests`. MBPP problems
+  are self-contained: the model writes a function and its asserts, and
+  the sandbox runs them directly.
+- `mcp_tools_swebench.py` exposes the nine tools required by the
+  subject, because fixing a real bug means exploring a repository
+  before touching it.
+
+The sandbox discovers whatever the connected server advertises and
+injects each tool into the execution namespace as a plain Python
+function. Nothing is hardcoded on the client side: connect a different
+server and the agent gets different tools.
+
+## The nine SWE-bench tools
+
+| Tool | Purpose |
+|---|---|
+| `read_file` | Read a file, or a line range, numbered `cat -n` style |
+| `edit_file` | Replace one exact, unique occurrence of a string |
+| `list_files` | List a directory, non-recursively, filtered by a glob |
+| `search_code` | Recursive regex search across the codebase |
+| `search_function_or_class_definition_in_code` | Locate where a symbol is *defined* |
+| `find_references` | Locate where a symbol is *used*, definition excluded |
+| `run_tests` | Run the task's evaluation script |
+| `get_patch` | Stage everything and return the diff against HEAD |
+| `run_command` | Run an arbitrary shell command |
+
+## Design decisions
+
+**Every tool returns text, never an object.** The consumer is a language
+model, so the return value is what it will read. Search results use one
+mandated shape — `/absolute/path:<line> <content>` — so the model can
+feed a result straight back into `read_file` or `edit_file`.
+
+**Failures are returned, not raised.** A tool that cannot do its job
+answers `"error: ..."`. An exception would abort the sandbox execution
+and leave the model with nothing to react to; a returned message keeps
+the loop alive and tells it what went wrong.
+
+**`edit_file` refuses ambiguity.** If `old_str` appears more than once
+it edits nothing and asks for more surrounding context. Silently
+patching the first match is how an agent corrupts a file it cannot see.
+
+**`get_patch` cleans before staging.** Running the test suite generates
+`__pycache__` and `.pyc` files; they are deleted before `git add`, so
+build noise never ends up in a submitted patch.
+
+**Two timeout classes.** Read-only tools get 15 seconds; tools that
+spawn a process — `run_tests`, `run_command` — get 300. A grep that
+hangs is a bug, a test suite that takes four minutes is normal.
+
+## The execution backend
+
+No tool touches the filesystem itself. Each one receives an
+`ExecBackend` and goes through its three operations:
+
+```python
+run(cmd, workdir, timeout, bash=False) -> CommandResult
+read_file(path) -> str
+write_file(path, content) -> None
+```
+
+This indirection is what lets the same tool code run in two very
+different places:
+
+- **`LocalExecBackend`** executes on the host, confined to a root
+  directory. Every path is resolved and any path escaping that root is
+  refused. MBPP uses it, and it also stands in for Docker while testing
+  the tools.
+- **`DockerExecBackend`** executes inside the container named by the
+  task's `docker_image` field. SWE-bench uses it, because a task's
+  repository comes with its own dependencies and its own Python.
+
+Both report the same `CommandResult` — `stdout`, `stderr`, `exit_code`,
+`timed_out` — so a tool cannot tell them apart. Two details worth
+knowing:
+
+**Timeouts are measured, not inferred.** Docker reports a timeout
+through the exit code of the `timeout` utility, whose convention
+differs between GNU coreutils and BusyBox. Comparing elapsed time
+against the limit works the same everywhere.
+
+**Containers are cleaned on every exit path.** The backend registers an
+`atexit` handler, supports the `with` statement, and purges any
+container left labelled `agent-smith` when it starts. The MCP server
+also turns `SIGTERM` into a normal interpreter shutdown, so a killed
+agent still runs its cleanup instead of leaking a container.
 
 
 ___
