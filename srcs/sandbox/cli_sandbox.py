@@ -89,7 +89,7 @@ class CLI_Sandbox:
         try:
             while True:
                 try:
-                    command = input("Sanbox>")
+                    command = input("Sanbox> ")
                     if command == "exit":
                         break
                     if not command.strip():
@@ -102,7 +102,8 @@ class CLI_Sandbox:
                         print(f"Error: {result.error}")
                     if result.finished:
                         print(f"Final Answer: {result.final_answer}")
-                    print(result)
+                    if not (result.output or result.error or result.finished):
+                        print("(no output)")
                 except (KeyboardInterrupt, EOFError):
                     print("\nExit the sandbox.")
                     break
