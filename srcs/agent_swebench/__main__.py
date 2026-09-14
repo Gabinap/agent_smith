@@ -7,6 +7,7 @@ from pathlib import Path
 import cli_agent
 from call_llm.profile import Profile
 from models import McpSpec
+from models.sandbox import SandboxConfig
 from rich.console import Console
 from sandbox.mcp_client import create_mcp_client
 
@@ -80,7 +81,14 @@ def launch_agent(profile, console, args, mcp_client):
         model_name=profile.model_name,
         env_key=profile.key_name,
         console=console,
-        client=mcp_client
+        client=mcp_client,
+        # Subject limits for SWE-bench: 30 iterations, 900s. The time
+        # budget leaves room for the iteration already in flight, which
+        # the guard cannot interrupt once started.
+        max_iteration=30,
+        max_time_seconds=840,
+        sandbox_config=SandboxConfig.from_file(
+            PROJECT_ROOT / "sandbox_swebench.json"),
     )
     agent.solve_task()
     if profile.new:

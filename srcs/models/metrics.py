@@ -96,3 +96,7 @@ class SolutionOutput(BaseModel):
         default=None, description="Error message if the agent failed."
     )
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+    stop_reason: str = Field(
+        default="solved",
+        description="Reason the agent stopped.",
+    )

@@ -152,7 +152,13 @@ def test_write_file_escape_is_blocked(backend):
 # container instead of the host filesystem. ---
 
 def test_get_patch_produces_a_valid_diff_through_docker(backend):
-    backend.run("apk add --no-cache git", workdir="/work", timeout=30)
+    # The only call here that downloads. What this test is about is
+    # get_patch(), not apk: when the install cannot complete, say so and
+    # skip rather than fail three lines below on a missing git binary.
+    installed = backend.run(
+        "apk add --no-cache git", workdir="/work", timeout=120)
+    if installed.exit_code != 0 or installed.timed_out:
+        pytest.skip(f"git could not be installed: {installed.stderr[-200:]}")
     backend.run(
         "git init -q && git -c user.email=t@t -c user.name=t "
         "commit -q --allow-empty -m init",

@@ -26,6 +26,8 @@ class SWEBench:
         console: Console,
         client: McpClient,
         max_iteration: int = 30,
+        max_time_seconds: int = 60,
+        sandbox_config: SandboxConfig | None = None,
     ):
         """Load the task and the LLM
 
@@ -33,12 +35,10 @@ class SWEBench:
             task_file (str): Task json file
             api_url (str): Url of the providers
             model_name (str): Name of the model
+            sandbox_config: policy for the sandbox, built-in one if None
         """
         self.output_file = output_file
         self.task = task
-        self.api_url = api_url
-        self.model_name = model_name
-        self.env_key = env_key
         self.steps: list[StepMetrics] = []
         self.step = 1
         self.sandbox_data = None
@@ -46,12 +46,15 @@ class SWEBench:
         self.total_requests = 0
         self.console = console
         self.max_iteration = max_iteration
+        self.max_time_seconds = max_time_seconds
         self.error: Exception | None = None
         self.elapsed_seconds = 0.0
-        self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
+        self.sandbox = Sandbox(
+            mcp_client=client, config=sandbox_config or SandboxConfig())
+        self.stop_reason = "solved"
 
         list_tools = self.sandbox.list_tools()
-        self.llm = LLM(self.api_url, self.model_name, self.env_key,
+        self.llm = LLM(api_url, model_name, env_key,
                        system_content(list_tools), list_tools)
 
     def execute(self):
@@ -131,6 +134,10 @@ class SWEBench:
         try:
             while (True):
                 if self.step > self.max_iteration:
+                    self.stop_reason = "Iterations limit reached"
+                    break
+                if time.perf_counter() - start > self.max_time_seconds:
+                    self.stop_reason = "Time limit reached"
                     break
                 self.execute()
                 self.steps.append(self.get_step_metrics())
@@ -190,5 +197,6 @@ class SWEBench:
             total_time_seconds=self.elapsed_seconds,
             steps=self.steps,
             system_prompt=self.prompt,
-            error=str(self.error) if self.error else None
+            error=str(self.error) if self.error else None,
+            stop_reason=self.stop_reason,
         )

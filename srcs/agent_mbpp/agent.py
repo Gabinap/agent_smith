@@ -28,13 +28,20 @@ class Mbpp:
         console: Console,
         client: McpClient,
         max_iteration: int = 5,
+        max_time_seconds: int = 60,
+        sandbox_config: SandboxConfig | None = None,
     ) -> None:
-        """Load the task and set up the LLM, sandbox, and console."""
+        """Load the task and set up the LLM, sandbox, and console.
+
+        `sandbox_config` defaults to the built-in policy, so an agent
+        built without one still runs inside a restricted sandbox.
+        """
         self.output_file = output_file
         self.task = task
         self.llm = LLM(api_url, model_name, env_key, system_content(), [])
         self.steps: list[StepMetrics] = []
-        self.sandbox = Sandbox(mcp_client=client, config=SandboxConfig())
+        self.sandbox = Sandbox(
+            mcp_client=client, config=sandbox_config or SandboxConfig())
         self.step = 1
         self.sandbox_data = None
         self.py_code = ""
@@ -43,6 +50,8 @@ class Mbpp:
         self.max_iteration = max_iteration
         self.error: Exception | None = None
         self.elapsed_seconds = 0.0
+        self.max_time_seconds = max_time_seconds
+        self.stop_reason = "solved"
 
     def execute(self) -> None:
         """Run one generate -> extract -> sandbox-execute cycle.
@@ -84,6 +93,10 @@ class Mbpp:
         try:
             while (True):
                 if self.step > self.max_iteration:
+                    self.stop_reason = "Iterations limit reached"
+                    break
+                if time.perf_counter() - start > self.max_time_seconds:
+                    self.stop_reason = "Time limit reached"
                     break
                 self.execute()
                 self.steps.append(self.get_step_metrics())
@@ -154,5 +167,6 @@ class Mbpp:
             steps=self.steps,
             system_prompt=self.prompt,
             error=str(self.error) if self.error else None,
-            timestamp=timestamp
+            timestamp=timestamp,
+            stop_reason=self.stop_reason
         )

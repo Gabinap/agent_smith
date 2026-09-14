@@ -6,6 +6,7 @@ import cli_agent
 from call_llm.profile import Profile
 from rich.console import Console
 from models import McpSpec
+from models.sandbox import SandboxConfig
 from sandbox.mcp_client import create_mcp_client
 from agent_mbpp.agent import Mbpp
 from .task_manager import Task
@@ -80,7 +81,14 @@ def launch_agent(profile, console, args, mcp_client):
         model_name=profile.model_name,
         env_key=profile.key_name,
         console=console,
-        client=mcp_client
+        client=mcp_client,
+        # Subject limits for MBPP: 10 iterations, 120s. The iteration
+        # cap stays at 5 on purpose (Q9 rewards efficiency); the time
+        # budget leaves room for the iteration already in flight.
+        max_iteration=5,
+        max_time_seconds=100,
+        sandbox_config=SandboxConfig.from_file(
+            PROJECT_ROOT / "sandbox_mbpp.json"),
     )
     agent.solve_task()
     if profile.new:

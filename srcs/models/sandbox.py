@@ -1,4 +1,6 @@
 
+import pathlib
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -23,6 +25,22 @@ class SandboxConfig(BaseModel):
     ])
     max_execution_time_seconds: int = 30
     max_memory_mb: int = 512
+
+    @classmethod
+    def from_file(cls, path: pathlib.Path) -> "SandboxConfig":
+        """Read a policy template, falling back to these defaults.
+
+        A missing or malformed template degrades to the built-in
+        policy rather than stopping a run: the defaults above are
+        already safe, so the worst case is a less tailored sandbox,
+        never an open one.
+        """
+        if not path.is_file():
+            return cls()
+        try:
+            return cls.model_validate_json(path.read_text(encoding="utf-8"))
+        except ValueError:
+            return cls()
 
 
 class SandboxResult(BaseModel):
