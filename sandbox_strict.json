@@ -1,0 +1,7 @@
+{
+  "_comment": "Demonstration policy: the allowlist is data, not code. Only math may be imported, no path may be opened, and the limits are deliberately small. Useful to show that the same sandbox enforces whatever policy it is handed — `import json` fails here and succeeds with sandbox_template.json, without a line of code changing.",
+  "authorized_imports": ["math"],
+  "allowed_directories": [],
+  "max_execution_time_seconds": 5,
+  "max_memory_mb": 256
+}

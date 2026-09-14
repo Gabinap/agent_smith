@@ -1,0 +1,17 @@
+{
+  "_comment": "Default sandbox policy, the one the subject's commands use. Mirrors SandboxConfig's built-in defaults, so `uv run sandbox sandbox_template.json` behaves exactly like `uv run sandbox`.",
+  "authorized_imports": [
+    "math", "math.*",
+    "collections", "collections.*",
+    "itertools", "re", "json",
+    "typing", "typing.*",
+    "functools", "operator",
+    "heapq", "bisect", "copy",
+    "string", "random",
+    "datetime", "datetime.*",
+    "array", "cmath"
+  ],
+  "allowed_directories": ["/testbed", "/tmp/agent"],
+  "max_execution_time_seconds": 30,
+  "max_memory_mb": 512
+}

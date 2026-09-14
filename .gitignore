@@ -230,3 +230,4 @@ runs/logs/
 runs/llm_responses.jsonl
 mbpp_solution.json
 swebench_solution.json
+*.html

@@ -1,0 +1,15 @@
+{
+  "_comment": "MBPP tasks compute an answer and hand it to final_answer(): they never touch the filesystem, so no directory is allowed at all. Tighter limits than the default because a Mostly Basic Python Problem that needs 15s or 256MB is a runaway, not a hard problem.",
+  "authorized_imports": [
+    "math", "math.*",
+    "collections", "collections.*",
+    "itertools", "re",
+    "typing", "typing.*",
+    "functools", "operator",
+    "heapq", "bisect", "copy",
+    "string", "cmath"
+  ],
+  "allowed_directories": [],
+  "max_execution_time_seconds": 15,
+  "max_memory_mb": 256
+}

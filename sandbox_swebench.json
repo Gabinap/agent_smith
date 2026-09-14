@@ -1,0 +1,15 @@
+{
+  "_comment": "SWE-bench runs against a real repository checked out at /testbed. The heavy work (reading, editing, running the project's tests) happens in MCP tools outside the sandbox, so what runs inside is mostly tool calls and string handling — but a test suite echoing back through the sandbox needs more room and more time than an MBPP snippet.",
+  "authorized_imports": [
+    "math", "math.*",
+    "collections", "collections.*",
+    "itertools", "re", "json",
+    "typing", "typing.*",
+    "functools", "operator",
+    "heapq", "bisect", "copy",
+    "string", "datetime", "datetime.*"
+  ],
+  "allowed_directories": ["/testbed", "/tmp/agent"],
+  "max_execution_time_seconds": 120,
+  "max_memory_mb": 1024
+}
