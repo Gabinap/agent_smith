@@ -22,11 +22,19 @@ class CLI_Sandbox:
             return
         self.mcp_spec = self._get_mcp_spec(self.args)
         self._get_sandbox_config(self.args)
-        self.mcp_client: McpClient | None = create_mcp_client(self.mcp_spec)
-        self.sandbox = Sandbox(
-            mcp_client=self.mcp_client,
-            config=self.config
-            )
+        self.mcp_client: McpClient | None = None
+        try:
+            self.mcp_client = create_mcp_client(self.mcp_spec)
+            self.sandbox = Sandbox(
+                mcp_client=self.mcp_client,
+                config=self.config
+                )
+        except (RuntimeError, OSError) as error:
+            # A server that will not start is no reason to lose the REPL
+            print(f"Warning: MCP server unavailable ({error}). "
+                  "Continuing without tools.", file=sys.stderr)
+            self.mcp_client = None
+            self.sandbox = Sandbox(mcp_client=None, config=self.config)
 
     @staticmethod
     def _sandbox_cli_parsing() -> argparse.Namespace:

@@ -8,6 +8,7 @@ from mcp.server.mcpserver import MCPServer
 
 from srcs.backends.docker import DockerExecBackend
 from srcs.mcp_server import tools
+from srcs.mcp_server.task_file import find_task
 from srcs.models import SWEBenchTaskInput
 
 task: SWEBenchTaskInput
@@ -102,7 +103,7 @@ def main() -> None:
     signal.signal(signal.SIGTERM, _handle_sigterm)
 
     global task, backend
-    with open(os.environ["SWE_TASK_FILE"]) as f:
+    with open(find_task("SWE_TASK_FILE", "instance_id")) as f:
         task = SWEBenchTaskInput.model_validate_json(f.read())
 
     root = os.environ.get("TESTBED_PATH", "/testbed")

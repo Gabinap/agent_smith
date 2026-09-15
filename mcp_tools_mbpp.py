@@ -1,13 +1,13 @@
 """MCP server exposing the MBPP task's run_tests tool."""
 
 import json
-import os
 import sys
 
 from mcp.server.mcpserver import MCPServer
 
 from srcs.backends.local import LocalExecBackend
 from srcs.mcp_server import tools
+from srcs.mcp_server.task_file import find_task
 from srcs.models import MBPPTaskInput
 
 EVAL_SCRIPT_FILE = "_run_tests.py"
@@ -58,7 +58,7 @@ def main() -> None:
     disconnects) — kept out of module scope so importing this file
     never touches MBPP_TASK_FILE or starts the server."""
     global task
-    with open(os.environ["MBPP_TASK_FILE"]) as f:
+    with open(find_task("MBPP_TASK_FILE", "task_id")) as f:
         task = MBPPTaskInput.model_validate_json(f.read())
     transport = "streamable-http" if "--http" in sys.argv else "stdio"
     mcp.run(transport=transport)
