@@ -10,7 +10,8 @@ from rich.console import Console
 from sandbox.mcp_client import McpClient
 from sandbox.sandbox import Sandbox, SandboxConfig
 
-from .code_gen import clean_run_tests, llm_output_code, truncate_output
+from code_extract import NO_CODE, truncate_output
+from .code_gen import clean_run_tests, llm_output_code
 from .prompt import get_prompt, system_content
 from .save_data import save_output
 
@@ -72,15 +73,11 @@ class SWEBench:
             self.llm_output_data = self.llm.call(self.prompt)
         self.total_requests += 1 + self.llm_output_data.get("retries", 0)
 
-        self.py_code = llm_output_code(self.console, self.llm_output_data)
+        self.py_code, repair = llm_output_code(
+            self.console, self.llm_output_data)
 
-        if self.py_code == "":
-            self.llm.messages.append({
-                "role": "user",
-                "content": "No python code generated, you have to "
-                           "write valid python block, example "
-                           "```python #your code here ```"
-            })
+        if not self.py_code:
+            self.llm.messages.append({"role": "user", "content": NO_CODE})
             return
 
         self.sandbox_data = self.sandbox.execute(self.py_code)
@@ -118,11 +115,12 @@ class SWEBench:
         self.sandbox_data.output = truncate_output(
             self.sandbox_data.output, max_lines=30)
 
-        self.llm.messages.append({
-                    "role": "user",
-                    "content": f"Input: {self.py_code}\n"
+        feedback = (f"Input: {self.py_code}\n"
                     f"Sandbox Error: {self.sandbox_data.error}\n"
-                    f"Tool result :\n{self.sandbox_data.output}"
+                    f"Tool result :\n{self.sandbox_data.output}")
+        self.llm.messages.append({
+            "role": "user",
+            "content": f"{repair}\n{feedback}" if repair else feedback,
         })
         cli_agent.display_sandbox(self.console,
                                   self.sandbox_data,
@@ -170,7 +168,8 @@ class SWEBench:
                 model_name=self.llm.model_name,
                 llm_output=self.llm_output_data.get("answer"),
                 sandbox_input=self.py_code,
-                sandbox_output=self.sandbox_data.output,
+                sandbox_output=(self.sandbox_data.output
+                                if self.sandbox_data else ""),
                 retries=self.llm_output_data.get("retries", 0),
         )
 

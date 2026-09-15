@@ -1,11 +1,11 @@
 """Autonomous agent loop that solves a single MBPP task."""
 
 import datetime
-import re
 import time
 
 import cli_agent
 from call_llm.calling import LLM
+from code_extract import NO_CODE, extract_python, truncate_output
 from models.metrics import SolutionOutput, StepMetrics
 from rich.console import Console
 from sandbox.mcp_client import McpClient
@@ -13,6 +13,10 @@ from sandbox.sandbox import Sandbox, SandboxConfig
 
 from .prompt import get_prompt, system_content
 from .task_manager import Task
+
+# MBPP has 6000 input tokens for the whole run: a single unbounded
+# output can eat the budget the remaining iterations need.
+MAX_OUTPUT_LINES = 30
 
 
 class Mbpp:
@@ -70,18 +74,25 @@ class Mbpp:
         self.total_requests += 1 + self.llm_output_data.get("retries", 0)
 
         llm_answer = self.llm_output_data.get("answer")
-        match = self.extract_python(llm_answer)
-        self.py_code = match.group(1) if match else "# No python code"
+        self.py_code, repair = extract_python(llm_answer)
 
         cli_agent.display_llm_output(self.console,
                                      self.llm_output_data,
                                      llm_answer)
+
+        if not self.py_code:
+            self.llm.messages.append({"role": "user", "content": NO_CODE})
+            return
+
         self.sandbox_data = self.sandbox.execute(self.py_code)
+        self.sandbox_data.output = truncate_output(
+            self.sandbox_data.output, max_lines=MAX_OUTPUT_LINES)
+        feedback = (f"Input: {self.py_code}\n"
+                    f"Sandbox Error: {self.sandbox_data.error}\n"
+                    f"Output :\n{self.sandbox_data.output}")
         self.llm.messages.append({
-                            "role": "user",
-                            "content": f"Input: {self.py_code}\n"
-                            f"Sandbox Error: {self.sandbox_data.error}\n"
-                            f"Output :\n{self.sandbox_data.output}"
+            "role": "user",
+            "content": f"{repair}\n{feedback}" if repair else feedback,
         })
         cli_agent.display_sandbox(self.console,
                                   self.sandbox_data,
@@ -116,10 +127,6 @@ class Mbpp:
         cli_agent.display_solution(self.console, output)
         self.save_output(output)
 
-    def extract_python(self, text: str | None) -> re.Match[str] | None:
-        """Extract the first ```python fenced code block from `text`."""
-        return re.search(r"```python\s*(.*?)```", text, re.DOTALL)
-
     def save_output(self, output: SolutionOutput) -> None:
         """Write `output` to output_file as JSON."""
         with (open(self.output_file, "w", encoding="utf-8") as file):
@@ -140,7 +147,8 @@ class Mbpp:
                 model_name=self.llm.model_name,
                 llm_output=self.llm_output_data.get("answer"),
                 sandbox_input=self.py_code,
-                sandbox_output=self.sandbox_data.output,
+                sandbox_output=(self.sandbox_data.output
+                                if self.sandbox_data else ""),
                 retries=self.llm_output_data.get("retries", 0)
         )
 

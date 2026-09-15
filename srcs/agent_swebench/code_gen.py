@@ -2,13 +2,10 @@ import json
 import re
 
 import cli_agent
+from code_extract import extract_python
 from openai.types.chat.chat_completion_message_function_tool_call import (
     ChatCompletionMessageFunctionToolCall,
 )
-
-
-def extract_python(text: str):
-    return re.search(r"```python\s*(.*?)```", text, re.DOTALL)
 
 
 def python_block_gen(tool_call: ChatCompletionMessageFunctionToolCall) -> str:
@@ -38,14 +35,5 @@ def llm_output_code(console, llm_output_data):
         cli_agent.display_llm_output(console,
                                      llm_output_data,
                                      llm_answer)
-        match = extract_python(llm_answer)
-        py_code = match.group(1) if match else ""
-    return py_code
-
-
-def truncate_output(result: str, max_lines: int):
-    new_lines = [i for i, c in enumerate(result) if c == '\n']
-    if len(new_lines) > max_lines:
-        result = result[:new_lines[max_lines]]
-        result += f"\n({len(new_lines)-max_lines} Remaining Lines...)"
-    return result
+        return extract_python(llm_answer)
+    return py_code, ""
