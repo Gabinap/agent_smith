@@ -285,3 +285,91 @@ LEGITIMATE_CODE = {
 def test_legitimate_code_still_runs(sandbox, code):
     result = sandbox.execute(code)
     assert result.success is True, result.error
+
+
+# --- The sandbox manual (subject V.2.5) ---
+
+class _FakeMcpClient:
+    """Answers tools/list with canned schemas, like a real server."""
+
+    def __init__(self, tools):
+        self._tools = tools
+
+    def initialize_session(self):
+        return {"result": {"tools": self._tools}}
+
+    def call_tool(self, name, arguments):
+        return {"result": {"content": [{"text": f"{name} called"}]}}
+
+    def close(self):
+        pass
+
+
+ADD_AND_ECHO = [
+    {
+        "name": "add",
+        "description": "Add two numbers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"a": {"type": "integer"},
+                           "b": {"type": "integer"}},
+        },
+    },
+    {
+        "name": "echo",
+        "description": "Echo back the text.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"text": {"type": "string"}},
+        },
+    },
+]
+
+MULTIPLY = [
+    {
+        "name": "multiply",
+        "description": "Multiply two numbers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"a": {"type": "integer"}},
+        },
+    },
+]
+
+
+def test_the_manual_documents_names_parameters_and_types():
+    sandbox = Sandbox(mcp_client=_FakeMcpClient(ADD_AND_ECHO))
+
+    manual = sandbox.manual()
+
+    assert "- add(a: integer, b: integer): Add two numbers." in manual
+    assert "- echo(text: string): Echo back the text." in manual
+
+
+def test_the_manual_always_offers_final_answer():
+    """final_answer is a sandbox feature, not an MCP tool."""
+    sandbox = Sandbox(mcp_client=_FakeMcpClient(ADD_AND_ECHO))
+
+    assert "final_answer(answer)" in sandbox.manual()
+
+
+def test_without_a_server_only_final_answer_is_offered():
+    assert Sandbox().manual().strip() == (
+        "- final_answer(answer): Submit the final answer and stop")
+
+
+def test_another_server_yields_another_manual():
+    """The subject: the manual must follow the connected server."""
+    first = Sandbox(mcp_client=_FakeMcpClient(ADD_AND_ECHO)).manual()
+    second = Sandbox(mcp_client=_FakeMcpClient(MULTIPLY)).manual()
+
+    assert "add(" in first and "multiply(" not in first
+    assert "multiply(" in second and "add(" not in second
+
+
+def test_a_discovered_tool_is_callable_from_the_sandbox():
+    sandbox = Sandbox(mcp_client=_FakeMcpClient(ADD_AND_ECHO))
+
+    result = sandbox.execute("print(add(a=1, b=2))")
+
+    assert result.output.strip() == "add called"

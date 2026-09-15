@@ -14,8 +14,9 @@ Tests to try:
 """
 
 
-def system_content() -> str:
-    return textwrap.dedent("""
+def system_content(tools: str = "") -> str:
+    """Build the system prompt around the sandbox's own tool manual."""
+    return textwrap.dedent(f"""
         You are an expert Python software engineer tasked with solving
         a coding problem step by step.
 
@@ -60,4 +61,7 @@ def system_content() -> str:
         \"\"\"
         final_answer(code_string)
         ​```
+
+        # Available Tools
+        {tools}
         """)

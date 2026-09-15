@@ -1,5 +1,4 @@
 import textwrap
-from typing import Any
 
 from models.tasks import SWEBenchTaskInput
 
@@ -12,8 +11,8 @@ def get_prompt(task: SWEBenchTaskInput):
     return prompt
 
 
-def system_content(list_tools: list[dict[str, Any]]) -> str:
-    tools = build_tool_docs(list_tools)
+def system_content(tools: str) -> str:
+    """Build the system prompt around the sandbox's own tool manual."""
     return textwrap.dedent(f"""
 You are an expert Python software engineer tasked with troubleshooting
 a bug step by step.
@@ -51,26 +50,3 @@ print(result)
 # Available Tools
 {tools}
 """)
-
-
-def build_tool_docs(list_tools) -> str:
-    schemas = list_tools
-    lines: list[str] = []
-    for schema in schemas:
-        name = schema.get("name", "")
-        description = schema.get("description", "")
-        props = schema.get("inputSchema", {}).get("properties", {})
-        params = ", ".join(
-            f"{k}: {v.get('type', 'str')}"
-            for k, v in props.items()
-        )
-        line_text = (
-            f"- {name}({params}): "
-            f"{description}"
-        )
-        lines.append(line_text)
-    lines.append(
-        "- final_answer(answer): Submit the final solution (patch string) "
-        "and stop"
-    )
-    return "\n".join(lines)

@@ -86,10 +86,18 @@ class CLI_Sandbox:
 
     def execute(self) -> None:
         """Run the read-eval-print loop until 'exit' or EOF/Ctrl-C."""
+        # Whatever server was connected, say what it brought: the
+        # manual is generated from its schemas, not hardcoded here.
+        print("Available tools:")
+        print(self.sandbox.manual())
+        print("Type 'manual' to print this again, 'exit' to leave.\n")
         try:
             while True:
                 try:
                     command = input("Sanbox> ")
+                    if command == "manual":
+                        print(self.sandbox.manual())
+                        continue
                     if command == "exit":
                         break
                     if not command.strip():

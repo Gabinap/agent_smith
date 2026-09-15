@@ -53,9 +53,9 @@ class SWEBench:
             mcp_client=client, config=sandbox_config or SandboxConfig())
         self.stop_reason = "solved"
 
-        list_tools = self.sandbox.list_tools()
         self.llm = LLM(api_url, model_name, env_key,
-                       system_content(list_tools), list_tools)
+                       system_content(self.sandbox.manual()),
+                       self.sandbox.list_tools())
 
     def execute(self):
         """Launch the loaded Task

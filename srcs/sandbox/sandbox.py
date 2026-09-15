@@ -335,6 +335,29 @@ class Sandbox:
         """Return the discovered MCP tool specs, or [] if none."""
         return self.tools
 
+    def manual(self) -> str:
+        """Document the tools this sandbox exposes, from their schemas.
+
+        Built at call time from the connected server's `tools/list`
+        reply, so pointing the sandbox at another server yields another
+        manual with no code change. `final_answer` is listed alongside
+        them: it is a sandbox feature, not an MCP tool.
+        """
+        lines = []
+        for tool in self.tools:
+            params = ", ".join(
+                f"{name}: {spec.get('type', 'str')}"
+                for name, spec in tool.get("inputSchema", {})
+                .get("properties", {}).items()
+            )
+            lines.append(
+                f"- {tool.get('name', '')}({params}): "
+                f"{tool.get('description', '')}"
+            )
+        lines.append(
+            "- final_answer(answer): Submit the final answer and stop")
+        return "\n".join(lines)
+
     @staticmethod
     def _setrlimit(name: str, value: int) -> None:
         """Apply one kernel limit, as both the soft and the hard one.

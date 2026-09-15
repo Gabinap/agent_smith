@@ -38,10 +38,11 @@ class Mbpp:
         """
         self.output_file = output_file
         self.task = task
-        self.llm = LLM(api_url, model_name, env_key, system_content(), [])
         self.steps: list[StepMetrics] = []
         self.sandbox = Sandbox(
             mcp_client=client, config=sandbox_config or SandboxConfig())
+        self.llm = LLM(api_url, model_name, env_key,
+                       system_content(self.sandbox.manual()), [])
         self.step = 1
         self.sandbox_data = None
         self.py_code = ""
