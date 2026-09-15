@@ -34,6 +34,10 @@ sandbox-swebench:
 graph:
 	uv run srcs/build_graph.py
 
+# the Markdown sections of BENCHMARK_REPORT.md, derived from runs/
+report:
+	uv run srcs/bench_report.py
+
 # one solution.json per (model, task); re-running skips what is done
 # make bench MODELS="codestral-latest,openai/gpt-oss-20b" TASKS="cache/a.json"
 bench:
@@ -68,5 +72,5 @@ clean:
 	rm -rf __pycache__ .mypy_cache .pytest_cache .python-version .vscode
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
-.PHONY: run-mbpp run-swebench sandbox sandbox-mbpp sandbox-swebench graph bench \
-	install test lint lint-strict debug clean
+.PHONY: run-mbpp run-swebench sandbox sandbox-mbpp sandbox-swebench graph \
+	report bench install test lint lint-strict debug clean
