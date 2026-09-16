@@ -518,7 +518,7 @@ class Sandbox:
                 process.join()
             return SandboxResult.model_validate({
                 "success": False,
-                "output": "",
+                "output": self.stdout,
                 "error": (
                     "TimeoutError: Execution time limit exceeded ("
                     f"{self.config.max_execution_time_seconds}s limit)"
