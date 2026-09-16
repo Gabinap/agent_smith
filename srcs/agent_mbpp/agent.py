@@ -7,12 +7,13 @@ import cli_agent
 from call_llm.calling import LLM
 from code_extract import NO_CODE, extract_python, truncate_output
 from models.metrics import SolutionOutput, StepMetrics
+from models.sandbox import SandboxResult
+from models.tasks import MBPPTaskInput
 from rich.console import Console
 from sandbox.mcp_client import McpClient
 from sandbox.sandbox import Sandbox, SandboxConfig
 
 from .prompt import get_prompt, system_content
-from .task_manager import Task
 
 # MBPP has 6000 input tokens for the whole run: a single unbounded
 # output can eat the budget the remaining iterations need.
@@ -24,13 +25,13 @@ class Mbpp:
 
     def __init__(
         self,
-        task: Task,
+        task: MBPPTaskInput,
         output_file: str,
         api_url: str,
         model_name: str,
-        env_key: str,
+        env_keys: list[str],
         console: Console,
-        client: McpClient,
+        client: McpClient | None,
         max_iteration: int = 5,
         max_time_seconds: int = 60,
         sandbox_config: SandboxConfig | None = None,
@@ -45,10 +46,10 @@ class Mbpp:
         self.steps: list[StepMetrics] = []
         self.sandbox = Sandbox(
             mcp_client=client, config=sandbox_config or SandboxConfig())
-        self.llm = LLM(api_url, model_name, env_key,
+        self.llm = LLM(api_url, model_name, env_keys,
                        system_content(self.sandbox.manual()), [])
         self.step = 1
-        self.sandbox_data = None
+        self.sandbox_data: SandboxResult | None = None
         self.py_code = ""
         self.total_requests = 0
         self.console = console
@@ -78,7 +79,7 @@ class Mbpp:
 
         cli_agent.display_llm_output(self.console,
                                      self.llm_output_data,
-                                     llm_answer)
+                                     llm_answer or "")
 
         if not self.py_code:
             self.llm.messages.append({"role": "user", "content": NO_CODE})
@@ -137,15 +138,21 @@ class Mbpp:
 
         `retries` is what the LLM call reported: 0 means its first
         attempt went through.
+
+        Token counts are None when the provider omits `usage`, and
+        StepMetrics types them as required ints: without these
+        fallbacks a silent provider costs the whole run a
+        ValidationError.
         """
         return StepMetrics(
                 step=self.step,
-                input_tokens=self.llm_output_data.get("input_tokens"),
-                output_tokens=self.llm_output_data.get("output_tokens"),
-                request_time_ms=self.llm_output_data.get("request_time_ms"),
+                input_tokens=self.llm_output_data.get("input_tokens") or 0,
+                output_tokens=self.llm_output_data.get("output_tokens") or 0,
+                request_time_ms=(
+                    self.llm_output_data.get("request_time_ms") or 0.0),
                 api_url=self.llm.api_url,
                 model_name=self.llm.model_name,
-                llm_output=self.llm_output_data.get("answer"),
+                llm_output=self.llm_output_data.get("answer") or "",
                 sandbox_input=self.py_code,
                 sandbox_output=(self.sandbox_data.output
                                 if self.sandbox_data else ""),

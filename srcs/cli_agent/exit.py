@@ -1,10 +1,13 @@
+from typing import Any
+
 import questionary
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 
 
-def display_exit(console: Console, llm_output_data: dict, system_prompt):
+def display_exit(console: Console, llm_output_data: dict[str, Any],
+                 system_prompt: str) -> None:
     exits = ['Show the think process', 'Show the prompt', 'Exit']
     while (True):
         selected = questionary.select(
@@ -16,7 +19,8 @@ def display_exit(console: Console, llm_output_data: dict, system_prompt):
         match exits.index(selected):
             case 0:
                 console.print(Panel(
-                    Text(llm_output_data.get('thought'), style="italic"),
+                    Text(llm_output_data.get('thought')
+                         or "No thought recorded", style="italic"),
                     title="Thought",
                     title_align="left",
                     border_style="white"

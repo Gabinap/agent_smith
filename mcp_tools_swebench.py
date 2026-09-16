@@ -3,6 +3,7 @@
 import os
 import signal
 import sys
+from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 
@@ -109,7 +110,8 @@ def main() -> None:
     root = os.environ.get("TESTBED_PATH", "/testbed")
     backend = DockerExecBackend(task.docker_image, root=root)
 
-    transport = "streamable-http" if "--http" in sys.argv else "stdio"
+    transport: Literal["stdio", "streamable-http"] = (
+        "streamable-http" if "--http" in sys.argv else "stdio")
     mcp.run(transport=transport)
 
 

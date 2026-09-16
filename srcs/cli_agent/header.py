@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 
-def display_header(console: Console, profile: Profile):
+def display_header(console: Console, profile: Profile) -> None:
 
     titre = figlet_format("Agent Smith", font="slant")
     stats = [

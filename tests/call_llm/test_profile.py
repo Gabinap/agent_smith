@@ -73,11 +73,6 @@ def test_unknown_url_falls_back_to_the_default_key():
 
 # --- the catalog ---
 
-def test_key_name_still_mirrors_keys():
-    p = Profile(mode="cli", provider_url=OPEN_ROUTER_URL, model_name="m")
-    assert p.key_name == p.keys
-
-
 def test_load_providers_reads_the_json_file(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)  # the path must not depend on the cwd
     providers = Profile._load_providers()

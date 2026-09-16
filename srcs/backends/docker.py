@@ -8,6 +8,8 @@ import posixpath
 import tarfile
 import time
 
+from typing import Any
+
 import docker
 
 from srcs.models import CommandResult
@@ -19,7 +21,7 @@ class DockerExecBackend:
     def __init__(self, image_name: str, root: str = "/") -> None:
         """Prepare the Docker backend for a fresh run.
 
-        Pulls `image_name`, purges orphaned containers from a
+        Resolves `image_name`, purges orphaned containers from a
         previous run, and starts a fresh container to work in.
         """
         client = docker.from_env()  # connect to the Docker daemon
@@ -27,9 +29,10 @@ class DockerExecBackend:
                 all=True, filters={"label": "agent-smith"}):
             c.remove(force=True)
         self.root = root
-        # used to pull the image if not present locally,
-        # and to raise an error if the image doesn't exist
-        _ = client.images.pull(image_name)
+        try:
+            client.images.get(image_name)
+        except docker.errors.ImageNotFound:
+            client.images.pull(image_name)
 
         self.container = client.containers.run(
             image_name,
@@ -48,7 +51,7 @@ class DockerExecBackend:
         """
         return self
 
-    def __exit__(self, _, __, ___) -> None:
+    def __exit__(self, _: Any, __: Any, ___: Any) -> None:
         """Stop and remove the container when the `with` block ends."""
         self._cleanup()
 
@@ -117,7 +120,8 @@ class DockerExecBackend:
         stdout, stderr = result.output
         if result.exit_code != 0:
             raise OSError(f"cat {resolved} failed: {stderr.decode()}")
-        return stdout.decode()
+        content: str = stdout.decode()
+        return content
 
     def write_file(self, path: str, content: str) -> None:
         """Overwrite a file inside the container with `content`.

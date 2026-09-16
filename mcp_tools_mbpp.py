@@ -2,6 +2,7 @@
 
 import json
 import sys
+from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 
@@ -60,7 +61,8 @@ def main() -> None:
     global task
     with open(find_task("MBPP_TASK_FILE", "task_id")) as f:
         task = MBPPTaskInput.model_validate_json(f.read())
-    transport = "streamable-http" if "--http" in sys.argv else "stdio"
+    transport: Literal["stdio", "streamable-http"] = (
+        "streamable-http" if "--http" in sys.argv else "stdio")
     mcp.run(transport=transport)
 
 

@@ -56,12 +56,12 @@ test:
 # --follow-imports=silent: still type-checks srcs/ for context, but reports
 # only the errors of the files listed, so nothing is reported twice.
 lint:
-	$(FLK) . --extend-exclude .venv
+	$(FLK) . --extend-exclude .venv,moulinette
 	cd srcs && $(MYPY) . $(FLAGS)
 	$(MYPY) $(ROOTPY) --follow-imports=silent $(FLAGS)
 
 lint-strict:
-	$(FLK) . --extend-exclude .venv
+	$(FLK) . --extend-exclude .venv,moulinette
 	cd srcs && $(MYPY) . $(FLAGS) --strict
 	$(MYPY) $(ROOTPY) --follow-imports=silent $(FLAGS) --strict
 

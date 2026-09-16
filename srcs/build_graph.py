@@ -55,8 +55,8 @@ class LLMBenchmarkGraph:
         Returns:
             tuple with model_successes and total_tasks done
         """
-        model_tasks = defaultdict(set)
-        model_successes = defaultdict(int)
+        model_tasks: defaultdict[str, set[str]] = defaultdict(set)
+        model_successes: defaultdict[str, int] = defaultdict(int)
 
         for entry in self.raw_data:
             model = entry["model"]
@@ -90,7 +90,7 @@ class LLMBenchmarkGraph:
                 )
         return model_successes, total_tasks
 
-    def build_graph(self):
+    def build_graph(self) -> None:
         """
         Display the graph in the terminal
         """

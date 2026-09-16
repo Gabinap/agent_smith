@@ -5,6 +5,7 @@ import time
 import cli_agent
 from call_llm.calling import LLM
 from models.metrics import SolutionOutput, StepMetrics
+from models.sandbox import SandboxResult
 from models.tasks import SWEBenchTaskInput
 from rich.console import Console
 from sandbox.mcp_client import McpClient
@@ -23,9 +24,9 @@ class SWEBench:
         output_file: str,
         api_url: str,
         model_name: str,
-        env_key: str,
+        env_keys: list[str],
         console: Console,
-        client: McpClient,
+        client: McpClient | None,
         max_iteration: int = 30,
         max_time_seconds: int = 60,
         sandbox_config: SandboxConfig | None = None,
@@ -42,7 +43,7 @@ class SWEBench:
         self.task = task
         self.steps: list[StepMetrics] = []
         self.step = 1
-        self.sandbox_data = None
+        self.sandbox_data: SandboxResult | None = None
         self.py_code = ""
         self.total_requests = 0
         self.console = console
@@ -54,11 +55,11 @@ class SWEBench:
             mcp_client=client, config=sandbox_config or SandboxConfig())
         self.stop_reason = "solved"
 
-        self.llm = LLM(api_url, model_name, env_key,
+        self.llm = LLM(api_url, model_name, env_keys,
                        system_content(self.sandbox.manual()),
                        self.sandbox.list_tools())
 
-    def execute(self):
+    def execute(self) -> None:
         """Launch the loaded Task
 
         `total_requests` counts API attempts, not iterations: a step
@@ -126,7 +127,7 @@ class SWEBench:
                                   self.sandbox_data,
                                   self.py_code)
 
-    def solve_task(self):
+    def solve_task(self) -> None:
         self.error = None
         start = time.perf_counter()
         try:
@@ -158,15 +159,21 @@ class SWEBench:
 
         `retries` is what the LLM call reported: 0 means its first
         attempt went through.
+
+        Token counts are None when the provider omits `usage`, and
+        StepMetrics types them as required ints: without these
+        fallbacks a silent provider costs the whole run a
+        ValidationError.
         """
         return StepMetrics(
                 step=self.step,
-                input_tokens=self.llm_output_data.get("input_tokens"),
-                output_tokens=self.llm_output_data.get("output_tokens"),
-                request_time_ms=self.llm_output_data.get("request_time_ms"),
+                input_tokens=self.llm_output_data.get("input_tokens") or 0,
+                output_tokens=self.llm_output_data.get("output_tokens") or 0,
+                request_time_ms=(
+                    self.llm_output_data.get("request_time_ms") or 0.0),
                 api_url=self.llm.api_url,
                 model_name=self.llm.model_name,
-                llm_output=self.llm_output_data.get("answer"),
+                llm_output=self.llm_output_data.get("answer") or "",
                 sandbox_input=self.py_code,
                 sandbox_output=(self.sandbox_data.output
                                 if self.sandbox_data else ""),

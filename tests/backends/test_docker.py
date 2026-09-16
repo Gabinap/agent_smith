@@ -14,17 +14,34 @@ from srcs.mcp_server import tools
 IMAGE = "alpine:latest"
 
 
-def _docker_available() -> bool:
+def _unavailable() -> str:
+    """Why these tests cannot run, or "" when they can.
+
+    A reachable daemon is not enough: the image has to be obtainable
+    too. A machine with Docker but no route to the registry used to
+    error out here instead of skipping — which is exactly what a
+    restricted network looks like.
+    """
     try:
-        docker.from_env().ping()
-        return True
-    except Exception:
-        return False
+        client = docker.from_env()
+        client.ping()
+    except Exception as exc:
+        return f"Docker daemon not available: {exc}"
+    try:
+        client.images.get(IMAGE)
+    except docker.errors.ImageNotFound:
+        try:
+            client.images.pull(IMAGE)
+        except Exception as exc:
+            return f"{IMAGE} is neither local nor pullable: {exc}"
+    except Exception as exc:
+        return f"Docker image lookup failed: {exc}"
+    return ""
 
 
-pytestmark = pytest.mark.skipif(
-    not _docker_available(), reason="Docker daemon not available"
-)
+_SKIP_REASON = _unavailable()
+
+pytestmark = pytest.mark.skipif(bool(_SKIP_REASON), reason=_SKIP_REASON)
 
 
 @pytest.fixture

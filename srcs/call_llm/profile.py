@@ -33,7 +33,6 @@ class Profile:
             self.new = False
 
         self.keys: list[str] = self.provider.get("keys", list(DEFAULT_KEYS))
-        self.key_name = self.keys  # TODO: drop once the agents read .keys
 
     def provider_selection(self) -> str:
         """Prompt the user to pick a provider, return its name."""

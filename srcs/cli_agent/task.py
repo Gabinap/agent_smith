@@ -5,7 +5,7 @@ from rich.syntax import Syntax
 from rich.text import Text
 
 
-def display_mbpp_task(console: Console, task: MBPPTaskInput):
+def display_mbpp_task(console: Console, task: MBPPTaskInput) -> None:
     content = Group(
         Text(task.task_definition, style="bold orange1", end="\n\n",
              justify="center"),
@@ -19,7 +19,7 @@ def display_mbpp_task(console: Console, task: MBPPTaskInput):
                         padding=1, style='orange1'))
 
 
-def display_swebench_task(console: Console, task: SWEBenchTaskInput):
+def display_swebench_task(console: Console, task: SWEBenchTaskInput) -> None:
     hint = "No hints"
     if task.hints_text:
         hint = task.hints_text

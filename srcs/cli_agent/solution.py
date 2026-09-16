@@ -5,7 +5,7 @@ from rich.syntax import Syntax
 from rich.text import Text
 
 
-def display_solution(console: Console, output: SolutionOutput):
+def display_solution(console: Console, output: SolutionOutput) -> None:
     content = Group(
             Text.from_markup("[bold]Total input tokens:[/bold] "
                              f"{output.total_input_tokens}"),

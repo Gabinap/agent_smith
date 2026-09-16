@@ -1,7 +1,7 @@
 from models.metrics import SolutionOutput
 
 
-def save_output(output: SolutionOutput, output_file):
+def save_output(output: SolutionOutput, output_file: str) -> None:
     """Save the Agent output in a Json file.
     Args:
         output (SolutionOutput): solution output

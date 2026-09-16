@@ -1,11 +1,13 @@
 import json
 import re
+from typing import Any
 
 import cli_agent
 from code_extract import extract_python
 from openai.types.chat.chat_completion_message_function_tool_call import (
     ChatCompletionMessageFunctionToolCall,
 )
+from rich.console import Console
 
 
 def python_block_gen(tool_call: ChatCompletionMessageFunctionToolCall) -> str:
@@ -25,15 +27,15 @@ def clean_run_tests(text: str) -> str:
     return "\n".join(filtered)
 
 
-def llm_output_code(console, llm_output_data):
-    if llm_output_data.get("tool_calls"):
-        tool_call = llm_output_data.get("tool_calls")
+def llm_output_code(console: Console,
+                    llm_output_data: dict[str, Any]) -> tuple[str, str]:
+    tool_call = llm_output_data.get("tool_calls")
+    if tool_call:
         cli_agent.display_llm_tool_call(console, tool_call)
-        py_code = python_block_gen(tool_call)
-    else:
-        llm_answer = llm_output_data.get("answer")
-        cli_agent.display_llm_output(console,
-                                     llm_output_data,
-                                     llm_answer)
-        return extract_python(llm_answer)
-    return py_code, ""
+        return python_block_gen(tool_call), ""
+
+    llm_answer = llm_output_data.get("answer")
+    cli_agent.display_llm_output(console,
+                                 llm_output_data,
+                                 llm_answer or "")
+    return extract_python(llm_answer)

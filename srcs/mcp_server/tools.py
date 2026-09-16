@@ -13,9 +13,10 @@ EXEC_TOOL_TIMEOUT_SECONDS = 300
 
 def _resolve_root(backend: ExecBackend) -> str:
     """Return the absolute path of the current search root (".")."""
-    return backend.run(
+    root: str = backend.run(
         "pwd", workdir=".", timeout=FAST_TOOL_TIMEOUT_SECONDS,
     ).stdout.strip()
+    return root
 
 
 def _definition_regex(name: str) -> str:
@@ -122,7 +123,8 @@ def list_files(backend: ExecBackend, directory: str, pattern: str) \
     )
     if result.exit_code != 0:
         return f"error: {result.stderr}"
-    return result.stdout
+    found: str = result.stdout
+    return found
 
 
 # Search tools
@@ -263,7 +265,8 @@ def get_patch(backend: ExecBackend) -> str:
     )
     if diff_result.exit_code != 0:
         return f"error: git diff failed: {diff_result.stderr}"
-    return diff_result.stdout
+    diff: str = diff_result.stdout
+    return diff
 
 
 def run_command(

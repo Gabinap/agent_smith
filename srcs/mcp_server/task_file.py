@@ -36,7 +36,8 @@ def find_task(env_var: str, marker: str) -> pathlib.Path:
         except (json.JSONDecodeError, OSError):
             continue
         if isinstance(content, dict) and marker in content:
-            return candidate
+            found: pathlib.Path = candidate
+            return found
 
     raise SystemExit(
         f"no task to serve: set {env_var}, or dump one into {CACHE} "

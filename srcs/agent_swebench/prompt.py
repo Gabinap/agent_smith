@@ -3,7 +3,7 @@ import textwrap
 from models.tasks import SWEBenchTaskInput
 
 
-def get_prompt(task: SWEBenchTaskInput):
+def get_prompt(task: SWEBenchTaskInput) -> str:
     prompt = f"REPO: {task.repo}\n"
     if task.hints_text:
         prompt += f"HINT: {task.hints_text}\n"

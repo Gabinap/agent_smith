@@ -7,7 +7,7 @@ from call_llm.profile import Profile
 from rich.console import Console
 from models import McpSpec
 from models.sandbox import SandboxConfig
-from sandbox.mcp_client import create_mcp_client
+from sandbox.mcp_client import McpClient, create_mcp_client
 from agent_mbpp.agent import Mbpp
 from .task_manager import Task
 
@@ -70,7 +70,9 @@ def main() -> None:
         console.print("[bold red] Error:", e)
 
 
-def launch_agent(profile, console, args, mcp_client):
+def launch_agent(profile: Profile, console: Console,
+                 args: argparse.Namespace,
+                 mcp_client: McpClient | None) -> None:
     cli_agent.display_header(console, profile)
     task = Task(str(Path(args.task_file).expanduser().resolve())).input
     cli_agent.display_mbpp_task(console, task)
@@ -79,7 +81,7 @@ def launch_agent(profile, console, args, mcp_client):
         output_file=args.output,
         api_url=profile.provider_url,
         model_name=profile.model_name,
-        env_key=profile.key_name,
+        env_keys=profile.keys,
         console=console,
         client=mcp_client,
         # Subject limits for MBPP: 10 iterations, 120s. The iteration

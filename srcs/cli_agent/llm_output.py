@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from rich.console import Console, Group
 from rich.panel import Panel
@@ -7,7 +8,8 @@ from rich.table import Table
 from rich.text import Text
 
 
-def display_llm_output(console: Console, llm_output_data: dict, py_code: str):
+def display_llm_output(console: Console, llm_output_data: dict[str, Any],
+                       py_code: str) -> None:
     table = Table(padding=1).grid(padding=(0, 2))
     table.add_column(style="bold")
     table.add_column()
@@ -32,7 +34,12 @@ def display_llm_output(console: Console, llm_output_data: dict, py_code: str):
     ))
 
 
-def display_llm_tool_call(console: Console, tool_call: dict):
+def display_llm_tool_call(console: Console, tool_call: Any) -> None:
+    """Render one tool call.
+
+    `tool_call` is the provider SDK's own object, not a dict: it is
+    reached through `.function.name` / `.function.arguments`.
+    """
     content = Group(
         Text("Tool called:", style="bold white", end="\n\n"),
         Syntax(str(tool_call.function.name), "python",

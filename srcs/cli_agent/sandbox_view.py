@@ -6,7 +6,7 @@ from rich.text import Text
 
 
 def display_sandbox(console: Console, sandbox_data: SandboxResult,
-                    py_code: str):
+                    py_code: str) -> None:
     msg_error = ("No Errors" if sandbox_data.error is None
                  else sandbox_data.error)
     py_code = "No Python code" if py_code is None else py_code
@@ -29,7 +29,7 @@ def display_sandbox(console: Console, sandbox_data: SandboxResult,
 
 
 def display_sandbox_tests(console: Console, output: str,
-                          result: str):
+                          result: str) -> None:
 
     sandbox_cli = Group(
         Text("\nOutput:", style="bold white", end="\n\n"),
