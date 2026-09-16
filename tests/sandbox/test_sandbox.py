@@ -112,6 +112,37 @@ def test_infinite_loop_is_killed_by_timeout():
     assert "TimeoutError" in result.error
 
 
+def test_output_printed_before_the_timeout_is_kept():
+    """V.3 requires the partial output to survive the deadline.
+
+    Only the child can supply it: the parent kills the process, and
+    its own `stdout` list stays empty because the child's copy dies
+    with it. So this passes only while the child reports its own
+    SIGALRM through the pipe.
+    """
+    config = SandboxConfig(max_execution_time_seconds=1)
+    sandbox = Sandbox(config=config)
+
+    result = sandbox.execute(
+        "print('printed before the deadline')\nwhile True:\n    pass")
+
+    assert "printed before the deadline" in result.output
+    assert "TimeoutError" in result.error
+
+
+def test_a_timeout_with_nothing_printed_yields_an_empty_output():
+    """The empty case must stay a valid result, not a crash: `output`
+    is typed `str`, so handing back the raw list would raise a
+    ValidationError out of execute() and kill the whole run."""
+    config = SandboxConfig(max_execution_time_seconds=1)
+    sandbox = Sandbox(config=config)
+
+    result = sandbox.execute("while True:\n    pass")
+
+    assert result.output == ""
+    assert result.success is False
+
+
 # --- final_answer() ---
 
 def test_final_answer_sets_finished_and_value(sandbox):

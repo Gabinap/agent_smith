@@ -30,6 +30,7 @@ def _timeout_handler(signum: int, frame: FrameType | None) -> None:
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 MAX_OPEN_FILES = 256
 CPU_GRACE_SECONDS = 5
+TIMEOUT_REPORT_GRACE_SECONDS = 1
 
 
 # Attributes that walk from any object back to the process (its classes,
@@ -302,8 +303,6 @@ class Sandbox:
 
         self.namespace = {
             "__builtins__": authorized_builtins,
-            # Every class body reads __name__ to set __module__; "__main__"
-            # also lets the usual `if __name__ == "__main__":` block run.
             "__name__": "__main__",
             "final_answer": self._final_answer_tool,
         }
@@ -422,13 +421,20 @@ class Sandbox:
             conn : mp.connection.Connection = The conneciton between the child
                 and the parent
         """
+        import signal
+
         try:
             self._limit_resource()
             self._block_network()
 
             tree = _reject_escapes(code)
             compiled_code = compile(tree, filename="<sandbox>", mode="exec")
-            exec(compiled_code, self.namespace)
+            signal.signal(signal.SIGALRM, _timeout_handler)
+            signal.alarm(self.config.max_execution_time_seconds)
+            try:
+                exec(compiled_code, self.namespace)
+            finally:
+                signal.alarm(0)
 
             conn.send({
                 "success": True,
@@ -438,8 +444,6 @@ class Sandbox:
                 "finished": self.has_finished,
             })
         except SystemExit as e:
-            # Must reach the caller of execute(), not be swallowed
-            # here — report it so the parent can re-raise it itself.
             conn.send({"__control__": "SystemExit", "code": e.code})
         except KeyboardInterrupt:
             conn.send({"__control__": "KeyboardInterrupt"})
@@ -467,6 +471,19 @@ class Sandbox:
                 "error": (
                     "MemoryError: RAM limit exceeded ("
                     f"{self.config.max_memory_mb} MB limit)"
+                ),
+                "final_answer": self.final_answer_value,
+                "finished": False,
+            })
+        except TimeoutError:
+            # Same wording as the parent's backstop below: the agent
+            # reads one message whichever side noticed the deadline.
+            conn.send({
+                "success": False,
+                "output": "".join(self.stdout),
+                "error": (
+                    "TimeoutError: Execution time limit exceeded ("
+                    f"{self.config.max_execution_time_seconds}s limit)"
                 ),
                 "final_answer": self.final_answer_value,
                 "finished": False,
@@ -508,7 +525,8 @@ class Sandbox:
                 "finished": False
             })
 
-        process.join(timeout=self.config.max_execution_time_seconds)
+        process.join(timeout=(self.config.max_execution_time_seconds
+                              + TIMEOUT_REPORT_GRACE_SECONDS))
 
         if process.is_alive():
             process.terminate()
@@ -518,7 +536,7 @@ class Sandbox:
                 process.join()
             return SandboxResult.model_validate({
                 "success": False,
-                "output": self.stdout,
+                "output": "",
                 "error": (
                     "TimeoutError: Execution time limit exceeded ("
                     f"{self.config.max_execution_time_seconds}s limit)"
