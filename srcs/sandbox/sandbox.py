@@ -476,8 +476,6 @@ class Sandbox:
                 "finished": False,
             })
         except TimeoutError:
-            # Same wording as the parent's backstop below: the agent
-            # reads one message whichever side noticed the deadline.
             conn.send({
                 "success": False,
                 "output": "".join(self.stdout),

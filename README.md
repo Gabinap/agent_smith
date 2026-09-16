@@ -1,4 +1,4 @@
-_This project has been created as part of the 42 curriculum by pgougne, gagulhon, mthetcha._ 
+_This project has been created as part of the 42 curriculum by pgougne, gagulhon, mthetcha._
 ![](./assets/42banner.png)
 ___
 # Description
@@ -15,72 +15,131 @@ a system, moving beyond static prompts and JSON-based tool calling to build a fu
 agentic loop driven by executable Python code.
 
 ## Project
-This project involves creating two agents that interact within a sandbox by executing Python code to complete specific tasks.
 
-    MBPP Agent: Focuses on standard coding tasks (Mostly Basic Python Problems) by writing functions to solve given problems.
+Agent Smith is a code agent that acts by writing Python. Instead of
+answering in JSON, the model writes a block of code; the code runs in a
+sandbox, and what it printed becomes the model's next observation. Two
+agents share this loop:
 
-    SWE-bench Agent: Focuses on software engineering tasks, such as diagnosing bugs and modifying existing codebases. This agent operates in a loop, allowing it to iteratively read, modify, and write files until the issue is resolved.
+- **MBPP agent** — solves *Mostly Basic Python Problems*: write a
+  function, run it against the task's asserts, submit it once they pass.
+- **SWE-bench agent** — fixes a real bug in a real repository: explore
+  the code, edit it, run the project's tests, and submit the resulting
+  git patch.
 
-To let agents modify, create, write and read files, execute python code, we must isolate as much as possible to be protected against malicious code. For this, we created the sandbox to isolate the execution and the actions made by the agent on files are in a docker accessible by a mcp server with provided tools and an mcp client directly in the sandbox.
+Both are built from the same three parts:
 
-    Sandbox: The sandbox use the python function "exec" to create another executed code with restricted acces. It is restricted in many ways:
-     - import restriction
-     - builtin restriction
-     - escape syntax rejected before the code is compiled
-     - network block
-     - path restrict
-     - time limit
-     - memory limit
-     - no process creation
-     - MCP protocol
+- **The sandbox** executes model-written code in a fresh, isolated child
+  process. It inspects the source before compiling it, hands out only
+  allowlisted imports and builtins, confines file access to allowed
+  directories, neutralises the network, and lets the kernel cap memory,
+  CPU, file size and process creation. A wall-clock timeout stops
+  runaway code while keeping what it printed so far.
+- **An MCP server** per benchmark exposes the tools the agent may call.
+  The sandbox connects to it as an MCP client and injects every tool it
+  advertises as a plain Python function. For SWE-bench, the tools work
+  inside the task's Docker container, never on the host.
+- **An LLM layer** talks to any OpenAI-compatible provider, rotates
+  between API keys when one is rate limited, and records the tokens,
+  latency and retries of every call.
 
-    McpServer: Mcp Server is a local server where the agent can use tools in to succeed the tasks.
+Every run ends with a `solution.json` in the format the moulinette
+validates: the answer, and the metrics of each iteration.
 ___
 # Instructions
 
-This project use UV
+## Requirements
 
-To run the project, you must install all the dependencies
+- Python 3.10 and [uv](https://docs.astral.sh/uv/)
+- A running Docker daemon, for SWE-bench
+- At least one API key from a supported provider
+
+## Installation
+
 ```sh
 make install
 ```
 
-## Running an agent
-
-Each agent reads a task file dumped by the moulinette and writes its
-solution as JSON. Both are run from `srcs/`, which the Makefile does
-for you:
+API keys are read from a `.env` file at the repository root, never from
+the code. The variable names each provider expects are listed in
+`srcs/call_llm/providers.json`; a second key per provider enables
+rotation when the first one is rate limited:
 
 ```sh
-make run-mbpp
-make run-swebench
+MISTRAL_STUDIO_1=...
+MISTRAL_STUDIO_2=...
+GROQ_CONSOLE_1=...
 ```
 
-To pick the model without the interactive prompt:
+A provider URL that is not in the catalog falls back to `API_KEY`.
+
+## Getting a task
+
+Tasks come from the moulinette, dumped into `cache/`:
+
+```sh
+cd moulinette && uv sync
+uv run moulinette_eval dump mbpp --output ../cache/mbpp_task.json
+uv run moulinette_eval dump swebench --output ../cache/swebench_task.json
+```
+
+## Running an agent
+
+Each agent reads a task file and writes its solution as JSON. Both run
+from `srcs/`, which the Makefile does for you:
+
+```sh
+make run-mbpp          # cache/mbpp_task.json     -> cache/mbpp_solution.json
+make run-swebench      # cache/swebench_task.json -> cache/swebench_solution.json
+```
+
+Without arguments, the provider and model are picked interactively. To
+skip the prompt:
 
 ```sh
 make run-mbpp MODEL="codestral-latest" PROVIDER="https://api.mistral.ai/v1"
 ```
 
-## Running the sandbox on its own
+The agent starts its MCP server itself, over stdio. To reach a server
+already listening on `http://localhost:8000` instead, start it with
+`python mcp_tools_mbpp.py --http` and pass `--http` to the agent.
 
-The sandbox is also a standalone REPL: it opens a prompt, executes what
-you type under the same restrictions, and exits on `exit` or Ctrl-D.
+To check a solution the way the evaluation does:
 
 ```sh
-uv run sandbox                                   # built-in policy
-uv run sandbox sandbox_template.json             # explicit policy
-make sandbox-mbpp                                # with the MBPP tools
-make sandbox-swebench                            # with the SWE-bench tools
+cd moulinette
+uv run moulinette_eval validate mbpp ../cache/mbpp_task.json ../cache/mbpp_solution.json
 ```
+
+## Running the sandbox on its own
+
+The sandbox is also a standalone REPL. It prints the manual of the tools
+it discovered, executes each line under the same restrictions, and
+exits on `exit` or Ctrl-D; `manual` prints the tool list again.
+
+```sh
+uv run sandbox                                            # built-in policy
+uv run sandbox sandbox_strict.json                        # explicit policy
+uv run sandbox --mcp-stdio "python mcp_tools_mbpp.py"     # with an MCP server
+uv run sandbox --mcp-server http://localhost:8000         # same, over HTTP
+make sandbox-mbpp                                         # MBPP tools + template
+make sandbox-swebench                                     # SWE-bench tools + template
+```
+
+An MCP server started this way without a task file serves the first
+matching task it finds in `cache/`.
 
 ## Benchmark
 
 ```sh
 make bench                    # every catalogued model on every cached task
 make bench MODELS="codestral-latest,openai/gpt-oss-20b"
-make graph                    # success rate per model
+make graph                    # success rate per model, in the terminal
+make report                   # Markdown tables derived from runs/
 ```
+
+Each (model, task) pair leaves one `runs/<model>__<task>.json`, and a
+re-run skips the pairs already done.
 
 ## Checks
 
@@ -92,57 +151,207 @@ make lint-strict   # same, with mypy --strict
 
 ___
 # Resources
-https://www.iditect.com/faq/python/how-to-sandbox-python-in-pure-python.html
-https://phase2online.com/insights/explain-it-like-i-m-five-what-the-heck-is-an-mcp-server
 
-**How AI was used ?**\
-Ai was used throughout this project as a support and learning assistant.
+**Topic references**
+
+- Model Context Protocol specification — https://modelcontextprotocol.io/specification
+- MBPP: *Program Synthesis with Large Language Models* — https://arxiv.org/abs/2108.07732
+- SWE-bench: *Can Language Models Resolve Real-World GitHub Issues?* — https://arxiv.org/abs/2310.06770
+- CodeAct: *Executable Code Actions Elicit Better LLM Agents* — https://arxiv.org/abs/2402.01030
+- Python `ast`, `resource`, `signal` and `multiprocessing` documentation — https://docs.python.org/3.10/library/
+- Docker SDK for Python — https://docker-py.readthedocs.io/
+- Sandboxing Python in pure Python — https://www.iditect.com/faq/python/how-to-sandbox-python-in-pure-python.html
+- What is an MCP server — https://phase2online.com/insights/explain-it-like-i-m-five-what-the-heck-is-an-mcp-server
+
+**How AI was used**
+
+AI was used as a support and learning assistant, and for some parts as a
+code generator whose output we reviewed, tested and can explain.
 
 - Organising:
   - Split the project into multiple parts
   - Suggest an organisation plan
-
-- Debugging:
-  - Explain unexpected behaviors
-  - Suggest potential causes of bugs
-
-- Global Assistance:
-  - Discuss best practices in project structure
-  - Writing Docstrings
+- Debugging and review:
+  - Explain unexpected behaviors and suggest potential causes of bugs
+  - Audit the repository against the subject and the evaluation grid,
+    by running the code rather than reading it
+- Code generation, reviewed by the team:
+  - The benchmark report extractor (`srcs/bench_report.py`)
+  - The benchmark matrix generator (`srcs/bench_matrix.py`)
+  - The type annotations that bring the code to `mypy`
+- Tests: part of the unit tests were generated with AI, then read and
+  adjusted for edge cases.
+- Writing: docstrings, and drafting parts of this README.
 
 ___
 # System architecture
 
-The architecture was dictate by the subject:
+The architecture was dictated by the subject:
 ![](./assets/achitecture.png)
-Here is an example of how the agent operates:
 
-  - Task Processing: The agent takes the task generated by the moulinette and uses it to construct a prompt for the LLM.
+Here is how the parts fit together during a run:
 
-  - Code Generation: The LLM responds with Python code aiming to solve the problem.
+- **Task processing** — the agent reads the task dumped by the
+  moulinette and builds the prompt describing it.
+- **Code generation** — the LLM answers with Python code aimed at the
+  next step.
+- **Sandboxed execution** — the agent extracts the code and runs it in
+  the sandbox.
+- **Tool access** — when the code calls a tool, the sandbox forwards the
+  call to the MCP server through its MCP client, and the result comes
+  back as the function's return value.
+- **Evaluation loop** — the sandbox's output is fed back to the model,
+  until the code calls `final_answer()` or a limit is reached.
 
-  - Sandboxed Execution: The agent extracts the code and runs it safely inside a sandbox.
+The code is organised by responsibility:
 
-  - Tool Access: If needed during execution, the sandbox calls external tools on the MCP server via the MCP client.
+```
+mcp_tools_mbpp.py        MCP server for MBPP: run_tests
+mcp_tools_swebench.py    MCP server for SWE-bench: the nine tools
+sandbox_*.json           sandbox policies, one per use
+srcs/
+├── agent_mbpp/          MBPP agent: CLI entry point, prompts, loop
+├── agent_swebench/      SWE-bench agent: CLI entry point, prompts, loop
+├── call_llm/            provider catalog, key rotation, API calls
+├── sandbox/             sandbox, MCP client, standalone REPL
+├── mcp_server/          tool implementations, task file lookup
+├── backends/            where tools execute: host directory or Docker
+├── models/              pydantic models and shared interfaces
+├── cli_agent/           terminal display
+├── code_extract.py      code extraction from model replies
+├── bench_matrix.py      benchmark runner
+├── bench_report.py      report tables derived from the runs
+└── build_graph.py       success-rate graph
+tests/                   unit and integration tests
+```
 
-  - Evaluation Loop: The sandbox returns its output to the agent for evaluation:
-    - If the solution fails or remains incomplete, the output is fed back into the loop to refine the code.
-    - If all tests pass, the loop terminates successfully.
+`cache/` holds what goes into a run (task files), `runs/` everything a
+run puts out (solutions, provider replies, runner logs).
 
 ___
 # Agent loop explanation
 
-mthetcha
+Both agents run the same **Thought → Code → Observation** loop,
+implemented in `solve_task()` and `execute()` of each agent. No agent
+framework is involved.
 
+## The conversation
+
+The conversation opens with a **system prompt** that sets the rules —
+one Python block per turn, one step per block, explore before editing,
+call `final_answer()` to finish — and ends with the manual of the tools
+the sandbox actually discovered, generated from the MCP server's
+schemas. The **task prompt** follows: the problem and its tests for
+MBPP; the repository, the hints and the issue for SWE-bench.
+
+Every later turn is appended to that same history, and the whole
+history is sent on each call. The model therefore always sees every
+step it took and every result it got, which is also why input tokens
+grow with each iteration.
+
+## One iteration
+
+1. **Thought and code** — the LLM is called with the conversation.
+   Reasoning is separated from the answer, whether the model marks it
+   with `</think>` / `</thought>` tags or the provider returns it in a
+   dedicated field.
+2. **Extraction** — the Python block is taken from the answer. A
+   well-formed ` ```python ` block is used as is; otherwise the
+   extractor tries, in order, a block with another tag or none, a block
+   that was never closed, and finally the whole reply as bare code. A
+   candidate is only accepted if `ast.parse` confirms it is Python, so a
+   shell or JSON block is never run as if it were.
+3. **Execution** — the code runs in the sandbox, which calls the MCP
+   tools on its behalf. Each execution starts from a clean interpreter:
+   what persists between steps is the conversation, and the files the
+   tools changed — not Python variables.
+4. **Observation** — the result is appended to the conversation as the
+   environment's turn, and the next iteration begins.
+
+## Feedback in every situation
+
+The model is never left guessing about what happened to its code:
+
+| Situation | What the model receives |
+|---|---|
+| No code found in the reply | Nothing is executed; the model is told no Python was found and which format is expected |
+| Malformed block, recovered | The observation starts with a note naming the repair — wrong tag, missing closing fence, no fence at all — and the correct format |
+| Code raised an error | The code, the error type and message, and what it printed before failing |
+| Execution timed out | `TimeoutError: Execution time limit exceeded`, with the output printed before the deadline |
+| Output too long | The first 30 lines, followed by `(N Remaining Lines...)` |
+| SWE-bench `run_tests()` | The verdict, `Test Passed` or `Test Failed`; the cleaned test log is shown in the terminal |
+
+## How the loop ends
+
+- **`final_answer()` is called** — the sandbox marks the execution as
+  finished and the loop stops. For MBPP the answer is the function's
+  source code; for SWE-bench it is the patch returned by `get_patch()`.
+- **The iteration cap is reached**, or **the time budget is spent** —
+  checked before each iteration. The budget sits below the subject's
+  timeout, because an iteration already in flight cannot be
+  interrupted.
+- **An unexpected error occurs** — every API key rate limited, for
+  instance. It is caught and recorded instead of crashing the program.
+
+In every case a `solution.json` is written: `success` says whether a
+final answer was given, `stop_reason` tells a solved task from one
+stopped by a limit, and `error` holds the exception if one occurred.
+
+| | Subject limit | Agent setting | Sandbox, per execution |
+|---|---|---|---|
+| MBPP | 10 iterations, 120 s | 5 iterations, 100 s | 15 s, 256 MB |
+| SWE-bench | 30 iterations, 900 s | 30 iterations, 840 s | 120 s, 1024 MB |
+
+MBPP stops at 5 iterations on purpose: the evaluation rewards iteration
+efficiency, and every extra iteration resends the whole history against
+a cumulative budget of 6,000 input tokens.
+
+## Talking to the LLM
+
+Providers and their models are listed in `srcs/call_llm/providers.json`:
+Google AI Studio, OpenRouter, Mistral and Groq, all reached through the
+same OpenAI-compatible client. When a call is rate limited, the client
+switches to the provider's next API key and tries again; each rejected
+attempt counts as a retry. Every raw response is appended to
+`runs/llm_responses.jsonl`, which keeps what the metrics do not, such as
+the `finish_reason`.
+
+## Metrics
+
+Each iteration produces a `StepMetrics`: input and output tokens, request
+time in milliseconds, retries, model and provider, the model's reply,
+and the code sent to the sandbox with the output it returned. The
+`SolutionOutput` adds the totals — tokens summed over the steps,
+iterations, API requests including retries, and the elapsed wall-clock
+time.
 
 ___
 # Sandbox design
 
-The Sandbox class is designed to securely execute code generated by the agent.
+The `Sandbox` class securely executes the code generated by the agent.
 
-To achieve this, the class builds an execution environment with a restricted dictionary containing only whitelisted imports and built-in functions. The code is then executed inside an isolated child process for enhanced security. Within this process, two key functions are used: compile() to check for syntax and static errors, and exec() to run the code using the restricted dictionary as its global namespace.
+## Execution model
 
-Finally, the child process sends the execution results back to the main process via IPC (Inter-Process Communication), allowing the agent to interpret the response and either refine its code or confirm task completion.
+Each call to `execute()` forks a **new child process**. The child
+restricts itself, runs the code, and sends a result back to the parent
+through a pipe: whether it succeeded, what it printed, the error if
+any, and the final answer if `final_answer()` was called. Everything the
+code did to the interpreter dies with the child.
+
+The namespace the code runs in replaces `print` so that the output is
+captured instead of reaching the terminal, and injects `final_answer()`
+and one function per MCP tool. Tool functions take keyword arguments —
+`read_file(filepath="/testbed/setup.py")` — and return the tool's text.
+
+**Timeouts keep the partial output.** The printed output only exists in
+the child, so only the child can report it. It arms `SIGALRM` for the
+policy's time limit before running the code; when the alarm fires, it
+catches its own timeout and sends what it had printed. The parent waits
+one extra second for that report, then terminates the process if it
+never came; `RLIMIT_CPU` remains a last resort should the parent itself
+be stuck. A child
+killed by the kernel — typically for exceeding its memory — is reported
+as a crash with its exit code.
 
 ## Why a restricted namespace is not enough
 
@@ -171,11 +380,14 @@ hides its dots inside a string literal.
 
 **2. The namespace hands out no capability.** Builtins are replaced by a
 small allowlist in which `__import__`, `open` and `print` are our own
-guarded versions. More subtly, the module that defines those functions
-keeps **no module and no real builtin in its own globals**: every import
-it needs happens inside the function that uses it. This matters because
-`injected_function.__globals__` is exactly that dictionary — if `os` sat
-there, one attribute lookup would be enough.
+guarded versions: imports are checked against the policy, and `open`
+resolves the real path of the file — symbolic links included — before
+checking it lies inside an allowed directory. More subtly, the module
+that defines those functions keeps **no module and no real builtin in
+its own globals**: every import it needs happens inside the function
+that uses it. This matters because `injected_function.__globals__` is
+exactly that dictionary — if `os` sat there, one attribute lookup would
+be enough.
 
 **3. The kernel caps what an escape could do.** The child process sets
 its own limits before running anything, each as both the soft and the
@@ -190,12 +402,21 @@ stack.
 ## The policy is data
 
 Imports, readable directories, per-execution timeout and memory ceiling
-all come from a `SandboxConfig`, loaded from a JSON template. Each
-benchmark gets the policy it needs — MBPP never touches the filesystem,
-so it runs with no readable directory at all — and a missing or
-malformed template falls back to the built-in policy, which is
-restrictive. `sandbox_strict.json` exists to demonstrate the point: it
-allows `math` and nothing else, without a line of code changing.
+all come from a `SandboxConfig`, loaded from a JSON template. Each use
+gets the policy it needs, without a line of code changing:
+
+| Template | Used by | Imports | Directories | Timeout | Memory |
+|---|---|---|---|---|---|
+| `sandbox_template.json` | standalone REPL | 16 standard modules | `/testbed`, `/tmp/agent` | 30 s | 512 MB |
+| `sandbox_mbpp.json` | MBPP agent | 12 standard modules | none | 15 s | 256 MB |
+| `sandbox_swebench.json` | SWE-bench agent | 13 standard modules | `/testbed`, `/tmp/agent` | 120 s | 1024 MB |
+| `sandbox_strict.json` | demonstration | `math` only | none | 5 s | 256 MB |
+
+MBPP never touches the filesystem, so it runs with no readable directory
+at all. `sandbox_strict.json` exists to demonstrate the point: `import
+json` fails under it and succeeds under the default template. A missing
+or malformed template falls back to the built-in policy, which is
+restrictive.
 
 ___
 # Tool implementation details
@@ -203,19 +424,28 @@ ___
 ## Two MCP servers, one per benchmark
 
 Tools are exposed to the agent through an MCP server started as a child
-process and spoken to over stdio (or HTTP with `--http`).
+process and spoken to over stdio (or HTTP with `--http`). The server
+receives its task through an environment variable set by the agent;
+started by hand without one, it serves the first matching task in
+`cache/`.
 
-- `mcp_tools_mbpp.py` exposes a single tool, `run_tests`. MBPP problems
-  are self-contained: the model writes a function and its asserts, and
-  the sandbox runs them directly.
+- `mcp_tools_mbpp.py` exposes a single tool, `run_tests(code,
+  test_list)`. It writes the candidate code followed by the asserts into
+  a script, runs it in a working directory on the host, and returns a
+  JSON verdict with the combined output.
 - `mcp_tools_swebench.py` exposes the nine tools required by the
   subject, because fixing a real bug means exploring a repository
   before touching it.
 
-The sandbox discovers whatever the connected server advertises and
-injects each tool into the execution namespace as a plain Python
-function. Nothing is hardcoded on the client side: connect a different
-server and the agent gets different tools.
+The sandbox discovers whatever the connected server advertises through
+`tools/list`, injects each tool into the execution namespace as a plain
+Python function, and generates the tool manual from the same schemas.
+Nothing is hardcoded on the client side: connect a different server and
+the agent gets different tools, documented accordingly.
+
+`final_answer()` is not one of these tools. It belongs to the sandbox,
+because it controls the agent loop rather than acting on the
+repository.
 
 ## The nine SWE-bench tools
 
@@ -278,8 +508,13 @@ different places:
   repository comes with its own dependencies and its own Python.
 
 Both report the same `CommandResult` — `stdout`, `stderr`, `exit_code`,
-`timed_out` — so a tool cannot tell them apart. Two details worth
+`timed_out` — so a tool cannot tell them apart. Three details worth
 knowing:
+
+**Images already present are not pulled again.** The backend looks the
+image up in the local Docker store first and only pulls what is missing.
+A plain pull contacts the registry every time, which would make every
+run depend on Docker Hub being reachable.
 
 **Timeouts are measured, not inferred.** Docker reports a timeout
 through the exit code of the `timeout` utility, whose convention
@@ -291,7 +526,6 @@ against the limit works the same everywhere.
 container left labelled `agent-smith` when it starts. The MCP server
 also turns `SIGTERM` into a normal interpreter shutdown, so a killed
 agent still runs its cleanup instead of leaking a container.
-
 
 ___
 # Benchmark results and analysis
