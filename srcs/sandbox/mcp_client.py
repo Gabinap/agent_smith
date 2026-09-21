@@ -31,16 +31,11 @@ class McpClient(ABC):
                 },
             },
         )
-        init_response = self.send_message(init_request)
-        print(f"Init response: {init_response}\n")  # delete debug print
-
+        self.send_message(init_request)
         notif = self._build_notification(method="notifications/initialized")
         self.send_message(notif)
-        print("Notification send (no response needed)\n")  # delete debug print
-
         server_request = self._build_request("tools/list")
         server_response = self.send_message(server_request)
-        print(f"Server response: {server_response}\n")  # delete debug print
 
         return server_response if server_response else {}
 

@@ -12,7 +12,7 @@
 "Mistral Studio": {
 	"url": "https://api.mistral.ai/v1",
 	"keys": ["MISTRAL_STUDIO_1", "MISTRAL_STUDIO_2"],
-	"model": ["codestral-latest", "mistral-small-latest", "mistral-medium-latest", "ministral-3b-latest", "ministral-8b-latest", "ministral-14b-latest"]
+	"model": ["codestral-latest"]
 },
 "Groq Console": {
 	"url": "https://api.groq.com/openai/v1",
