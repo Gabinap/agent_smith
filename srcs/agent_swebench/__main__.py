@@ -29,7 +29,7 @@ def main() -> None:
         )
         parser.add_argument(
             "--output",
-            default="../swebench_solution.json",
+            default=str(PROJECT_ROOT / "runs" / "swebench_solution.json"),
         )
         parser.add_argument(
             "--model-name",

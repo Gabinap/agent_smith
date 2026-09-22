@@ -31,7 +31,7 @@ def main() -> None:
         )
         parser.add_argument(
             "--output",
-            default="../mbpp_solution.json",
+            default=str(PROJECT_ROOT / "runs" / "mbpp_solution.json"),
         )
         parser.add_argument(
             "--model-name",
