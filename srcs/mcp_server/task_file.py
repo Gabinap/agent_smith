@@ -30,7 +30,7 @@ def find_task(env_var: str, marker: str) -> pathlib.Path:
             raise SystemExit(f"{env_var} points at a missing file: {path}")
         return path
 
-    for candidate in sorted(CACHE.glob("*.json")):
+    for candidate in sorted(CACHE.rglob("*.json")):
         try:
             content = json.loads(candidate.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):

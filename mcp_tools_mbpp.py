@@ -59,7 +59,9 @@ def main() -> None:
     disconnects) — kept out of module scope so importing this file
     never touches MBPP_TASK_FILE or starts the server."""
     global task
-    with open(find_task("MBPP_TASK_FILE", "task_id")) as f:
+    # `task_definition`, not `task_id`: a solution.json carries a
+    # task_id too, and cache/ holds some of those.
+    with open(find_task("MBPP_TASK_FILE", "task_definition")) as f:
         task = MBPPTaskInput.model_validate_json(f.read())
     transport: Literal["stdio", "streamable-http"] = (
         "streamable-http" if "--http" in sys.argv else "stdio")
