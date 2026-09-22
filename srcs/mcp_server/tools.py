@@ -1,5 +1,6 @@
 """MCP tool implementations: file, search, and execute operations."""
 
+import ast
 import re
 import shlex
 
@@ -81,6 +82,32 @@ def read_file(
     )
 
 
+def _syntax_error_introduced(before: str, after: str, filepath: str) -> str:
+    """The syntax error an edit would add, or "" when it adds none.
+
+    The subject requires the model to be told when its own edit breaks
+    a file — the one feedback case a silent write would hide, since
+    the damage only surfaces much later, when the tests run.
+
+    Only a file that parsed *before* and fails *after* is the edit's
+    doing. The parse happens in this server, not in the container, so
+    a repository written for a newer Python would otherwise see every
+    edit refused for a syntax its interpreter simply does not know.
+    """
+    if not filepath.endswith(".py"):
+        return ""
+    try:
+        ast.parse(before)
+    except SyntaxError:
+        return ""
+    try:
+        ast.parse(after)
+    except SyntaxError as error:
+        where = f"line {error.lineno}" if error.lineno else "unknown line"
+        return f"{error.msg} ({where})"
+    return ""
+
+
 def edit_file(
         backend: ExecBackend, filepath: str, old_str: str, new_str: str
         ) -> str:
@@ -92,8 +119,9 @@ def edit_file(
         old_str: Exact text to replace, must be unique in the file.
         new_str: Replacement text.
     Returns:
-        "ok: <filepath> updated", or "error: ..." if not found or
-        ambiguous (multiple occurrences).
+        "ok: <filepath> updated", or "error: ..." if not found,
+        ambiguous (multiple occurrences), or if the edit would leave
+        the file unparseable.
     """
     try:
         content = backend.read_file(filepath)
@@ -109,7 +137,15 @@ def edit_file(
             "must be unique — include more surrounding context"
         )
 
-    backend.write_file(filepath, content.replace(old_str, new_str, 1))
+    updated = content.replace(old_str, new_str, 1)
+    broken = _syntax_error_introduced(content, updated, filepath)
+    if broken:
+        return (
+            f"error: that edit would break the syntax of {filepath}: "
+            f"{broken}. Nothing was written — fix new_str and retry."
+        )
+
+    backend.write_file(filepath, updated)
     return f"ok: {filepath} updated"
 
 
