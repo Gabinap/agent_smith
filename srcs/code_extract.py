@@ -81,3 +81,55 @@ def truncate_output(result: str, max_lines: int) -> str:
         result = result[:new_lines[max_lines]]
         result += f"\n({len(new_lines) - max_lines} Remaining Lines...)"
     return result
+
+
+def observation(error: str | None, output: str, repair: str = "") -> str:
+    """The turn the environment sends back, and nothing more.
+
+    The model's own code is already in the conversation as its own
+    message: repeating it back costs a second copy of every turn, on
+    every later call, since the whole history is resent each time. On
+    the measured MBPP runs that duplication was 88% of the feedback.
+
+    What the model cannot know is what happened, so that is all this
+    carries — the error if there was one, what was printed, and
+    explicitly that nothing was printed when that is the case, which
+    is otherwise indistinguishable from a silent failure.
+    """
+    parts = []
+    if repair:
+        parts.append(repair)
+    if error:
+        parts.append(f"Error: {error}")
+    if output.strip():
+        parts.append(f"Output:\n{output.rstrip()}")
+    elif not error:
+        parts.append("Ran with no error and printed nothing.")
+    return "\n".join(parts)
+
+
+# unittest's own summary, the only part of a test log worth resending.
+# Non-capturing on purpose: findall returns the group when there is
+# one, so a capturing group here would yield "FAIL" instead of the line.
+TEST_VERDICT = re.compile(
+    r"^(?:Ran \d+ tests?|OK\b|FAILED\b).*", re.MULTILINE)
+TEST_FAILURE = re.compile(r"^(?:FAIL|ERROR): .*", re.MULTILINE)
+
+
+def summarise_tests(output: str, max_failures: int = 10) -> str:
+    """Keep the verdict and what failed, drop the build noise.
+
+    A Django suite prints locale generation, git status and teardown
+    around a two-line summary: 393 lines measured, of which 2 matter.
+    Sending the whole log would swamp the conversation, and sending
+    only "Test Failed" leaves the model without the one thing it needs
+    — which test failed.
+    """
+    failures = TEST_FAILURE.findall(output)
+    verdicts = TEST_VERDICT.findall(output)
+
+    lines = failures[:max_failures]
+    if len(failures) > max_failures:
+        lines.append(f"({len(failures) - max_failures} more failures...)")
+    lines.extend(verdicts[-2:])
+    return "\n".join(lines) if lines else output

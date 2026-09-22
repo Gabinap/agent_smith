@@ -220,51 +220,18 @@ class Sandbox:
             )
         return real_open(file, mode, *args, **kwargs)
 
-    @staticmethod
-    def _clean_git_diff(text: str) -> str:
-        """delete unwanted lines (diff --git, old mode, new mode, etc.)
-        and reformate."""
-        import re
-
-        if not isinstance(text, str):
-            return text
-
-        pattern = (
-            r"(?:diff --git|old mode|new mode|sympy/[^\n\r]*?b/sympy/[^\n\r]*"
-            r"|nold mode)[^\n\r]*(\\n|\r?\n)?"
-        )
-        second_pattern = r'^\s*(\+|export |building extension|Link requires)'
-        cleaned = re.sub(pattern, '', text)
-        cleaned = re.sub(second_pattern, '', cleaned, flags=re.MULTILINE)
-
-        if r'\n' in cleaned:
-            cleaned = cleaned.replace(r'\n', '\n')
-
-        return cleaned.strip()
-
-    def _process_response(self, data: Any) -> Any:
-        """
-            Access recursivly to each part of the result to find text
-            to delete diff lines.
-        """
-        if isinstance(data, dict):
-            return {k: self._process_response(v) for k, v in data.items()}
-        elif isinstance(data, list):
-            return [self._process_response(item) for item in data]
-        elif isinstance(data, str):
-            return self._clean_git_diff(data)
-        return data
-
     def _custom_print(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Rewriting the function print for the agent to capture
-        the standard output and not printing it in the terminal
+        """Capture what the code prints instead of writing it out.
+
+        Faithfully: shortening belongs to the agent, which decides
+        what goes into the conversation. Rewriting here corrupted
+        every print — a leading "+" was stripped as if it were a diff
+        marker, and `final_answer` would have carried the damage.
         """
         sep = kwargs.get("sep", " ")
         end = kwargs.get("end", "\n")
 
-        cleaned_args = [self._process_response(a) for a in args]
-        text = sep.join(str(a) for a in cleaned_args) + end
+        text = sep.join(str(a) for a in args) + end
         self.stdout.append(text)
 
     def _final_answer_tool(self, answer: str) -> str:
