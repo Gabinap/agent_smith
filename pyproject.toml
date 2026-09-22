@@ -25,13 +25,7 @@ build-backend = "setuptools.build_meta"
 dev = [
     "flake8>=7.3.0",
     "mypy>=2.3.1",
-    "pytest>=9.1.1",
 ]
-
-[tool.pytest.ini_options]
-pythonpath = [".", "srcs"]
-# Only our suite: moulinette/ ships its own tests and is not ours to run.
-testpaths = ["tests"]
 
 [project.scripts]
 sandbox = "sandbox.cli_sandbox:main"
