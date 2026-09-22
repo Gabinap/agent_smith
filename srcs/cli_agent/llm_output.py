@@ -1,4 +1,3 @@
-import json
 from typing import Any
 
 from rich.console import Console, Group
@@ -32,26 +31,3 @@ def display_llm_output(console: Console, llm_output_data: dict[str, Any],
         title="LLM answer",
         border_style="blue"
     ))
-
-
-def display_llm_tool_call(console: Console, tool_call: Any) -> None:
-    """Render one tool call.
-
-    `tool_call` is the provider SDK's own object, not a dict: it is
-    reached through `.function.name` / `.function.arguments`.
-    """
-    content = Group(
-        Text("Tool called:", style="bold white", end="\n\n"),
-        Syntax(str(tool_call.function.name), "python",
-               theme="stata-dark", line_numbers=False),
-        "\n",
-        Text("Arguments:", style="bold white", end="\n\n"),
-        Syntax(str(json.loads(tool_call.function.arguments)), "python",
-               theme="stata-dark", line_numbers=False),
-    )
-
-    console.print(Panel(
-            content,
-            title="LLM answer",
-            border_style="blue"
-        ))
