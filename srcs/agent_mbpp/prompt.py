@@ -17,8 +17,16 @@ Tests to try:
 
 
 def system_content(tools: str = "") -> str:
-    """Build the system prompt around the sandbox's own tool manual."""
-    return textwrap.dedent(f"""
+    """Build the system prompt around the sandbox's own tool manual.
+
+    The manual is appended after dedenting rather than interpolated
+    into the template: its own lines start at column 0, so a manual of
+    two tools or more leaves `textwrap.dedent` no common prefix to
+    strip and the whole prompt goes out indented — wasted tokens on a
+    6000-token budget, and a `system_prompt` that no longer starts
+    where the prompt starts.
+    """
+    return textwrap.dedent("""
         You are an expert Python software engineer tasked with solving
         a coding problem step by step.
 
@@ -65,5 +73,4 @@ def system_content(tools: str = "") -> str:
         ​```
 
         # Available Tools
-        {tools}
-        """)
+        """).strip() + f"\n{tools}\n"
