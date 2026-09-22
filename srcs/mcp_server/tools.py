@@ -10,6 +10,19 @@ FAST_TOOL_TIMEOUT_SECONDS = 15
 # Tools that can spawn a process
 EXEC_TOOL_TIMEOUT_SECONDS = 300
 
+# Directories a bug fix never lives in: version control, build and
+# test scaffolding, vendored dependencies. `grep -r` walks all of them
+# by default — which costs time against a 15-second budget and, worse,
+# reports hits inside a vendored or built copy of the very module
+# being fixed, sending the agent to edit a file the patch ignores.
+NOISE_DIRS = (
+    ".git", ".hg", ".svn", ".tox", ".nox", ".eggs", ".mypy_cache",
+    ".pytest_cache", ".venv", "__pycache__", "build", "dist",
+    "node_modules", "site-packages",
+)
+EXCLUDE_NOISE = " ".join(
+    f"--exclude-dir={shlex.quote(name)}" for name in NOISE_DIRS)
+
 
 def _resolve_root(backend: ExecBackend) -> str:
     """Return the absolute path of the current search root (".")."""
@@ -129,7 +142,6 @@ def list_files(backend: ExecBackend, directory: str, pattern: str) \
 
 # Search tools
 
-# TODO: maybe delete by default all files starting with a dot.
 def search_code(backend: ExecBackend, pattern: str, file_pattern: str) \
         -> str:
     """Recursively grep the codebase for a regex pattern.
@@ -142,7 +154,8 @@ def search_code(backend: ExecBackend, pattern: str, file_pattern: str) \
         One match per line: "/absolute/path:<line_number> <content>".
     """
     cmd = (
-        f"grep -rn --include={shlex.quote(file_pattern)} "
+        f"grep -rn {EXCLUDE_NOISE} "
+        f"--include={shlex.quote(file_pattern)} "
         f"{shlex.quote(pattern)} ."
     )
     raw = backend.run(
@@ -164,7 +177,7 @@ def search_function_or_class_definition_in_code(
         One match per line: "/absolute/path:<line_number> <content>".
     """
     cmd = (
-        f"grep -rEn --include='*.py' "
+        f"grep -rEn {EXCLUDE_NOISE} --include='*.py' "
         f"{shlex.quote(_definition_regex(name))} ."
     )
     raw = backend.run(
@@ -194,7 +207,8 @@ def find_references(
     if line is not None and line < 1:
         return "error: line number must be >= 1"
     definition_pattern = _definition_regex(name)
-    cmd = f"grep -rFn --include='*.py' {shlex.quote(name)} ."
+    cmd = (f"grep -rFn {EXCLUDE_NOISE} --include='*.py' "
+           f"{shlex.quote(name)} .")
     raw = backend.run(cmd, workdir=".", timeout=FAST_TOOL_TIMEOUT_SECONDS)
     if raw.exit_code not in (0, 1):
         return f"error: {raw.stderr}"
