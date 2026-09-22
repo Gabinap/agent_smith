@@ -1,23 +1,19 @@
 """The link between an agent and an OpenAI-compatible chat API."""
 
-import datetime
-import json
 import os
-import pathlib
 import time
 from typing import Any
 
 from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
-from paths import LLM_RESPONSES
 
 
 class LLM:
     """Hold one conversation with the model and its API keys."""
 
     def __init__(self, api_url: str, model_name: str, env_keys: list[str],
-                 system_content: str, tools: Any = None) -> None:
+                 system_content: str) -> None:
         """Resolve the API keys and open the chat with its system prompt.
 
         Args:
@@ -25,11 +21,9 @@ class LLM:
             model_name: Name of the model to call.
             env_keys: Names of the .env variables holding the API keys.
             system_content: System prompt opening the conversation.
-            tools: Unused, kept until agent_swebench stops passing it.
         """
         self.api_url = api_url
         self.model_name = model_name
-        self.log_file: str | None = str(LLM_RESPONSES)
         self._system_content = system_content
         self._api_keys = self._load_keys(env_keys)
         self._key_index = 0
@@ -54,6 +48,19 @@ class LLM:
             base_url=self.api_url,
             timeout=120.0,
         )
+
+    @property
+    def system_prompt(self) -> str:
+        """The system message as it was actually sent.
+
+        Read back from the conversation rather than rebuilt: the field
+        exists for provenance, so it has to show what left the process
+        — not what calling the builder a second time would produce.
+        """
+        first = self.messages[0] if self.messages else {}
+        if isinstance(first, dict) and first.get("role") == "system":
+            return str(first.get("content", ""))
+        return ""
 
     def _next_key(self) -> bool:
         """Switch to the next API key, False when none is left."""
@@ -102,21 +109,6 @@ class LLM:
                 return parts[0], parts[-1]
         return reasoning or "No thought found", response.content
 
-    def log_response(self, completion: ChatCompletion) -> None:
-        """Append one API response to the JSONL log file."""
-        if not self.log_file:
-            return
-        entry = {
-            "timestamp": datetime.datetime.now().isoformat(
-                timespec="seconds"),
-            "model_name": self.model_name,
-            "completion": json.loads(completion.model_dump_json()),
-        }
-        log = pathlib.Path(self.log_file)
-        log.parent.mkdir(parents=True, exist_ok=True)
-        with open(log, "a", encoding="utf-8") as file:
-            file.write(json.dumps(entry, ensure_ascii=False) + "\n")
-
     def call(self, prompt: str) -> dict[str, Any]:
         """Call the LLM through the API and return its reply.
 
@@ -134,7 +126,6 @@ class LLM:
         start = time.perf_counter()
         completion, retries = self._create_completion()
         elapsed = time.perf_counter() - start
-        self.log_response(completion)
         response = completion.choices[0].message
         self.messages.append(response)
 
@@ -149,5 +140,4 @@ class LLM:
             "answer": answer,
             "request_time_ms": elapsed * 1000,
             "retries": retries,
-            "tool_calls": None,  # TODO: drop with agent_swebench's branch
         }

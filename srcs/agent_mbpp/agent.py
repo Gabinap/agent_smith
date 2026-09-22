@@ -1,6 +1,7 @@
 """Autonomous agent loop that solves a single MBPP task."""
 
 import datetime
+import pathlib
 import time
 
 import cli_agent
@@ -47,7 +48,7 @@ class Mbpp:
         self.sandbox = Sandbox(
             mcp_client=client, config=sandbox_config or SandboxConfig())
         self.llm = LLM(api_url, model_name, env_keys,
-                       system_content(self.sandbox.manual()), [])
+                       system_content(self.sandbox.manual()))
         self.step = 1
         self.sandbox_data: SandboxResult | None = None
         self.py_code = ""
@@ -130,6 +131,8 @@ class Mbpp:
 
     def save_output(self, output: SolutionOutput) -> None:
         """Write `output` to output_file as JSON."""
+        pathlib.Path(self.output_file).parent.mkdir(
+            parents=True, exist_ok=True)
         with (open(self.output_file, "w", encoding="utf-8") as file):
             file.write(output.model_dump_json(indent=2))
 
@@ -181,7 +184,7 @@ class Mbpp:
                                     for metric in self.steps),
             total_time_seconds=self.elapsed_seconds,
             steps=self.steps,
-            system_prompt=self.prompt,
+            system_prompt=self.llm.system_prompt,
             error=str(self.error) if self.error else None,
             timestamp=timestamp,
             stop_reason=self.stop_reason

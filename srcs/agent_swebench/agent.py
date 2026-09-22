@@ -56,8 +56,7 @@ class SWEBench:
         self.stop_reason = "solved"
 
         self.llm = LLM(api_url, model_name, env_keys,
-                       system_content(self.sandbox.manual()),
-                       self.sandbox.list_tools())
+                       system_content(self.sandbox.manual()))
 
     def execute(self) -> None:
         """Launch the loaded Task
@@ -202,7 +201,7 @@ class SWEBench:
                                     for metric in self.steps),
             total_time_seconds=self.elapsed_seconds,
             steps=self.steps,
-            system_prompt=self.prompt,
+            system_prompt=self.llm.system_prompt,
             error=str(self.error) if self.error else None,
             stop_reason=self.stop_reason,
         )
