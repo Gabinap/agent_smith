@@ -276,10 +276,16 @@ The model is never left guessing about what happened to its code:
 |---|---|
 | No code found in the reply | Nothing is executed; the model is told no Python was found and which format is expected |
 | Malformed block, recovered | The observation starts with a note naming the repair — wrong tag, missing closing fence, no fence at all — and the correct format |
-| Code raised an error | The code, the error type and message, and what it printed before failing |
+| Code raised an error | The error type and message, and what it printed before failing |
 | Execution timed out | `TimeoutError: Execution time limit exceeded`, with the output printed before the deadline |
 | Output too long | The first 30 lines, followed by `(N Remaining Lines...)` |
-| SWE-bench `run_tests()` | The verdict, `Test Passed` or `Test Failed`; the cleaned test log is shown in the terminal |
+| An edit would break a file | `edit_file` writes nothing and names the syntax error its `new_str` would introduce |
+| Code ran and printed nothing | Said in as many words, so silence is never mistaken for a silent failure |
+| SWE-bench `run_tests()` | The verdict and the failing test names, as unittest itself reports them |
+
+The observation carries what happened, never the code that caused it:
+the model's own message is already in the conversation, and the whole
+history is resent on every call.
 
 ## How the loop ends
 
@@ -476,6 +482,12 @@ the loop alive and tells it what went wrong.
 **`edit_file` refuses ambiguity.** If `old_str` appears more than once
 it edits nothing and asks for more surrounding context. Silently
 patching the first match is how an agent corrupts a file it cannot see.
+
+**`edit_file` refuses to break a file.** The replacement is parsed
+before being written: a `.py` file that parsed before the edit and
+would not parse after is reported, and nothing is written. Only the
+edit's own damage counts — a file already unparseable is left alone,
+since the parse runs on this host rather than in the container.
 
 **`get_patch` cleans before staging.** Running the test suite generates
 `__pycache__` and `.pyc` files; they are deleted before `git add`, so
