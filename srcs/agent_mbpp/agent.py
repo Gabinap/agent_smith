@@ -7,7 +7,8 @@ from typing import Any
 
 import cli_agent
 from call_llm.calling import LLM
-from code_extract import NO_CODE, extract_python, truncate_output
+from code_extract import (NO_CODE, extract_python, observation,
+                          truncate_output)
 from models.metrics import SolutionOutput, StepMetrics
 from models.sandbox import SandboxResult
 from models.tasks import MBPPTaskInput
@@ -72,6 +73,9 @@ class Mbpp:
         `total_requests` counts API attempts, not iterations: a step
         rate-limited twice costs three requests.
         """
+        # Each iteration starts without a result: a step that never
+        # reaches the sandbox must not inherit the previous one's.
+        self.sandbox_data = None
         self.prompt = get_prompt(self.task)
 
         with self.console.status("[bold blue]LMM Generation...",
@@ -95,12 +99,10 @@ class Mbpp:
         self.sandbox_data = self.sandbox.execute(self.py_code)
         self.sandbox_data.output = truncate_output(
             self.sandbox_data.output, max_lines=MAX_OUTPUT_LINES)
-        feedback = (f"Input: {self.py_code}\n"
-                    f"Sandbox Error: {self.sandbox_data.error}\n"
-                    f"Output :\n{self.sandbox_data.output}")
         self.llm.messages.append({
             "role": "user",
-            "content": f"{repair}\n{feedback}" if repair else feedback,
+            "content": observation(self.sandbox_data.error,
+                                   self.sandbox_data.output, repair),
         })
         cli_agent.display_sandbox(self.console,
                                   self.sandbox_data,
@@ -162,6 +164,7 @@ class Mbpp:
 
         except Exception as e:
             print(f"Error: {e}")
+            self.stop_reason = "Agent loop error"
             self.error = e
 
         self.elapsed_seconds = time.perf_counter() - start

@@ -12,7 +12,8 @@ from rich.console import Console
 from sandbox.mcp_client import McpClient
 from sandbox.sandbox import Sandbox, SandboxConfig
 
-from code_extract import NO_CODE, truncate_output
+from code_extract import (NO_CODE, observation,
+                          summarise_tests, truncate_output)
 from .code_gen import clean_run_tests, llm_output_code
 from .prompt import get_prompt, system_content
 from .save_data import save_output
@@ -71,6 +72,9 @@ class SWEBench:
         `total_requests` counts API attempts, not iterations: a step
         rate-limited twice costs three requests.
         """
+        # Each iteration starts without a result: a step that never
+        # reaches the sandbox must not inherit the previous one's.
+        self.sandbox_data = None
         self.prompt = get_prompt(self.task)
 
         with self.console.status("[bold blue]LMM Generation...",
@@ -89,13 +93,12 @@ class SWEBench:
 
         self.sandbox_data = self.sandbox.execute(self.py_code)
 
-        if self.sandbox_data.error or not self.sandbox_data:
+        if self.sandbox_data.error:
             self.llm.messages.append({
-                                "role": "user",
-                                "content": f"Input: {self.py_code}\n"
-                                f"Sandbox Error: {self.sandbox_data.error}\n"
-                                f"Tool result :\n{self.sandbox_data.output}"
-                    })
+                "role": "user",
+                "content": observation(self.sandbox_data.error,
+                                       self.sandbox_data.output, repair),
+            })
             cli_agent.display_sandbox(self.console,
                                       self.sandbox_data,
                                       self.py_code)
@@ -103,11 +106,10 @@ class SWEBench:
 
         if re.search(r'^[^#\n]*\brun_tests\s*\(', self.py_code, re.MULTILINE):
 
-            if ('[FAIL]' in self.sandbox_data.output
-                    or 'FAILED' in self.sandbox_data.output):
-                message = "Test Failed"
-            else:
-                message = "Test Passed"
+            # The verdict alone leaves the model unable to know which
+            # test broke; the whole log swamps the conversation. The
+            # summary is what unittest itself reports.
+            message = summarise_tests(self.sandbox_data.output)
 
             self.llm.messages.append({
                 "role": "user",
@@ -122,12 +124,10 @@ class SWEBench:
         self.sandbox_data.output = truncate_output(
             self.sandbox_data.output, max_lines=30)
 
-        feedback = (f"Input: {self.py_code}\n"
-                    f"Sandbox Error: {self.sandbox_data.error}\n"
-                    f"Tool result :\n{self.sandbox_data.output}")
         self.llm.messages.append({
             "role": "user",
-            "content": f"{repair}\n{feedback}" if repair else feedback,
+            "content": observation(self.sandbox_data.error,
+                                   self.sandbox_data.output, repair),
         })
         cli_agent.display_sandbox(self.console,
                                   self.sandbox_data,
@@ -184,6 +184,7 @@ class SWEBench:
                     self.step += 1
         except Exception as e:
             self.console.print("[bold red] Agentic Loop Error:", e)
+            self.stop_reason = "Agent loop error"
             self.error = e
 
         self.elapsed_seconds = time.perf_counter() - start
