@@ -89,8 +89,8 @@ Each agent reads a task file and writes its solution as JSON. Both run
 from `srcs/`, which the Makefile does for you:
 
 ```sh
-make run-mbpp          # cache/mbpp_task.json     -> cache/mbpp_solution.json
-make run-swebench      # cache/swebench_task.json -> cache/swebench_solution.json
+make run-mbpp          # cache/mbpp_task.json     -> runs/mbpp_solution.json
+make run-swebench      # cache/swebench_task.json -> runs/swebench_solution.json
 ```
 
 Without arguments, the provider and model are picked interactively. To
@@ -108,7 +108,7 @@ To check a solution the way the evaluation does:
 
 ```sh
 cd moulinette
-uv run moulinette_eval validate mbpp ../cache/mbpp_task.json ../cache/mbpp_solution.json
+uv run moulinette_eval validate mbpp ../cache/mbpp_task.json ../runs/mbpp_solution.json
 ```
 
 ## Running the sandbox on its own
@@ -132,7 +132,8 @@ matching task it finds in `cache/`.
 ## Benchmark
 
 ```sh
-make bench                    # every catalogued model on every cached task
+make bench                    # every catalogued model on the SWE-bench set
+make bench-mbpp               # the same, on the MBPP set
 make bench MODELS="codestral-latest,openai/gpt-oss-20b"
 make graph                    # success rate per model, in the terminal
 make report                   # Markdown tables derived from runs/
@@ -144,7 +145,6 @@ re-run skips the pairs already done.
 ## Checks
 
 ```sh
-make test          # the test suite
 make lint          # flake8, then mypy
 make lint-strict   # same, with mypy --strict
 ```
@@ -166,7 +166,7 @@ ___
 **How AI was used**
 
 AI was used as a support and learning assistant, and for some parts as a
-code generator whose output we reviewed, tested and can explain.
+code generator whose output we reviewed and can explain.
 
 - Organising:
   - Split the project into multiple parts
@@ -179,8 +179,6 @@ code generator whose output we reviewed, tested and can explain.
   - The benchmark report extractor (`srcs/bench_report.py`)
   - The benchmark matrix generator (`srcs/bench_matrix.py`)
   - The type annotations that bring the code to `mypy`
-- Tests: part of the unit tests were generated with AI, then read and
-  adjusted for edge cases.
 - Writing: docstrings, and drafting parts of this README.
 
 ___
@@ -219,14 +217,16 @@ srcs/
 ├── models/              pydantic models and shared interfaces
 ├── cli_agent/           terminal display
 ├── code_extract.py      code extraction from model replies
-├── bench_matrix.py      benchmark runner
+├── bench_matrix.py      benchmark runner, and the task set it runs
 ├── bench_report.py      report tables derived from the runs
 └── build_graph.py       success-rate graph
-tests/                   unit and integration tests
 ```
 
-`cache/` holds what goes into a run (task files), `runs/` everything a
-run puts out (solutions, provider replies, runner logs).
+`cache/` holds what goes into a run and `runs/` everything a run puts
+out (solutions, provider replies, runner logs). Each benchmark's task
+set lives in its own directory, `cache/swebench/` and `cache/mbpp/`:
+the runner dumps whatever is missing from it before starting, so the
+matrix is exactly the declared set.
 
 ___
 # Agent loop explanation
