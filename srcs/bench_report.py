@@ -21,7 +21,7 @@ import re
 import statistics
 from typing import Any
 
-from paths import LLM_RESPONSES, MATRIX_LOG, RUNS
+from paths import RUN_LOGS, RUNS
 
 NA = "—"
 # No API call answers this fast: a mean below it means the run predates
@@ -42,8 +42,6 @@ def load_runs(runs_dir: pathlib.Path) -> list[dict[str, Any]]:
     """Return every solution file in `runs_dir`, oldest name first."""
     runs = []
     for path in sorted(runs_dir.glob("*.json")):
-        if path.name == MATRIX_LOG.name:
-            continue
         try:
             run = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
@@ -151,61 +149,44 @@ def results_table(runs: list[dict[str, Any]]) -> str:
     return "\n".join(rows)
 
 
-def truncated_replies() -> dict[str, tuple[int, int]]:
-    """Per model, how many replies the output cap cut short.
-
-    finish_reason lives only in the raw provider replies: a run that
-    failed because the model was cut off mid-answer looks exactly like
-    one that reasoned badly, unless this is read.
-    """
-    counts: dict[str, list[int]] = {}
-    if not LLM_RESPONSES.is_file():
-        return {}
-    for line in LLM_RESPONSES.read_text(encoding="utf-8").splitlines():
-        try:
-            entry = json.loads(line)
-            choices = entry["completion"]["choices"]
-        except (json.JSONDecodeError, KeyError, TypeError):
-            continue
-        reason = choices[0].get("finish_reason") if choices else None
-        counts.setdefault(entry.get("model_name", "unknown"), []).append(
-            1 if reason == "length" else 0)
-    return {model: (sum(flags), len(flags)) for model, flags in
-            counts.items()}
+def slug(model: str) -> str:
+    """Flatten a model id the way the runner names its files."""
+    return model.replace("/", "-")
 
 
 def availability() -> dict[str, tuple[int, int]]:
-    """Per model, cells that produced data over cells attempted.
+    """Per model slug, cells that produced data over cells attempted.
 
-    Read from the runner log rather than the runs: a cell that never
-    wrote a solution.json leaves no trace among the runs themselves.
+    The runner writes one log per cell it starts, the agent one
+    solution per cell that finished: comparing the two counts needs no
+    separate journal, and a model whose every cell died still shows up
+    — with its attempts, and no data.
     """
-    if not MATRIX_LOG.is_file():
-        return {}
-    try:
-        history = json.loads(MATRIX_LOG.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return {}
-    tally: dict[str, list[bool]] = {}
-    for record in history:
-        tally.setdefault(record.get("model", "unknown"), []).append(
-            bool(record.get("solution_written")))
-    return {model: (sum(ok), len(ok)) for model, ok in tally.items()}
+    attempted: dict[str, int] = {}
+    for log in RUN_LOGS.glob("*.log"):
+        name = log.stem.split("__", 1)[0]
+        attempted[name] = attempted.get(name, 0) + 1
+
+    produced: dict[str, int] = {}
+    for run in RUNS.glob("*.json"):
+        name = run.stem.split("__", 1)[0]
+        produced[name] = produced.get(name, 0) + 1
+
+    return {name: (produced.get(name, 0), count)
+            for name, count in attempted.items()}
 
 
 def reliability_table(runs: list[dict[str, Any]]) -> str:
-    """Per model: latency, retries, availability, truncated replies."""
+    """Per model: latency, retries, and cells that produced data."""
     by_model: dict[str, list[dict[str, Any]]] = {}
     for run in runs:
         by_model.setdefault(run["_model"], []).append(run)
 
     served = availability()
-    truncated = truncated_replies()
 
     rows = [
-        "| Model | Runs | Avg response | Retries | Cells with data "
-        "| Replies cut by the output cap |",
-        "|---|---:|---:|---:|---:|---:|",
+        "| Model | Runs | Avg response | Retries | Cells with data |",
+        "|---|---:|---:|---:|---:|",
     ]
     suspect = False
     for model, model_runs in sorted(by_model.items()):
@@ -218,8 +199,8 @@ def reliability_table(runs: list[dict[str, Any]]) -> str:
             step.get("retries", 0)
             for run in model_runs for step in run["steps"]
         )
-        ok, attempted = served.get(model, (len(model_runs), len(model_runs)))
-        cut, total = truncated.get(model, (0, 0))
+        ok, attempted = served.get(
+            slug(model), (len(model_runs), len(model_runs)))
         mean = statistics.mean(latencies) if latencies else 0.0
         flag = ""
         if latencies and mean < IMPOSSIBLE_LATENCY_MS:
@@ -228,9 +209,17 @@ def reliability_table(runs: list[dict[str, Any]]) -> str:
             f"| {model} | {len(model_runs)} "
             f"| {mean:.0f} ms{flag} "
             f"| {retries} "
-            f"| {ok}/{attempted} "
-            f"| {f'{cut}/{total}' if total else NA} |"
+            f"| {ok}/{attempted} |"
         )
+    # A model whose every cell died has no run to group, so it would
+    # vanish from the table — which is exactly the finding to report.
+    silent = set(served) - {slug(model) for model in by_model}
+    for name in sorted(silent):
+        rows.append(
+            f"| {name} | 0 | {NA} | {NA} "
+            f"| 0/{served[name][1]} |"
+        )
+
     if suspect:
         rows.append(
             "\n⚠ Impossibly fast: those runs were produced before "

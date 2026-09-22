@@ -17,8 +17,3 @@ CACHE = ROOT / "cache"
 
 RUNS = ROOT / "runs"
 RUN_LOGS = RUNS / "logs"
-MATRIX_LOG = RUNS / "matrix_log.json"
-
-# Raw provider replies, appended across every run: the only place that
-# keeps finish_reason and the backend a provider actually served.
-LLM_RESPONSES = RUNS / "llm_responses.jsonl"

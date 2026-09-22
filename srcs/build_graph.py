@@ -2,7 +2,7 @@ import json
 import pathlib
 from collections import defaultdict
 
-from paths import MATRIX_LOG, RUNS
+from paths import RUNS
 from termgraph import Args, BarChart, Data
 
 
@@ -32,8 +32,6 @@ class LLMBenchmarkGraph:
 
         results = []
         for path in sorted(self.runs_dir.glob("*.json")):
-            if path.name == MATRIX_LOG.name:
-                continue
             try:
                 run = json.loads(path.read_text(encoding="utf-8"))
                 results.append({
