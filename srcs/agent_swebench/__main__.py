@@ -89,6 +89,8 @@ def launch_agent(profile: Profile, console: Console,
         # the guard cannot interrupt once started.
         max_iteration=30,
         max_time_seconds=840,
+        max_input_tokens=300_000,
+        max_output_tokens=10_000,
         sandbox_config=SandboxConfig.from_file(
             PROJECT_ROOT / "sandbox_swebench.json"),
     )

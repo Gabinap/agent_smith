@@ -1,6 +1,7 @@
 
 import re
 import time
+from typing import Any
 
 import cli_agent
 from call_llm.calling import LLM
@@ -29,6 +30,8 @@ class SWEBench:
         client: McpClient | None,
         max_iteration: int = 30,
         max_time_seconds: int = 60,
+        max_input_tokens: int = 300_000,
+        max_output_tokens: int = 10_000,
         sandbox_config: SandboxConfig | None = None,
     ):
         """Load the task and the LLM
@@ -54,6 +57,10 @@ class SWEBench:
         self.sandbox = Sandbox(
             mcp_client=client, config=sandbox_config or SandboxConfig())
         self.stop_reason = "solved"
+        self.max_input_tokens = max_input_tokens
+        self.max_output_tokens = max_output_tokens
+        # execute() fills it; the guards read it before the first call
+        self.llm_output_data: dict[str, Any] = {}
 
         self.llm = LLM(api_url, model_name, env_keys,
                        system_content(self.sandbox.manual()))
@@ -126,6 +133,31 @@ class SWEBench:
                                   self.sandbox_data,
                                   self.py_code)
 
+    def budget_spent(self) -> str:
+        """Why one more call would breach a token budget, or "".
+
+        Read from `self.steps`, the very sums the moulinette validates,
+        so the guard and the validator can never disagree.
+
+        Input is checked against a forecast, not against the running
+        total: the whole conversation is resent every turn, so the next
+        call always costs more than the last and a check made after the
+        fact comes one call too late.
+        """
+        if not self.steps:
+            return ""
+        spent_in = sum(step.input_tokens for step in self.steps)
+        spent_out = sum(step.output_tokens for step in self.steps)
+        last_in = self.steps[-1].input_tokens
+        growth = (last_in - self.steps[-2].input_tokens
+                  if len(self.steps) > 1 else last_in)
+
+        if spent_in + last_in + max(growth, 0) > self.max_input_tokens:
+            return "Input token limit reached"
+        if spent_out + self.steps[-1].output_tokens > self.max_output_tokens:
+            return "Output token limit reached"
+        return ""
+
     def solve_task(self) -> None:
         self.error = None
         start = time.perf_counter()
@@ -137,6 +169,12 @@ class SWEBench:
                 if time.perf_counter() - start > self.max_time_seconds:
                     self.stop_reason = "Time limit reached"
                     break
+
+                spent = self.budget_spent()
+                if spent:
+                    self.stop_reason = spent
+                    break
+
                 self.execute()
                 self.steps.append(self.get_step_metrics())
 

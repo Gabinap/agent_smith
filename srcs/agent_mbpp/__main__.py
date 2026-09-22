@@ -89,6 +89,8 @@ def launch_agent(profile: Profile, console: Console,
         # budget leaves room for the iteration already in flight.
         max_iteration=5,
         max_time_seconds=100,
+        max_input_tokens=6000,
+        max_output_tokens=1500,
         sandbox_config=SandboxConfig.from_file(
             PROJECT_ROOT / "sandbox_mbpp.json"),
     )
