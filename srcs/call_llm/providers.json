@@ -6,9 +6,10 @@
 },
 "Open Router": {
 	"url": "https://openrouter.ai/api/v1",
-	"keys": ["OPEN_ROUTER_1", "OPEN_ROUTER_2", "OPEN_ROUTER_3"],
+	"keys": ["OPEN_ROUTER_1", "OPEN_ROUTER_2", "OPEN_ROUTER_4", "OPEN_ROUTER_5", "OPEN_ROUTER_6", "OPEN_ROUTER_7",  "OPEN_ROUTER_8"],
 	"model": [
 		"google/gemma-4-31b-it:free",
+		"google/gemma-4-26b-a4b-it",
 		"dots-studio/dots-3-note-preview:free",
 		"nvidia/nemotron-3-super-120b-a12b:free",
 		"cohere/north-mini-code:free",
@@ -16,13 +17,13 @@
 		"poolside/laguna-xs-2.1:free",
 		"inclusionai/ling-3.0-flash-fin:free",
 		"dots-studio/dots-3-note-preview:free",
-		"inclusionai/ling-3.0-flash-sante:free",
+		"inclusionai/ling-3.0-flash-sante:free"
 	]
 },
 "Mistral Studio": {
 	"url": "https://api.mistral.ai/v1",
-	"keys": ["MISTRAL_STUDIO_1", "MISTRAL_STUDIO_2"],
-	"model": ["codestral-latest", "glm-5-2"]
+	"keys": ["MISTRAL_STUDIO_1", "MISTRAL_STUDIO_2", "MISTRAL_STUDIO_3", "MISTRAL_STUDIO_4", "MISTRAL_STUDIO_5", "MISTRAL_STUDIO_6"],
+	"model": ["codestral-latest", "ministral-8b-2512", ]
 },
 "Groq Console": {
 	"url": "https://api.groq.com/openai/v1",
