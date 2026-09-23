@@ -7,7 +7,8 @@ from typing import Any
 
 import cli_agent
 from call_llm.calling import LLM
-from code_extract import (NO_CODE, extract_python, observation,
+from code_extract import (EMPTY_ANSWER, NO_CODE, extract_python,
+                          observation,
                           truncate_output)
 from models.metrics import SolutionOutput, StepMetrics
 from models.sandbox import SandboxResult
@@ -21,6 +22,11 @@ from .prompt import get_prompt, system_content
 # MBPP has 6000 input tokens for the whole run: a single unbounded
 # output can eat the budget the remaining iterations need.
 MAX_OUTPUT_LINES = 30
+
+# None keeps the provider default. A fixed value makes a run
+# comparable to the next one, which the benchmark needs more
+# than it needs variety.
+TEMPERATURE: float | None = None
 
 
 class Mbpp:
@@ -52,7 +58,8 @@ class Mbpp:
         self.sandbox = Sandbox(
             mcp_client=client, config=sandbox_config or SandboxConfig())
         self.llm = LLM(api_url, model_name, env_keys,
-                       system_content(self.sandbox.manual()))
+                       system_content(self.sandbox.manual()),
+                       temperature=TEMPERATURE)
         self.step = 1
         self.sandbox_data: SandboxResult | None = None
         self.py_code = ""
@@ -63,6 +70,7 @@ class Mbpp:
         self.elapsed_seconds = 0.0
         self.max_time_seconds = max_time_seconds
         self.stop_reason = "solved"
+        self.empty_answers = 0
         self.max_input_tokens = max_input_tokens
         self.max_output_tokens = max_output_tokens
         self.llm_output_data: dict[str, Any] = {}
@@ -82,7 +90,8 @@ class Mbpp:
                                  spinner_style="blue",
                                  spinner="aesthetic",
                                  speed=0.5):
-            self.llm_output_data = self.llm.call(self.prompt)
+            self.llm_output_data = self.llm.call(
+                self.prompt, self.output_tokens_left())
         self.total_requests += 1 + self.llm_output_data.get("retries", 0)
 
         llm_answer = self.llm_output_data.get("answer")
@@ -111,6 +120,16 @@ test_list={self.task.test_list}))"
         cli_agent.display_sandbox(self.console,
                                   self.sandbox_data,
                                   self.py_code)
+
+    def output_tokens_left(self) -> int:
+        """What the output budget still allows for one generation.
+
+        Capping each call is the only defence against a single runaway
+        answer: the loop guard runs between iterations and cannot
+        interrupt a generation already under way.
+        """
+        spent = sum(step.output_tokens for step in self.steps)
+        return max(self.max_output_tokens - spent, 1)
 
     def budget_spent(self) -> str:
         """Why one more call would breach a token budget, or "".
@@ -162,7 +181,19 @@ test_list={self.task.test_list}))"
                 self.steps.append(self.get_step_metrics())
 
                 if self.sandbox_data and self.sandbox_data.finished:
-                    break
+                    if (self.sandbox_data.final_answer or "").strip():
+                        break
+                    # One chance to do the work, then stop. Told twice
+                    # and still empty, a model repeats the same call
+                    # forever: measured 13 identical submissions.
+                    self.empty_answers += 1
+                    if self.empty_answers > 1:
+                        self.stop_reason = "Empty final answer"
+                        break
+                    self.llm.messages.append(
+                        {"role": "user", "content": EMPTY_ANSWER})
+                    self.step += 1
+                    continue
                 else:
                     self.step += 1
 
@@ -218,11 +249,12 @@ test_list={self.task.test_list}))"
         """
         timestamp = datetime.datetime.now().isoformat()
         answer = self.sandbox_data.final_answer if self.sandbox_data else None
+        solution = answer or ""
         return SolutionOutput(
             task_id=str(self.task.task_id),
             benchmark="mbpp",
-            success=answer is not None,
-            solution=answer or "",
+            success=bool(solution.strip()),
+            solution=solution,
             iterations=len(self.steps),
             total_requests=self.total_requests,
             total_input_tokens=sum(metric.input_tokens or 0
