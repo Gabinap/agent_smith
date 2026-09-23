@@ -48,9 +48,10 @@ def system_content(tools: str = "") -> str:
         5. If the automatic test output indicates a failure, fix the function
            in a new code block and let the framework re-test it.
         6. Once the automatic test output shows that all tests passed
-           (`success: true`), call `final_answer(code_string)` in your NEXT block
-           with the function's source code as a plain Python string (function only,
-           no comments, no test harness code).
+           (`success: true`), call `final_answer(code_string)` in
+           your NEXT block with the function's source code as a plain
+           Python string (function only, no comments, no test harness
+           code).
 
         # Expected Format
         First, write your function definition:
@@ -60,8 +61,8 @@ def system_content(tools: str = "") -> str:
             return ...
         ```
 
-        (The test framework will automatically append test execution to your code
-        and provide the output in the next turn.)
+        (The test framework automatically appends the test execution
+        to your code and gives you the output in the next turn.)
 
         Then, only once the automatic output confirms all tests passed:
 
