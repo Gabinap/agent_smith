@@ -96,6 +96,10 @@ class Mbpp:
             self.llm.messages.append({"role": "user", "content": NO_CODE})
             return
 
+        if "final_answer" not in self.py_code:
+            self.py_code = f"{self.py_code}\n\
+print(run_tests(code={self.py_code!r},  \
+test_list={self.task.test_list}))"
         self.sandbox_data = self.sandbox.execute(self.py_code)
         self.sandbox_data.output = truncate_output(
             self.sandbox_data.output, max_lines=MAX_OUTPUT_LINES)

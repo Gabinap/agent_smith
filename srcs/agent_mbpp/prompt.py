@@ -11,7 +11,7 @@ def get_prompt(task: MBPPTaskInput) -> str:
 
 Definition of the function: {task.function_definition}
 
-Tests to try:
+Tests executed:
 {tests}
 """
 
@@ -39,38 +39,39 @@ def system_content(tools: str = "") -> str:
            single ```python ``` block each turn.
         2. Only one step per code block (never write your function and
            submit in the same block).
-        3. After each call, the sandbox runs your code and returns the
-           output (what was printed using `print`, or any error
-           raised). Use this output to decide on the next step.
-        4. First write your function and test all assert at once. If an
-           assert fails, fix the function and re-test in a new block,
-           do not proceed until all asserts pass.
-        5. Once all asserts pass with no error, call
-           `final_answer(code_string)` with the function's source code
-           as a plain Python string (function only, no asserts, no
-           comments).
+        3. After each turn, the test framework automatically runs `run_tests`
+           on your defined function and returns the result (a JSON response
+           with a `success` status and output). Use this automatic feedback to
+           decide on your next step.
+        4. DO NOT write `assert` statements or call `run_tests` yourself.
+           Simply define your function in the code block.
+        5. If the automatic test output indicates a failure, fix the function
+           in a new code block and let the framework re-test it.
+        6. Once the automatic test output shows that all tests passed
+           (`success: true`), call `final_answer(code_string)` in your NEXT block
+           with the function's source code as a plain Python string (function only,
+           no comments, no test harness code).
 
         # Expected Format
-        Always return EXACTLY one block of Python code containing a
-        SINGLE step, for example:
+        First, write your function definition:
 
-        ​```python
+        ```python
         def your_function_name(args):
             return ...
+        ```
 
-        assert your_function_name(test_arg) == expected_result
-        ​```
+        (The test framework will automatically append test execution to your code
+        and provide the output in the next turn.)
 
-        Then, only once the asserts above ran with no error, in your
-        NEXT block:
+        Then, only once the automatic output confirms all tests passed:
 
-        ​```python
+        ```python
         code_string = \"\"\"
         def your_function_name(args):
             return ...
         \"\"\"
         final_answer(code_string)
-        ​```
+        ```
 
         # Available Tools
         """).strip() + f"\n{tools}\n"
