@@ -13,7 +13,8 @@ class LLM:
     """Hold one conversation with the model and its API keys."""
 
     def __init__(self, api_url: str, model_name: str, env_keys: list[str],
-                 system_content: str) -> None:
+                 system_content: str,
+                 temperature: float | None = None) -> None:
         """Resolve the API keys and open the chat with its system prompt.
 
         Args:
@@ -21,9 +22,15 @@ class LLM:
             model_name: Name of the model to call.
             env_keys: Names of the .env variables holding the API keys.
             system_content: System prompt opening the conversation.
+            temperature: Sampling temperature, None for the
+                provider's default. The same model on the same task
+                took 4, 5, 7 and 9 iterations across runs at the
+                default, which is wider than any effect a benchmark
+                is trying to measure.
         """
         self.api_url = api_url
         self.model_name = model_name
+        self.temperature = temperature
         self._system_content = system_content
         self._api_keys = self._load_keys(env_keys)
         self._key_index = 0
@@ -75,7 +82,9 @@ class LLM:
         if len(self.messages) <= 1:
             self.messages.append({"role": "user", "content": prompt})
 
-    def _create_completion(self) -> tuple[ChatCompletion, int]:
+    def _create_completion(
+            self, max_tokens: int | None = None
+    ) -> tuple[ChatCompletion, int]:
         """Send the conversation, rotating keys while rate limited.
 
         Returns the completion and the retries it cost: one per
@@ -83,12 +92,18 @@ class LLM:
         so it starts back at zero on the next call — unlike the key
         index, which keeps moving forward.
         """
+        # Passed only when set: some providers reject a null value,
+        # and omitting the field is what "provider default" means.
+        tuning: dict[str, Any] = ({} if self.temperature is None
+                                  else {"temperature": self.temperature})
         retries = 0
         while True:
             try:
                 completion = self.client.chat.completions.create(
                     model=self.model_name,
                     messages=self.messages,
+                    max_tokens=max_tokens,
+                    **tuning,
                 )
                 return completion, retries
             except RateLimitError:
@@ -109,11 +124,17 @@ class LLM:
                 return parts[0], parts[-1]
         return reasoning or "No thought found", response.content
 
-    def call(self, prompt: str) -> dict[str, Any]:
+    def call(self, prompt: str,
+             max_tokens: int | None = None) -> dict[str, Any]:
         """Call the LLM through the API and return its reply.
 
         Args:
             prompt: Prompt input, used on the first call only.
+            max_tokens: Ceiling for this generation. The loop guard
+                only runs between iterations, so without it a single
+                reasoning model can spend the whole output budget in
+                one call — 15 273 tokens measured against a cap of
+                1 500, for a 235-character answer.
 
         Returns:
             The answer, its reasoning, and the metrics of this single
@@ -124,8 +145,12 @@ class LLM:
         self._append_prompt(prompt)
 
         start = time.perf_counter()
-        completion, retries = self._create_completion()
+        completion, retries = self._create_completion(max_tokens)
         elapsed = time.perf_counter() - start
+        if not completion.choices:
+            raise ValueError(
+                "Provider returned no choices — the model produced "
+                "nothing for this call")
         response = completion.choices[0].message
         self.messages.append(response)
 
