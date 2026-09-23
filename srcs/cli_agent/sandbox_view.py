@@ -10,9 +10,7 @@ def display_sandbox(console: Console, sandbox_data: SandboxResult,
     msg_error = ("No Errors" if sandbox_data.error is None
                  else sandbox_data.error)
     py_code = "No Python code" if py_code is None else py_code
-    sandbox_data.final_answer = (
-        "No final answer" if sandbox_data.final_answer is None
-        else sandbox_data.final_answer)
+    final_answer = sandbox_data.final_answer or "No final answer"
     sandbox_cli = Group(
         Text("Input:", style="bold white", end="\n\n"),
         Syntax(py_code, "python", theme="stata-dark"),
@@ -21,7 +19,7 @@ def display_sandbox(console: Console, sandbox_data: SandboxResult,
         Text("\nErrors:", style="bold white", end="\n\n"),
         Syntax(msg_error, "python", theme="stata-dark"),
         Text("\nFinal result:", style="bold white", end="\n\n"),
-        Syntax(sandbox_data.final_answer, "python", theme="stata-dark",
+        Syntax(final_answer, "python", theme="stata-dark",
                line_numbers=True),
     )
     console.print(Panel(sandbox_cli, title="[bold orange1]SANDBOX output",

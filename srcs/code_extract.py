@@ -20,6 +20,13 @@ UNCLOSED = re.compile(r"```[a-zA-Z]*\s*(.*)", re.DOTALL)
 NO_CODE = ("No python code found in your answer. Reply with a single "
            "```python ... ``` block containing one step.")
 
+# Calling final_answer with nothing is not finishing: at temperature 0
+# a model reliably submits an empty patch on its first turn if nothing
+# stops it.
+EMPTY_ANSWER = ("Your final answer was empty, so nothing was submitted. "
+                "Do the work first, then call final_answer with the "
+                "result.")
+
 
 def is_python(code: str) -> bool:
     """True when `code` is non-blank and parses as Python."""
