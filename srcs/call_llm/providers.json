@@ -13,10 +13,8 @@
     ],
     "model": [
       "google/gemma-4-31b-it:free",
-      "google/gemma-4-26b-a4b-it",
       "dots-studio/dots-3-note-preview:free",
       "poolside/laguna-s-2.1:free",
-      "poolside/laguna-xs-2.1:free",
       "z-ai/glm-5.2:free",
       "nex-agi/nex-n2.5-mini:free"
     ]
@@ -32,8 +30,10 @@
       "MISTRAL_STUDIO_6"
     ],
     "model": [
-      "codestral-latest",
-      "ministral-8b-2512"
+      "codestral-2508",
+      "ministral-14b-2512",
+      "ministral-8b-2512",
+      "ministral-3b-2512"
     ]
   },
   "Groq Console": {
