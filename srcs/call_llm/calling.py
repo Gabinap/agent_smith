@@ -34,6 +34,7 @@ class LLM:
         self._system_content = system_content
         self._api_keys = self._load_keys(env_keys)
         self._key_index = 0
+        self._tried = 0
         self.client = self._load_llm()
         self.messages: list[Any] = [
             {"role": "system", "content": system_content},
@@ -70,10 +71,20 @@ class LLM:
         return ""
 
     def _next_key(self) -> bool:
-        """Switch to the next API key, False when none is left."""
-        if self._key_index + 1 >= len(self._api_keys):
+        """Switch to the next API key, False once all were tried.
+
+        The rotation wraps and is counted per call, not per run: a
+        provider answers "temporarily rate-limited upstream" on its
+        free pool, which is transient and hits some keys and not
+        others — measured with one key answering while two others
+        refused in the same second. Walking forward once per run
+        instead spent the whole rotation on the first bad minute and
+        left the run with no key to fall back on.
+        """
+        self._tried += 1
+        if self._tried >= len(self._api_keys):
             return False
-        self._key_index += 1
+        self._key_index = (self._key_index + 1) % len(self._api_keys)
         self.client = self._load_llm()
         return True
 
@@ -96,6 +107,7 @@ class LLM:
         # and omitting the field is what "provider default" means.
         tuning: dict[str, Any] = ({} if self.temperature is None
                                   else {"temperature": self.temperature})
+        self._tried = 0
         retries = 0
         while True:
             try:
