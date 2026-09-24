@@ -26,7 +26,7 @@ MAX_OUTPUT_LINES = 30
 # None keeps the provider default. A fixed value makes a run
 # comparable to the next one, which the benchmark needs more
 # than it needs variety.
-TEMPERATURE: float | None = None
+TEMPERATURE: float | None = 0.0
 
 
 class Mbpp:
