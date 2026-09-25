@@ -48,6 +48,12 @@ bench-mbpp:
 		$(if $(MODELS),--models "$(MODELS)") \
 		$(if $(TASKS),--tasks $(TASKS))
 
+# The moulinette's verdict on every run, cached in runs/validation.json.
+# `report` reads that cache: a run's own `success` field only says it
+# answered, not that it was right, so the report never quotes it.
+validate:
+	uv run srcs/bench_validate.py $(if $(FORCE),--force) $(if $(JOBS),--jobs $(JOBS))
+
 # ========================= dev commands =========================
 
 install:

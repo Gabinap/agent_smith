@@ -2,7 +2,7 @@ import json
 import pathlib
 from collections import defaultdict
 
-from paths import RUNS
+from paths import RUNS, iter_runs
 from termgraph import Args, BarChart, Data
 
 
@@ -31,7 +31,7 @@ class LLMBenchmarkGraph:
             raise FileNotFoundError(f"No run directory {self.runs_dir}")
 
         results = []
-        for path in sorted(self.runs_dir.glob("*.json")):
+        for path in iter_runs(self.runs_dir):
             try:
                 run = json.loads(path.read_text(encoding="utf-8"))
                 results.append({

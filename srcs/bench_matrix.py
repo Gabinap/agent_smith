@@ -20,7 +20,7 @@ import sys
 import time
 from typing import Any
 
-from paths import CACHE, ROOT, RUN_LOGS, RUNS
+from paths import CACHE, ROOT, RUN_LOGS, RUNS, run_path
 
 SRCS = ROOT / "srcs"
 CATALOG = SRCS / "call_llm" / "providers.json"
@@ -113,8 +113,9 @@ def is_done(output: pathlib.Path) -> bool:
         return False
 
 
-def run_cell(model: str, url: str, task: pathlib.Path,
-             timeout: int, agent: str = "agent_swebench") -> dict[str, Any]:
+def run_cell(model: str, url: str, task: pathlib.Path, timeout: int,
+             agent: str = "agent_swebench",
+             benchmark: str = "swebench") -> dict[str, Any]:
     """Run one (model, task) pair and report how it went.
 
     Never raises: a cell that crashes or times out is a result too —
@@ -122,7 +123,8 @@ def run_cell(model: str, url: str, task: pathlib.Path,
     """
     instance = instance_of(task)
     name = f"{slug(model)}__{instance}"
-    output = RUNS / f"{name}.json"
+    output = run_path(slug(model), instance, benchmark)
+    output.parent.mkdir(parents=True, exist_ok=True)
     log = RUN_LOGS / f"{name}.log"
 
     command = [
@@ -290,7 +292,7 @@ def main() -> None:
 
     for index, (model, task) in enumerate(cells, start=1):
         instance = instance_of(task)
-        output = RUNS / f"{slug(model)}__{instance}.json"
+        output = run_path(slug(model), instance, args.benchmark)
         head = f"[{index}/{len(cells)}] {model} on {instance}"
 
         if args.dry_run:
@@ -303,7 +305,8 @@ def main() -> None:
             print(f"{head}: previous run errored, running again")
 
         print(f"{head}...", flush=True)
-        record = run_cell(model, known[model], task, args.timeout, agent)
+        record = run_cell(model, known[model], task, args.timeout, agent,
+                          args.benchmark)
         verdict = "ok" if record["solution_written"] else "NO DATA"
         print(f"    {verdict} in {record['wall_seconds']}s "
               f"(exit {record['exit_code']})")

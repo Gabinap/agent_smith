@@ -1,0 +1,170 @@
+"""Ask the moulinette to judge every run, and cache its verdict.
+
+A run's own `success` field says it produced a final answer, which is
+not the same claim as having solved the task: on SWE-bench the two
+disagreed on 22 of 77 cells, always in the flattering direction. Only
+`moulinette_eval validate` settles correctness, so the report reads its
+verdict from here rather than believing the run about itself.
+
+The verdict is cached because obtaining it is expensive — one container
+per SWE-bench cell — and because it must not move while a report is
+being read. Re-running a cell invalidates its entry, so the cache also
+records the run's timestamp: an entry older than its run is stale and
+reported as such rather than silently trusted.
+
+Usage (from the repo root):
+    uv run srcs/bench_validate.py              # only what is missing
+    uv run srcs/bench_validate.py --force      # judge everything again
+"""
+
+import argparse
+import datetime
+import json
+import pathlib
+import re
+import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any
+
+from paths import CACHE, ROOT, VALIDATION, iter_runs
+
+MOULINETTE = ROOT / "moulinette"
+
+# The moulinette prints its verdict one label per line; reading the
+# labels is what keeps this script independent of its exit code, which
+# a failed task and a crashed harness share.
+VERDICTS = {
+    "correctness": re.compile(r"^Correctness:\s*(\w+)", re.M),
+    "metrics": re.compile(r"^Metrics:\s*(\w+)", re.M),
+    "resolution": re.compile(r"^Resolution status:\s*(\w+)", re.M),
+}
+
+
+def task_file(run: dict[str, Any]) -> pathlib.Path:
+    """The task file that run was solving.
+
+    Derived from the run's own `task_id` rather than from its filename:
+    a SWE-bench instance carries `__` inside its name, so splitting the
+    filename on `__` truncates the task and validates the wrong cell.
+    """
+    return CACHE / str(run["benchmark"]) / f"{run['task_id']}.json"
+
+
+def judge(run_path: pathlib.Path, run: dict[str, Any]) -> dict[str, Any]:
+    """Run the moulinette on one cell and return what it said."""
+    task = task_file(run)
+    if not task.is_file():
+        return {"error": f"task file missing: {task.relative_to(ROOT)}"}
+
+    # Launched from the moulinette's own directory, where `uv run`
+    # resolves its entry point: from the repo root the command is not
+    # on the path, and the failure is silent enough to be read as an
+    # unjudged cell rather than a broken call.
+    done = subprocess.run(
+        ["uv", "run", "moulinette_eval", "validate", run["benchmark"],
+         str(task.resolve()), str(run_path.resolve())],
+        cwd=MOULINETTE, capture_output=True, text=True,
+    )
+    if done.returncode != 0 and "Correctness:" not in done.stdout:
+        return {"error": (done.stderr or done.stdout).strip()[-200:]}
+    output = done.stdout + done.stderr
+    found = {name: (m.group(1) if (m := pattern.search(output)) else None)
+             for name, pattern in VERDICTS.items()}
+    return {
+        "correctness": found["correctness"],
+        "metrics": found["metrics"],
+        "resolution": found["resolution"],
+        # Both must hold: a correct patch that overran its token or time
+        # budget is a failed cell, and the moulinette says so too.
+        "passed": found["correctness"] == "PASSED"
+        and found["metrics"] == "VALID",
+        "run_timestamp": run.get("timestamp"),
+        "judged_at": datetime.datetime.now().isoformat(timespec="seconds"),
+    }
+
+
+def load_cache() -> dict[str, Any]:
+    """The verdicts recorded so far, empty when there are none."""
+    if not VALIDATION.is_file():
+        return {}
+    try:
+        return dict(json.loads(VALIDATION.read_text(encoding="utf-8")))
+    except (json.JSONDecodeError, OSError, TypeError):
+        return {}
+
+
+def is_fresh(entry: dict[str, Any], run: dict[str, Any]) -> bool:
+    """True when `entry` judged this very run and not an older one."""
+    return (bool(entry.get("correctness"))
+            and entry.get("run_timestamp") == run.get("timestamp"))
+
+
+def judge_group(cells: list[tuple[str, pathlib.Path, dict[str, Any]]],
+                ) -> list[tuple[str, dict[str, Any]]]:
+    """Judge every cell of one task, in order.
+
+    A whole task per worker, never a task split across workers: the
+    moulinette reuses any running container whose image matches the
+    instance, so two verdicts on the same task at once would share one
+    container and patch over each other.
+    """
+    return [(key, judge(path, run)) for key, path, run in cells]
+
+
+def main() -> None:
+    """Judge every run missing a fresh verdict, then write the cache."""
+    parser = argparse.ArgumentParser(prog="bench_validate")
+    parser.add_argument("--force", action="store_true",
+                        help="judge every run again, ignoring the cache")
+    parser.add_argument("--jobs", type=int, default=4,
+                        help="tasks judged in parallel (default 4)")
+    args = parser.parse_args()
+
+    runs = iter_runs()
+    if not runs:
+        raise SystemExit("no run to validate: launch the matrix first")
+
+    cache = {} if args.force else load_cache()
+    todo = []
+    for path in runs:
+        try:
+            run = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        key = str(path.relative_to(ROOT))
+        if not args.force and is_fresh(cache.get(key, {}), run):
+            continue
+        todo.append((key, path, run))
+
+    groups: dict[str, list[tuple[str, pathlib.Path, dict[str, Any]]]] = {}
+    for key, path, run in todo:
+        groups.setdefault(str(run["task_id"]), []).append((key, path, run))
+
+    jobs = max(1, min(args.jobs, len(groups))) if groups else 1
+    print(f"{len(runs)} run(s), {len(todo)} to judge "
+          f"over {len(groups)} task(s), {jobs} at a time\n")
+
+    done = 0
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = {pool.submit(judge_group, cells): task
+                   for task, cells in groups.items()}
+        for future in as_completed(futures):
+            for key, verdict in future.result():
+                cache[key] = verdict
+                done += 1
+                label = ("PASSED" if verdict.get("passed")
+                         else verdict.get("error")
+                         or f"{verdict.get('correctness')}"
+                            f"/{verdict.get('metrics')}")
+                print(f"[{done}/{len(todo)}] {key}: {label}", flush=True)
+
+    VALIDATION.parent.mkdir(parents=True, exist_ok=True)
+    VALIDATION.write_text(json.dumps(cache, indent=2, sort_keys=True) + "\n",
+                          encoding="utf-8")
+    passed = sum(1 for v in cache.values() if v.get("passed"))
+    print(f"\n{passed}/{len(cache)} cell(s) passed "
+          f"-> {VALIDATION.relative_to(ROOT)}")
+
+
+if __name__ == "__main__":
+    main()

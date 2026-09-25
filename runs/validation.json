@@ -1,0 +1,1498 @@
+{
+  "runs/codestral-2508/codestral-2508__django__django-11066.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:19:01",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:57:21.323668"
+  },
+  "runs/codestral-2508/codestral-2508__django__django-17029.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:18:30",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T12:58:47.091991"
+  },
+  "runs/codestral-2508/codestral-2508__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:19:04",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:59:00.733601"
+  },
+  "runs/codestral-2508/codestral-2508__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:18:30",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:01:45.756393"
+  },
+  "runs/codestral-2508/codestral-2508__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:20:49",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:04:17.027030"
+  },
+  "runs/codestral-2508/codestral-2508__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:21:34",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:05:05.931328"
+  },
+  "runs/codestral-2508/codestral-2508__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:01",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:07:32.139565"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:23:17",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:00.712880"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-11.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:07",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T07:17:50.574083"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:09",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:03.066723"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:58",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:05.249228"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:59",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:07.125323"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-285.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:25:48",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:11.969877"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:49",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:14.041803"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:41",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:16.014317"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-444.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:26:43",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:19.543503"
+  },
+  "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:29",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:21.840062"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__django__django-11066.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:19:35",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:16:01.528921"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__django__django-17029.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:19:04",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:16:44.856997"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:19:40",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:17:13.970197"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:18:33",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T12:22:36.242823"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:21:39",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:25:15.489535"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:21:37",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T12:27:21.591466"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:18",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:31:13.992277"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:23:22",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:42:25.348616"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-11.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:24:11",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T07:20:30.878947"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:14",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:42:36.790330"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:02",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:42:46.452594"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:04",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:42:54.735492"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-285.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:25:53",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:43:14.006299"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:54",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:43:28.276691"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:46",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:43:41.228772"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-444.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:26:47",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:44:00.199853"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:33",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:44:12.219358"
+  },
+  "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__django__django-11066.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:20:09",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T02:37:40.176151"
+  },
+  "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__django__django-17029.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:19:08",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:35:09.492091"
+  },
+  "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__pydata__xarray-4629.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:19:43",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T11:48:45.944397"
+  },
+  "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:18:37",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T08:02:28.319490"
+  },
+  "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:22:38",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T08:09:50.387012"
+  },
+  "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:21:41",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T08:23:02.661496"
+  },
+  "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:29:10",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:15:27.005144"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-103.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:23:26",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:19:57.233065"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-11.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:24:16",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T07:24:19.806760"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:18",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T07:25:39.651066"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:08",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:24:35.569742"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-257.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:25:09",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T07:26:46.710181"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:58",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T06:43:17.420375"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:59",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:38:05.207431"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-418.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:26:51",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T07:39:39.186819"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-444.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:26:52",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:41:07.386889"
+  },
+  "runs/google-gemma-4-31b-it:free/mbpp_task/google-gemma-4-31b-it:free__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:38",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:42:03.001230"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:23:31",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:35.835931"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-11.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:24:20",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T07:18:26.661506"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:22",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:37.782208"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:12",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:39.782003"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:14",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:42.636193"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:04",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:46.786592"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:04",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:49.749928"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:55",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:51.819854"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-444.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:26:56",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:55:58.046456"
+  },
+  "runs/ministral-14b-2512/mbpp_task/ministral-14b-2512__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:41",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:00.299912"
+  },
+  "runs/ministral-14b-2512/ministral-14b-2512__django__django-11066.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:20:41",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:07:55.898051"
+  },
+  "runs/ministral-14b-2512/ministral-14b-2512__django__django-17029.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:19:40",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:08:12.493602"
+  },
+  "runs/ministral-14b-2512/ministral-14b-2512__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:20:18",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:08:27.955939"
+  },
+  "runs/ministral-14b-2512/ministral-14b-2512__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:19:08",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:10:56.539808"
+  },
+  "runs/ministral-14b-2512/ministral-14b-2512__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:23:28",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:13:21.983127"
+  },
+  "runs/ministral-14b-2512/ministral-14b-2512__sympy__sympy-14711.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:22:19",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:13:52.152014"
+  },
+  "runs/ministral-14b-2512/ministral-14b-2512__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:30:55",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:18:39.855492"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:23:36",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:42.867407"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-11.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:24:25",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T07:19:18.334781"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:27",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:44.518274"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:16",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:46.596994"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:18",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:48.343412"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:09",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:51.244458"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:09",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:53.552564"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:59",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:55.627024"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-444.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:27:00",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:57:00.502622"
+  },
+  "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:45",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:57:02.403021"
+  },
+  "runs/ministral-3b-2512/ministral-3b-2512__django__django-11066.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:21:14",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": "RESOLVED_NO",
+    "run_timestamp": "2026-09-24T13:34:40.775417"
+  },
+  "runs/ministral-3b-2512/ministral-3b-2512__django__django-17029.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:20:12",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:34:58.491284"
+  },
+  "runs/ministral-3b-2512/ministral-3b-2512__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:20:52",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:35:07.416631"
+  },
+  "runs/ministral-3b-2512/ministral-3b-2512__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:19:12",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:35:30.506897"
+  },
+  "runs/ministral-3b-2512/ministral-3b-2512__sympy__sympy-13480.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:24:24",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": "RESOLVED_NO",
+    "run_timestamp": "2026-09-24T13:35:44.090464"
+  },
+  "runs/ministral-3b-2512/ministral-3b-2512__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:22:23",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:36:03.747585"
+  },
+  "runs/ministral-3b-2512/ministral-3b-2512__sympy__sympy-18189.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:30:58",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:36:30.055193"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:23:41",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:13.255669"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-11.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:30",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T02:08:52.107814"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:32",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:15.300829"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:21",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:17.380398"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:22",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:19.343602"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:13",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:24.966800"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:13",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:27.262817"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:03",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:29.523958"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-444.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:04",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:35.975615"
+  },
+  "runs/ministral-8b-2512/mbpp_task/ministral-8b-2512__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:49",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:56:38.209547"
+  },
+  "runs/ministral-8b-2512/ministral-8b-2512__django__django-11066.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:21:47",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:18:54.498024"
+  },
+  "runs/ministral-8b-2512/ministral-8b-2512__django__django-17029.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:20:44",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:19:10.417335"
+  },
+  "runs/ministral-8b-2512/ministral-8b-2512__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:21:28",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:19:40.487139"
+  },
+  "runs/ministral-8b-2512/ministral-8b-2512__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:19:44",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": "RESOLVED_NO",
+    "run_timestamp": "2026-09-24T13:24:41.495964"
+  },
+  "runs/ministral-8b-2512/ministral-8b-2512__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:21",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:29:10.793643"
+  },
+  "runs/ministral-8b-2512/ministral-8b-2512__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:22:28",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:31:19.902884"
+  },
+  "runs/ministral-8b-2512/ministral-8b-2512__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:32:39",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:34:06.123006"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-103.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:23:46",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:53:33.717026"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-11.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:36",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T06:44:21.712755"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:37",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:53:41.323174"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:25",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:53:50.940436"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:27",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:54:03.487253"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-285.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:26:17",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:54:14.584458"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:17",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:54:22.904104"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:07",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:54:32.576037"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-444.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:08",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:54:42.211327"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:53",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:54:51.409399"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__django__django-11066.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:21:51",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T12:54:50.438231"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__django__django-17029.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:20:48",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:44:08.559994"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:22:04",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T04:44:49.367047"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:19:47",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:47:53.893542"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:18",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T04:50:46.047518"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:22:31",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:51:55.593280"
+  },
+  "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__sympy__sympy-18189.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:32:42",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:56:19.584811"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:23:50",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:57:06.797065"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-11.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:40",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T02:09:02.428056"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:41",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:57:08.721166"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:30",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:57:10.673727"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-257.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:25:31",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T13:16:55.150856"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:22",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:28:12.313424"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:22",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:57:20.624548"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:11",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T03:45:35.628145"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-444.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:12",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T07:28:31.717036"
+  },
+  "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:56",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T03:45:49.144340"
+  },
+  "runs/openai-gpt-oss-120b/openai-gpt-oss-120b__django__django-11066.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:21:55",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:36:36.590378"
+  },
+  "runs/openai-gpt-oss-120b/openai-gpt-oss-120b__django__django-17029.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:20:52",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:37:38.835083"
+  },
+  "runs/openai-gpt-oss-120b/openai-gpt-oss-120b__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:22:46",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T08:41:45.275092"
+  },
+  "runs/openai-gpt-oss-120b/openai-gpt-oss-120b__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:19:51",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:43:10.532030"
+  },
+  "runs/openai-gpt-oss-120b/openai-gpt-oss-120b__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:13",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T08:49:03.884829"
+  },
+  "runs/openai-gpt-oss-120b/openai-gpt-oss-120b__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:22:35",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:44:35.197489"
+  },
+  "runs/openai-gpt-oss-120b/openai-gpt-oss-120b__sympy__sympy-18189.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:32:45",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:45:55.018724"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:23:55",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:44:35.868060"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-11.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:44",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T02:05:41.742088"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:46",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:44:48.567470"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:34",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:45:04.171200"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:36",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:45:24.477581"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:28",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:45:42.297926"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:27",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:45:58.175075"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:15",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:46:20.675217"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-444.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:17",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:46:51.983844"
+  },
+  "runs/poolside-laguna-s-2.1:free/mbpp_task/poolside-laguna-s-2.1:free__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:28:00",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:47:14.333178"
+  },
+  "runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__django__django-11066.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:21:59",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T12:34:23.724325"
+  },
+  "runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__django__django-17029.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:20:56",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T12:37:41.422898"
+  },
+  "runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:23:22",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:39:07.194147"
+  },
+  "runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:19:54",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:12:15.234955"
+  },
+  "runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__sympy__sympy-13480.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:27:17",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:26:23.641416"
+  },
+  "runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:22:38",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T12:49:49.528475"
+  },
+  "runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__sympy__sympy-18189.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:32:48",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:29:03.673841"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-103.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:23:59",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:58:13.005627"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-11.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:49",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T02:09:15.613343"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:50",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:58:14.552279"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:39",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:58:16.005866"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:41",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:58:17.545346"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:33",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:58:18.989027"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:32",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:58:20.366088"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:20",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:58:21.916705"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-444.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:22",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:58:31.513345"
+  },
+  "runs/qwen-qwen3.8-27b/mbpp_task/qwen-qwen3.8-27b__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:28:04",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:58:42.094863"
+  },
+  "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__django__django-11066.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:22:40",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:48:45.027342"
+  },
+  "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__django__django-17029.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:21:28",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:50:39.191277"
+  },
+  "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__pydata__xarray-4629.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:23:25",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:46:30.889181"
+  },
+  "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:19:58",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:54:32.439193"
+  },
+  "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:28:08",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T14:02:59.548195"
+  },
+  "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:22:42",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:56:53.494527"
+  },
+  "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:34:30",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T14:15:26.180911"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-103.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:02",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T13:16:48.790816"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-11.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:53",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T02:08:15.561975"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:54",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:48:56.773365"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:44",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:49:27.110470"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:25:45",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:50:14.434698"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:37",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:50:49.487936"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:26:36",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:51:26.763752"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:24",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:52:14.418689"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-444.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:27:26",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:52:46.739244"
+  },
+  "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:28:07",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T10:53:18.439396"
+  },
+  "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__django__django-11066.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:23:13",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T08:24:25.559852"
+  },
+  "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__django__django-17029.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:21:31",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:36:08.719524"
+  },
+  "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-25T16:24:05",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T12:38:38.619693"
+  },
+  "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:20:01",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:39:50.398988"
+  },
+  "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__sympy__sympy-13480.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:28:11",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:41:15.868075"
+  },
+  "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:22:46",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:42:52.539592"
+  },
+  "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__sympy__sympy-18189.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-25T16:34:33",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T12:44:18.484656"
+  }
+}
