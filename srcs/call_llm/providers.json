@@ -16,7 +16,8 @@
       "dots-studio/dots-3-note-preview:free",
       "poolside/laguna-s-2.1:free",
       "z-ai/glm-5.2:free",
-      "nex-agi/nex-n2.5-mini:free"
+      "nex-agi/nex-n2.5-mini:free",
+      "google/gemini-2.5-flash-lite"
     ]
   },
   "Mistral Studio": {
@@ -44,6 +45,19 @@
     "model": [
       "openai/gpt-oss-120b",
       "qwen/qwen3.8-27b"
+    ]
+  },
+  "Together": {
+    "url": "https://api.together.ai/v1",
+    "keys": [
+      "TOGETHER_1",
+      "TOGETHER_2",
+      "TOGETHER_3",
+      "TOGETHER_4" 
+    ],
+    "model": [
+      "Prism-ML/Ternary-Bonsai-27B",
+      "Qwen/Qwen3.8-Flash"
     ]
   }
 }
