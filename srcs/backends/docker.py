@@ -88,32 +88,44 @@ class DockerExecBackend:
     def run(self, cmd: str, workdir: str, timeout: int,
             bash: bool = False) -> CommandResult:
         """Run a shell command inside the container and return its result."""
+        import subprocess
+
         resolved_workdir = self._resolve(workdir)
         self.container.exec_run(["mkdir", "-p", resolved_workdir])
         start = time.monotonic()
+
         if bash:
             exec_cmd = ["bash", "-c", cmd]
         else:
             exec_cmd = ["sh", "-c", cmd]
+
+        timed_out = False
+        stdout = ""
+        stderr = ""
+        exit_code = 0
+
         try:
-            result = self.container.exec_run(
-                exec_cmd,
-                workdir=resolved_workdir, demux=True, timeout=timeout
+            result = subprocess.run(
+                ["docker", "exec", "-w", resolved_workdir,
+                 self.container.id] + exec_cmd,
+                capture_output=True, text=True, timeout=timeout
             )
-            timed_out = False
-        except Exception:
-            result = type('obj', (object,), {
-                'exit_code': -1,
-                'output': (b'', b'Command timed out'),
-            })()
+            stdout = result.stdout
+            stderr = result.stderr
+            exit_code = result.returncode
+        except subprocess.TimeoutExpired:
             timed_out = True
+            stderr = f"Command timed out after {timeout}s"
+            exit_code = -1
+        except Exception as e:
+            stderr = str(e)
+            exit_code = -1
 
         elapsed = time.monotonic() - start
-        stdout, stderr = result.output
         return CommandResult(
-            stdout=stdout.decode() if stdout else "",
-            stderr=stderr.decode() if stderr else "",
-            exit_code=result.exit_code,
+            stdout=stdout,
+            stderr=stderr,
+            exit_code=exit_code,
             timed_out=timed_out or elapsed >= timeout,
         )
 
