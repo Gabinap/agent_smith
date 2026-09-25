@@ -85,7 +85,6 @@ class DockerExecBackend:
             )
         return normalized
 
-    # ---- Contract: ExecBackend ----
     def run(self, cmd: str, workdir: str, timeout: int,
             bash: bool = False) -> CommandResult:
         """Run a shell command inside the container and return its result."""
@@ -93,24 +92,29 @@ class DockerExecBackend:
         self.container.exec_run(["mkdir", "-p", resolved_workdir])
         start = time.monotonic()
         if bash:
-            exec_cmd = ["timeout", str(timeout), "bash", "-c", cmd]
+            exec_cmd = ["bash", "-c", cmd]
         else:
-            exec_cmd = ["sh", "-c", f"timeout {timeout} {cmd}"]
+            exec_cmd = ["sh", "-c", cmd]
+        try:
+            result = self.container.exec_run(
+                exec_cmd,
+                workdir=resolved_workdir, demux=True, timeout=timeout
+            )
+            timed_out = False
+        except Exception:
+            result = type('obj', (object,), {
+                'exit_code': -1,
+                'output': (b'', b'Command timed out'),
+            })()
+            timed_out = True
 
-        result = self.container.exec_run(
-            exec_cmd,
-            workdir=resolved_workdir, demux=True
-        )
         elapsed = time.monotonic() - start
         stdout, stderr = result.output
         return CommandResult(
             stdout=stdout.decode() if stdout else "",
             stderr=stderr.decode() if stderr else "",
             exit_code=result.exit_code,
-            # `timeout`'s own exit code convention varies by
-            # implementation (GNU coreutils: 124, BusyBox: 143/SIGTERM)
-            # — measuring elapsed time is implementation-agnostic.
-            timed_out=elapsed >= timeout,
+            timed_out=timed_out or elapsed >= timeout,
         )
 
     def read_file(self, path: str) -> str:
