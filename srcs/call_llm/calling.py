@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from openai import OpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
 
+REQUEST_TIMEOUT = 120.0
+
 
 class LLM:
     """Hold one conversation with the model and its API keys."""
@@ -54,7 +56,7 @@ class LLM:
         return OpenAI(
             api_key=self._api_keys[self._key_index],
             base_url=self.api_url,
-            timeout=120.0,
+            timeout=REQUEST_TIMEOUT,
         )
 
     @property
@@ -94,7 +96,8 @@ class LLM:
             self.messages.append({"role": "user", "content": prompt})
 
     def _create_completion(
-            self, max_tokens: int | None = None
+            self, max_tokens: int | None = None,
+            timeout: float | None = None
     ) -> tuple[ChatCompletion, int]:
         """Send the conversation, rotating keys while rate limited.
 
@@ -103,10 +106,10 @@ class LLM:
         so it starts back at zero on the next call — unlike the key
         index, which keeps moving forward.
         """
-        # Passed only when set: some providers reject a null value,
-        # and omitting the field is what "provider default" means.
         tuning: dict[str, Any] = ({} if self.temperature is None
                                   else {"temperature": self.temperature})
+        if timeout is not None:
+            tuning["timeout"] = min(timeout, REQUEST_TIMEOUT)
         self._tried = 0
         retries = 0
         while True:
@@ -136,8 +139,8 @@ class LLM:
                 return parts[0], parts[-1]
         return reasoning or "No thought found", response.content
 
-    def call(self, prompt: str,
-             max_tokens: int | None = None) -> dict[str, Any]:
+    def call(self, prompt: str, max_tokens: int | None = None,
+             timeout: float | None = None) -> dict[str, Any]:
         """Call the LLM through the API and return its reply.
 
         Args:
@@ -147,6 +150,11 @@ class LLM:
                 reasoning model can spend the whole output budget in
                 one call — 15 273 tokens measured against a cap of
                 1 500, for a 235-character answer.
+            timeout: Seconds this one call may take, overriding the
+                client's. For the same reason as `max_tokens`: the
+                time guard runs between iterations, so the last call
+                overshoots the budget by however long it lasts — four
+                MBPP runs reached 188 s against a 120 s ceiling.
 
         Returns:
             The answer, its reasoning, and the metrics of this single
@@ -157,7 +165,7 @@ class LLM:
         self._append_prompt(prompt)
 
         start = time.perf_counter()
-        completion, retries = self._create_completion(max_tokens)
+        completion, retries = self._create_completion(max_tokens, timeout)
         elapsed = time.perf_counter() - start
         if not completion.choices:
             raise ValueError(

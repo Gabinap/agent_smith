@@ -74,6 +74,12 @@ class Mbpp:
         self.max_input_tokens = max_input_tokens
         self.max_output_tokens = max_output_tokens
         self.llm_output_data: dict[str, Any] = {}
+        # Set when the loop starts, so a call can tell how much of the
+        # time budget it is still allowed to spend.
+        self.started: float | None = None
+        # How long the last iteration took, which is what the time
+        # guard uses to forecast whether another one fits.
+        self.last_iteration = 0.0
 
     def execute(self) -> None:
         """Run one generate -> extract -> sandbox-execute cycle.
@@ -91,7 +97,7 @@ class Mbpp:
                                  spinner="aesthetic",
                                  speed=0.5):
             self.llm_output_data = self.llm.call(
-                self.prompt, self.output_tokens_left())
+                self.prompt, self.output_tokens_left(), self.time_left())
         self.total_requests += 1 + self.llm_output_data.get("retries", 0)
 
         llm_answer = self.llm_output_data.get("answer")
@@ -131,6 +137,31 @@ test_list={self.task.test_list}))"
         spent = sum(step.output_tokens for step in self.steps)
         return max(self.max_output_tokens - spent, 1)
 
+    def time_left(self) -> float:
+        """Seconds the time budget still allows for one call.
+
+        The same reasoning as `output_tokens_left`, for the clock: the
+        guard runs between iterations, so the call it lets through
+        overshoots by its own duration. Four runs reached 188 s against
+        a 120 s ceiling before this capped the call itself.
+        """
+        if self.started is None:
+            return float(self.max_time_seconds)
+        spent = time.perf_counter() - self.started
+        return max(self.max_time_seconds - spent, 1.0)
+
+    def out_of_time(self, start: float) -> bool:
+        """True when one more iteration would breach the time budget.
+
+        A forecast, like the input-token guard, and for the same reason:
+        checking the elapsed time alone lets the iteration it admits run
+        past the budget by its own duration. Capping the call is not
+        enough — the sandbox runs after it — so the last measured
+        iteration is what decides whether another one fits.
+        """
+        spent = time.perf_counter() - start
+        return spent + self.last_iteration > self.max_time_seconds
+
     def budget_spent(self) -> str:
         """Why one more call would breach a token budget, or "".
 
@@ -162,13 +193,13 @@ test_list={self.task.test_list}))"
     def solve_task(self) -> None:
         """Iterate until the task is solved or max_iteration is hit."""
         self.error = None
-        start = time.perf_counter()
+        start = self.started = time.perf_counter()
         try:
             while (True):
                 if self.step > self.max_iteration:
                     self.stop_reason = "Iterations limit reached"
                     break
-                if time.perf_counter() - start > self.max_time_seconds:
+                if self.out_of_time(start):
                     self.stop_reason = "Time limit reached"
                     break
 
@@ -177,7 +208,9 @@ test_list={self.task.test_list}))"
                     self.stop_reason = spent
                     break
 
+                began = time.perf_counter()
                 self.execute()
+                self.last_iteration = time.perf_counter() - began
                 self.steps.append(self.get_step_metrics())
 
                 if self.sandbox_data and self.sandbox_data.finished:

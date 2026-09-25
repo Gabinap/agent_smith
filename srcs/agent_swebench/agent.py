@@ -64,8 +64,11 @@ class SWEBench:
         self.empty_answers = 0
         self.max_input_tokens = max_input_tokens
         self.max_output_tokens = max_output_tokens
-        # execute() fills it; the guards read it before the first call
         self.llm_output_data: dict[str, Any] = {}
+        # Set when the loop starts
+        self.started: float | None = None
+        # How long the last iteration took
+        self.last_iteration = 0.0
 
         self.llm = LLM(api_url, model_name, env_keys,
                        system_content(self.sandbox.manual()),
@@ -87,7 +90,8 @@ class SWEBench:
                                  spinner="aesthetic",
                                  speed=0.5):
             self.llm_output_data = self.llm.call(
-                self.prompt, self.output_tokens_left())
+                self.prompt, self.output_tokens_left(),
+                self.time_left())
         self.total_requests += 1 + self.llm_output_data.get("retries", 0)
 
         self.py_code, repair = llm_output_code(
@@ -149,6 +153,31 @@ class SWEBench:
         spent = sum(step.output_tokens for step in self.steps)
         return max(self.max_output_tokens - spent, 1)
 
+    def time_left(self) -> float:
+        """Seconds the time budget still allows for one call.
+
+        The same reasoning as `output_tokens_left`, for the clock: the
+        guard runs between iterations, so the call it lets through
+        overshoots the budget by its own duration.
+        """
+        if self.started is None:
+            return float(self.max_time_seconds)
+        spent = time.perf_counter() - self.started
+        return max(self.max_time_seconds - spent, 1.0)
+
+    def out_of_time(self, start: float) -> bool:
+        """True when one more iteration would breach the time budget.
+
+        A forecast, like the input-token guard, and for the same reason:
+        checking the elapsed time alone lets the iteration it admits run
+        past the budget by its own duration. Capping the call is not
+        enough — the sandbox runs after it — so the last measured
+        iteration is what decides whether another one fits. One run
+        reached 1 008 s against a 900 s ceiling without this.
+        """
+        spent = time.perf_counter() - start
+        return spent + self.last_iteration > self.max_time_seconds
+
     def budget_spent(self) -> str:
         """Why one more call would breach a token budget, or "".
 
@@ -176,13 +205,13 @@ class SWEBench:
 
     def solve_task(self) -> None:
         self.error = None
-        start = time.perf_counter()
+        start = self.started = time.perf_counter()
         try:
             while (True):
                 if self.step > self.max_iteration:
                     self.stop_reason = "Iterations limit reached"
                     break
-                if time.perf_counter() - start > self.max_time_seconds:
+                if self.out_of_time(start):
                     self.stop_reason = "Time limit reached"
                     break
 
@@ -191,7 +220,9 @@ class SWEBench:
                     self.stop_reason = spent
                     break
 
+                began = time.perf_counter()
                 self.execute()
+                self.last_iteration = time.perf_counter() - began
                 self.steps.append(self.get_step_metrics())
 
                 if self.sandbox_data and self.sandbox_data.finished:
