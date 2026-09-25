@@ -82,7 +82,7 @@ class SWEBench:
         self.sandbox_data = None
         self.prompt = get_prompt(self.task)
 
-        with self.console.status("[bold blue]LMM Generation...",
+        with self.console.status("[bold blue]LLM Generation...",
                                  spinner_style="blue",
                                  spinner="aesthetic",
                                  speed=0.5):
