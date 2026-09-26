@@ -53,11 +53,10 @@
       "TOGETHER_1",
       "TOGETHER_2",
       "TOGETHER_3",
-      "TOGETHER_4" 
+      "TOGETHER_4"
     ],
     "model": [
-      "Prism-ML/Ternary-Bonsai-27B",
-      "Qwen/Qwen3.8-Flash"
+      "Prism-ML/Ternary-Bonsai-27B"
     ]
   }
 }
