@@ -490,8 +490,30 @@ class Sandbox:
                 "finished": False
             })
 
-        process.join(timeout=(self.config.max_execution_time_seconds
-                              + TIMEOUT_REPORT_GRACE_SECONDS))
+        child_conn.close()
+
+        answered = parent_conn.poll(
+            timeout=(self.config.max_execution_time_seconds
+                     + TIMEOUT_REPORT_GRACE_SECONDS))
+
+        if answered:
+            try:
+                # recv() drains the whole message however large, which
+                # unblocks the child's send()
+                res_dict = parent_conn.recv()
+            except EOFError:
+                res_dict = None
+            if res_dict is not None:
+                process.join(timeout=TIMEOUT_REPORT_GRACE_SECONDS)
+                if process.is_alive():
+                    process.terminate()
+                    process.join(timeout=5)
+                control = res_dict.get("__control__")
+                if control == "SystemExit":
+                    raise SystemExit(res_dict.get("code"))
+                if control == "KeyboardInterrupt":
+                    raise KeyboardInterrupt()
+                return SandboxResult.model_validate(res_dict)
 
         if process.is_alive():
             process.terminate()
@@ -509,15 +531,6 @@ class Sandbox:
                 "final_answer": None,
                 "finished": False
             })
-
-        if parent_conn.poll():
-            res_dict = parent_conn.recv()
-            control = res_dict.get("__control__")
-            if control == "SystemExit":
-                raise SystemExit(res_dict.get("code"))
-            if control == "KeyboardInterrupt":
-                raise KeyboardInterrupt()
-            return SandboxResult.model_validate(res_dict)
 
         exit_code = process.exitcode
         error_msg = (
