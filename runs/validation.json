@@ -1,4 +1,140 @@
 {
+  "runs/Prism-ML-Ternary-Bonsai-27B/Prism-ML-Ternary-Bonsai-27B__django__django-11066.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:03:07",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T14:04:16.710099"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/Prism-ML-Ternary-Bonsai-27B__django__django-17029.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:03:37",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T14:04:47.596319"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/Prism-ML-Ternary-Bonsai-27B__pydata__xarray-4629.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:03:04",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:47:26.135969"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/Prism-ML-Ternary-Bonsai-27B__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:03:05",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:49:43.502123"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/Prism-ML-Ternary-Bonsai-27B__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:22",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-26T16:51:06.600987"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/Prism-ML-Ternary-Bonsai-27B__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:04:45",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:52:16.081949"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/Prism-ML-Ternary-Bonsai-27B__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:07:10",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-26T16:54:48.702229"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:10",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:01:36.011712"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-11.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:23",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:02:11.554266"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-135.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:24",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:02:42.820396"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:37",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:02:52.348827"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:39",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:03:02.840205"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-285.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:51",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:03:27.038897"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-390.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:58",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:03:51.836866"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-418.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:06:05",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:04:09.751840"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-444.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:06:11",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:04:37.065917"
+  },
+  "runs/Prism-ML-Ternary-Bonsai-27B/mbpp_task/Prism-ML-Ternary-Bonsai-27B__mbpp-75.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:06:19",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:05:15.984049"
+  },
   "runs/codestral-2508/codestral-2508__django__django-11066.json": {
     "correctness": "PASSED",
     "judged_at": "2026-09-25T16:19:01",
@@ -25,19 +161,19 @@
   },
   "runs/codestral-2508/codestral-2508__scikit-learn__scikit-learn-13439.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:18:30",
+    "judged_at": "2026-09-27T00:03:09",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-24T13:01:45.756393"
+    "run_timestamp": "2026-09-26T16:09:57.932871"
   },
   "runs/codestral-2508/codestral-2508__sympy__sympy-13480.json": {
-    "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:20:49",
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:26",
     "metrics": "VALID",
-    "passed": true,
-    "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T13:04:17.027030"
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:10:53.606879"
   },
   "runs/codestral-2508/codestral-2508__sympy__sympy-14711.json": {
     "correctness": "FAILED",
@@ -48,12 +184,12 @@
     "run_timestamp": "2026-09-24T13:05:05.931328"
   },
   "runs/codestral-2508/codestral-2508__sympy__sympy-18189.json": {
-    "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:25:01",
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:07:13",
     "metrics": "VALID",
-    "passed": true,
-    "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T13:07:32.139565"
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:13:09.434638"
   },
   "runs/codestral-2508/mbpp_task/codestral-2508__mbpp-103.json": {
     "correctness": "FAILED",
@@ -160,20 +296,20 @@
     "run_timestamp": "2026-09-24T12:17:13.970197"
   },
   "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__scikit-learn__scikit-learn-13439.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:18:33",
-    "metrics": "VALID",
-    "passed": false,
-    "resolution": null,
-    "run_timestamp": "2026-09-24T12:22:36.242823"
-  },
-  "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__sympy__sympy-13480.json": {
     "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:21:39",
+    "judged_at": "2026-09-27T00:03:43",
     "metrics": "VALID",
     "passed": true,
     "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T12:25:15.489535"
+    "run_timestamp": "2026-09-26T15:55:43.654111"
+  },
+  "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__sympy__sympy-13480.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:30",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T15:57:10.616530"
   },
   "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__sympy__sympy-14711.json": {
     "correctness": "FAILED",
@@ -184,12 +320,12 @@
     "run_timestamp": "2026-09-24T12:27:21.591466"
   },
   "runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__sympy__sympy-18189.json": {
-    "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:27:18",
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:07:16",
     "metrics": "VALID",
-    "passed": true,
-    "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T12:31:13.992277"
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:00:08.901570"
   },
   "runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-103.json": {
     "correctness": "FAILED",
@@ -271,6 +407,62 @@
     "resolution": null,
     "run_timestamp": "2026-09-24T10:44:12.219358"
   },
+  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__django__django-11066.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:03:11",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:06:04.130206"
+  },
+  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__django__django-17029.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:03:40",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:06:32.294440"
+  },
+  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__pydata__xarray-4629.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:03:08",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:06:39.401636"
+  },
+  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:03:47",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:06:46.497720"
+  },
+  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__sympy__sympy-13480.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:34",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:06:53.568066"
+  },
+  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:04:49",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:07:00.621269"
+  },
+  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__sympy__sympy-18189.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:07:19",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:07:07.703195"
+  },
   "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__django__django-11066.json": {
     "correctness": "PASSED",
     "judged_at": "2026-09-25T16:20:09",
@@ -281,11 +473,11 @@
   },
   "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__django__django-17029.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:19:08",
+    "judged_at": "2026-09-27T00:03:44",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T12:35:09.492091"
+    "run_timestamp": "2026-09-26T15:45:28.502292"
   },
   "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__pydata__xarray-4629.json": {
     "correctness": "FAILED",
@@ -297,11 +489,11 @@
   },
   "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__scikit-learn__scikit-learn-13439.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:18:37",
+    "judged_at": "2026-09-27T00:03:50",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T08:02:28.319490"
+    "run_timestamp": "2026-09-26T15:53:28.105710"
   },
   "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__sympy__sympy-13480.json": {
     "correctness": "PASSED",
@@ -513,19 +705,19 @@
   },
   "runs/ministral-14b-2512/ministral-14b-2512__scikit-learn__scikit-learn-13439.json": {
     "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:19:08",
+    "judged_at": "2026-09-27T00:04:24",
     "metrics": "VALID",
     "passed": true,
     "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T13:10:56.539808"
+    "run_timestamp": "2026-09-26T16:14:47.623200"
   },
   "runs/ministral-14b-2512/ministral-14b-2512__sympy__sympy-13480.json": {
     "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:23:28",
+    "judged_at": "2026-09-27T00:06:29",
     "metrics": "VALID",
     "passed": true,
     "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T13:13:21.983127"
+    "run_timestamp": "2026-09-26T16:15:55.103702"
   },
   "runs/ministral-14b-2512/ministral-14b-2512__sympy__sympy-14711.json": {
     "correctness": "PASSED",
@@ -537,11 +729,11 @@
   },
   "runs/ministral-14b-2512/ministral-14b-2512__sympy__sympy-18189.json": {
     "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:30:55",
+    "judged_at": "2026-09-27T00:09:41",
     "metrics": "VALID",
     "passed": true,
     "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T13:18:39.855492"
+    "run_timestamp": "2026-09-26T16:18:45.480188"
   },
   "runs/ministral-3b-2512/mbpp_task/ministral-3b-2512__mbpp-103.json": {
     "correctness": "FAILED",
@@ -633,11 +825,11 @@
   },
   "runs/ministral-3b-2512/ministral-3b-2512__django__django-17029.json": {
     "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:20:12",
+    "judged_at": "2026-09-27T00:04:18",
     "metrics": "VALID",
     "passed": true,
     "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T13:34:58.491284"
+    "run_timestamp": "2026-09-26T16:24:51.483547"
   },
   "runs/ministral-3b-2512/ministral-3b-2512__pydata__xarray-4629.json": {
     "correctness": "PASSED",
@@ -657,11 +849,11 @@
   },
   "runs/ministral-3b-2512/ministral-3b-2512__sympy__sympy-13480.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:24:24",
+    "judged_at": "2026-09-27T00:06:32",
     "metrics": "VALID",
     "passed": false,
-    "resolution": "RESOLVED_NO",
-    "run_timestamp": "2026-09-24T13:35:44.090464"
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:25:32.590540"
   },
   "runs/ministral-3b-2512/ministral-3b-2512__sympy__sympy-14711.json": {
     "correctness": "FAILED",
@@ -777,27 +969,27 @@
   },
   "runs/ministral-8b-2512/ministral-8b-2512__pydata__xarray-4629.json": {
     "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:21:28",
+    "judged_at": "2026-09-27T00:03:49",
     "metrics": "VALID",
     "passed": true,
     "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T13:19:40.487139"
+    "run_timestamp": "2026-09-26T16:19:21.688514"
   },
   "runs/ministral-8b-2512/ministral-8b-2512__scikit-learn__scikit-learn-13439.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:19:44",
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:01",
     "metrics": "VALID",
-    "passed": false,
-    "resolution": "RESOLVED_NO",
-    "run_timestamp": "2026-09-24T13:24:41.495964"
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-26T16:20:34.472099"
   },
   "runs/ministral-8b-2512/ministral-8b-2512__sympy__sympy-13480.json": {
     "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:25:21",
+    "judged_at": "2026-09-27T00:07:17",
     "metrics": "VALID",
     "passed": true,
     "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T13:29:10.793643"
+    "run_timestamp": "2026-09-26T16:21:40.898697"
   },
   "runs/ministral-8b-2512/ministral-8b-2512__sympy__sympy-14711.json": {
     "correctness": "FAILED",
@@ -809,11 +1001,11 @@
   },
   "runs/ministral-8b-2512/ministral-8b-2512__sympy__sympy-18189.json": {
     "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:32:39",
+    "judged_at": "2026-09-27T00:11:32",
     "metrics": "VALID",
     "passed": true,
     "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T13:34:06.123006"
+    "run_timestamp": "2026-09-26T16:24:00.011095"
   },
   "runs/nex-agi-nex-n2.5-mini:free/mbpp_task/nex-agi-nex-n2.5-mini:free__mbpp-103.json": {
     "correctness": "PASSED",
@@ -921,19 +1113,19 @@
   },
   "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__scikit-learn__scikit-learn-13439.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:19:47",
+    "judged_at": "2026-09-27T00:05:05",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T04:47:53.893542"
+    "run_timestamp": "2026-09-26T16:04:30.079429"
   },
   "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__sympy__sympy-13480.json": {
-    "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:26:18",
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:07:20",
     "metrics": "VALID",
-    "passed": true,
-    "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-25T04:50:46.047518"
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:04:36.952455"
   },
   "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__sympy__sympy-14711.json": {
     "correctness": "FAILED",
@@ -945,11 +1137,11 @@
   },
   "runs/nex-agi-nex-n2.5-mini:free/nex-agi-nex-n2.5-mini:free__sympy__sympy-18189.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:32:42",
+    "judged_at": "2026-09-27T00:11:35",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T04:56:19.584811"
+    "run_timestamp": "2026-09-26T16:04:43.942176"
   },
   "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-103.json": {
     "correctness": "FAILED",
@@ -984,12 +1176,12 @@
     "run_timestamp": "2026-09-24T10:57:10.673727"
   },
   "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-257.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:25:31",
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:44",
     "metrics": "VALID",
-    "passed": false,
+    "passed": true,
     "resolution": null,
-    "run_timestamp": "2026-09-25T13:16:55.150856"
+    "run_timestamp": "2026-09-26T22:00:53.188835"
   },
   "runs/openai-gpt-oss-120b/mbpp_task/openai-gpt-oss-120b__mbpp-285.json": {
     "correctness": "PASSED",
@@ -1064,12 +1256,12 @@
     "run_timestamp": "2026-09-24T13:43:10.532030"
   },
   "runs/openai-gpt-oss-120b/openai-gpt-oss-120b__sympy__sympy-13480.json": {
-    "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:27:13",
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:07:24",
     "metrics": "VALID",
-    "passed": true,
-    "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-25T08:49:03.884829"
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-27T00:02:41.582347"
   },
   "runs/openai-gpt-oss-120b/openai-gpt-oss-120b__sympy__sympy-14711.json": {
     "correctness": "FAILED",
@@ -1200,12 +1392,12 @@
     "run_timestamp": "2026-09-25T04:12:15.234955"
   },
   "runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__sympy__sympy-13480.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:27:17",
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:08:37",
     "metrics": "VALID",
-    "passed": false,
-    "resolution": null,
-    "run_timestamp": "2026-09-25T04:26:23.641416"
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-26T16:03:46.810252"
   },
   "runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__sympy__sympy-14711.json": {
     "correctness": "FAILED",
@@ -1321,43 +1513,315 @@
   },
   "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__pydata__xarray-4629.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:23:25",
+    "judged_at": "2026-09-27T00:03:53",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T12:46:30.889181"
+    "run_timestamp": "2026-09-26T16:27:00.716509"
   },
   "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__scikit-learn__scikit-learn-13439.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:19:58",
+    "judged_at": "2026-09-27T00:05:09",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T12:54:32.439193"
+    "run_timestamp": "2026-09-26T16:35:00.688395"
   },
   "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__sympy__sympy-13480.json": {
-    "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:28:08",
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:08:41",
     "metrics": "VALID",
-    "passed": true,
-    "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T14:02:59.548195"
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:36:15.984264"
   },
   "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__sympy__sympy-14711.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:22:42",
+    "judged_at": "2026-09-27T00:04:53",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T12:56:53.494527"
+    "run_timestamp": "2026-09-26T16:38:01.058419"
   },
   "runs/qwen-qwen3.8-27b/qwen-qwen3.8-27b__sympy__sympy-18189.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:11:38",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T16:41:29.693981"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:14",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:55:16.385987"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-11.json": {
     "correctness": "PASSED",
-    "judged_at": "2026-09-25T16:34:30",
+    "judged_at": "2026-09-27T00:05:27",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:55:46.314862"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:29",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:56:00.240824"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:42",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:56:13.627823"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:48",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:56:32.141780"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:56",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:56:54.829864"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:06:02",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:57:20.765522"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:06:10",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:57:46.619990"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-444.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:06:16",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:58:38.454269"
+  },
+  "runs/qwen-qwen3.8-27b:free/mbpp_task/qwen-qwen3.8-27b:free__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:06:23",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:59:05.593814"
+  },
+  "runs/qwen-qwen3.8-27b:free/qwen-qwen3.8-27b:free__django__django-11066.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:03:50",
     "metrics": "VALID",
     "passed": true,
     "resolution": "RESOLVED_FULL",
-    "run_timestamp": "2026-09-24T14:15:26.180911"
+    "run_timestamp": "2026-09-26T22:42:10.803688"
+  },
+  "runs/qwen-qwen3.8-27b:free/qwen-qwen3.8-27b:free__django__django-17029.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:04:58",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-26T22:43:17.924010"
+  },
+  "runs/qwen-qwen3.8-27b:free/qwen-qwen3.8-27b:free__pydata__xarray-4629.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:03:57",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T23:58:06.212953"
+  },
+  "runs/qwen-qwen3.8-27b:free/qwen-qwen3.8-27b:free__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:12",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:53:24.182688"
+  },
+  "runs/qwen-qwen3.8-27b:free/qwen-qwen3.8-27b:free__sympy__sympy-13480.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:08:44",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T23:58:30.846829"
+  },
+  "runs/qwen-qwen3.8-27b:free/qwen-qwen3.8-27b:free__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:04:56",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:58:56.909815"
+  },
+  "runs/qwen-qwen3.8-27b:free/qwen-qwen3.8-27b:free__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:13:27",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-27T00:01:48.573146"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-103.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:18",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:59:21.198679"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-11.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:32",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:59:31.586026"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-135.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:34",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:59:41.511173"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-227.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:47",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:59:50.284407"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-257.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:05:53",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T21:59:58.799236"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-285.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:06:01",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:00:10.095117"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-390.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:06:07",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:00:19.398267"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-418.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:06:15",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:00:27.211642"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-444.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:06:20",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:00:37.198556"
+  },
+  "runs/stealth-space-bunny-alpha/mbpp_task/stealth-space-bunny-alpha__mbpp-75.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:06:27",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T22:00:46.598649"
+  },
+  "runs/stealth-space-bunny-alpha/stealth-space-bunny-alpha__django__django-11066.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:04:27",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-26T23:04:38.194176"
+  },
+  "runs/stealth-space-bunny-alpha/stealth-space-bunny-alpha__django__django-17029.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:01",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T23:17:29.120900"
+  },
+  "runs/stealth-space-bunny-alpha/stealth-space-bunny-alpha__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:04:41",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-26T23:24:45.994980"
+  },
+  "runs/stealth-space-bunny-alpha/stealth-space-bunny-alpha__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:05:16",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T23:39:09.563018"
+  },
+  "runs/stealth-space-bunny-alpha/stealth-space-bunny-alpha__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:10:22",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-26T23:40:18.327544"
+  },
+  "runs/stealth-space-bunny-alpha/stealth-space-bunny-alpha__sympy__sympy-14711.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T00:04:59",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-26T23:51:58.662002"
+  },
+  "runs/stealth-space-bunny-alpha/stealth-space-bunny-alpha__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T00:15:15",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-26T23:56:20.749367"
   },
   "runs/z-ai-glm-5.2:free/mbpp_task/z-ai-glm-5.2:free__mbpp-103.json": {
     "correctness": "PASSED",
@@ -1449,11 +1913,11 @@
   },
   "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__django__django-17029.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:21:31",
+    "judged_at": "2026-09-27T00:05:05",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T12:36:08.719524"
+    "run_timestamp": "2026-09-26T16:03:54.073841"
   },
   "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__pydata__xarray-4629.json": {
     "correctness": "PASSED",
@@ -1465,34 +1929,34 @@
   },
   "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__scikit-learn__scikit-learn-13439.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:20:01",
+    "judged_at": "2026-09-27T00:05:19",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T12:39:50.398988"
+    "run_timestamp": "2026-09-26T16:04:01.018573"
   },
   "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__sympy__sympy-13480.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:28:11",
+    "judged_at": "2026-09-27T00:10:25",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T12:41:15.868075"
+    "run_timestamp": "2026-09-26T16:04:08.861677"
   },
   "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__sympy__sympy-14711.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:22:46",
+    "judged_at": "2026-09-27T00:05:03",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T12:42:52.539592"
+    "run_timestamp": "2026-09-26T16:04:16.279340"
   },
   "runs/z-ai-glm-5.2:free/z-ai-glm-5.2:free__sympy__sympy-18189.json": {
     "correctness": "FAILED",
-    "judged_at": "2026-09-25T16:34:33",
+    "judged_at": "2026-09-27T00:15:18",
     "metrics": "VALID",
     "passed": false,
     "resolution": null,
-    "run_timestamp": "2026-09-25T12:44:18.484656"
+    "run_timestamp": "2026-09-26T16:04:23.159854"
   }
 }
