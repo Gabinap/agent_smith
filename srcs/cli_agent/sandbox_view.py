@@ -30,8 +30,6 @@ def display_sandbox_tests(console: Console, output: str,
                           result: str) -> None:
 
     sandbox_cli = Group(
-        Text("\nOutput:", style="bold white", end="\n\n"),
-        Syntax(output, "python", theme="stata-dark"),
         Text("\nResult:", style="bold white", end="\n\n"),
         Syntax(result, "python", theme="stata-dark"),
     )
