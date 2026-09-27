@@ -5,7 +5,7 @@ import signal
 import sys
 from typing import Literal
 
-from mcp.server.mcpserver import MCPServer
+from mcp.server.fastmcp import FastMCP
 
 from srcs.backends.docker import DockerExecBackend
 from srcs.mcp_server import tools
@@ -15,7 +15,9 @@ from srcs.models import SWEBenchTaskInput
 task: SWEBenchTaskInput
 backend: DockerExecBackend
 
-mcp = MCPServer("swebench-tools")
+# WARNING, not the SDK's INFO: over stdio this process shares the
+# agent's stderr, and a line per tool call buries the agent's own output.
+mcp = FastMCP("swebench-tools", log_level="WARNING")
 
 
 # --- Files tools ---

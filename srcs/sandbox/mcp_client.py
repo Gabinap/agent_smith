@@ -127,7 +127,8 @@ class McpHttp(McpClient):
             )
 
         client = self._http_client
-        headers = {"Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json",
+                   "Accept": "application/json, text/event-stream"}
 
         if self.session_id:
             headers["Mcp-Session-Id"] = self.session_id

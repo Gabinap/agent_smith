@@ -4,7 +4,7 @@ import json
 import sys
 from typing import Literal
 
-from mcp.server.mcpserver import MCPServer
+from mcp.server.fastmcp import FastMCP
 
 from srcs.backends.local import LocalExecBackend
 from srcs.mcp_server import tools
@@ -14,7 +14,9 @@ from srcs.models import MBPPTaskInput
 EVAL_SCRIPT_FILE = "_run_tests.py"
 
 backend = LocalExecBackend(root="/tmp/agent")
-mcp = MCPServer("mbpp-tools")
+# WARNING, not the SDK's INFO: over stdio this process shares the
+# agent's stderr, and a line per tool call buries the agent's own output.
+mcp = FastMCP("mbpp-tools", log_level="WARNING")
 task: MBPPTaskInput
 
 
