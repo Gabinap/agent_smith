@@ -26,7 +26,7 @@ def display_sandbox(console: Console, sandbox_data: SandboxResult,
                         border_style="orange1"))
 
 
-def display_sandbox_tests(console: Console, output: str,
+def display_sandbox_tests(console: Console,
                           result: str) -> None:
 
     sandbox_cli = Group(
