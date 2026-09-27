@@ -3,7 +3,6 @@ MYPY 	:= uv run mypy
 FLAGS	:= --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 ROOTPY	:= mcp_tools_mbpp.py mcp_tools_swebench.py
 
-# optional: make run-mbpp MODEL="qwen/qwen3.5-flash-02-23" PROVIDER="https://openrouter.ai/api/v1"
 LLM	:= $(if $(MODEL),--model-name "$(MODEL)") $(if $(PROVIDER),--provider-url "$(PROVIDER)")
 
 # ======================= subject commands =======================
@@ -32,13 +31,9 @@ sandbox-swebench:
 graph:
 	uv run srcs/build_graph.py
 
-# the Markdown sections of BENCHMARK_REPORT.md, derived from runs/
 report:
 	uv run srcs/bench_report.py --output BENCHMARK_REPORT.md
 
-# one solution.json per (model, task); the runner dumps whatever task
-# of its set is missing, then skips the cells already done
-# make bench MODELS="codestral-latest,openai/gpt-oss-20b" TASKS="cache/a.json"
 bench:
 	uv run srcs/bench_matrix.py $(if $(MODELS),--models "$(MODELS)") \
 		$(if $(TASKS),--tasks $(TASKS))
@@ -48,9 +43,6 @@ bench-mbpp:
 		$(if $(MODELS),--models "$(MODELS)") \
 		$(if $(TASKS),--tasks $(TASKS))
 
-# The moulinette's verdict on every run, cached in runs/validation.json.
-# `report` reads that cache: a run's own `success` field only says it
-# answered, not that it was right, so the report never quotes it.
 validate:
 	uv run srcs/bench_validate.py $(if $(FORCE),--force) $(if $(JOBS),--jobs $(JOBS))
 
@@ -59,9 +51,6 @@ validate:
 install:
 	uv sync
 
-# srcs/ and the root scripts are separate import roots, hence two mypy runs.
-# --follow-imports=silent: still type-checks srcs/ for context, but reports
-# only the errors of the files listed, so nothing is reported twice.
 lint:
 	$(FLK) . --extend-exclude .venv,moulinette
 	cd srcs && $(MYPY) . $(FLAGS)
