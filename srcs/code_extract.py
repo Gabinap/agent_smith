@@ -114,6 +114,7 @@ def observation(error: str | None, output: str, repair: str = "") -> str:
         parts.append("Ran with no error and printed nothing.")
     return "\n".join(parts)
 
+
 TEST_VERDICT = re.compile(
     r"^(?:Ran \d+ tests?|OK\b|FAILED\b).*", re.MULTILINE)
 TEST_FAILURE = re.compile(r"^(?:FAIL|ERROR): .*", re.MULTILINE)

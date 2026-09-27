@@ -110,10 +110,7 @@ class SWEBench:
                                       self.py_code)
             return
 
-        
-        
         if re.search(r'^[^#\n]*\brun_tests\s*\(', self.py_code, re.MULTILINE):
-            
             message = summarise_tests(self.sandbox_data.output)
 
             self.llm.messages.append({
@@ -166,7 +163,7 @@ class SWEBench:
         A forecast, like the input-token guard, and for the same reason:
         checking the elapsed time alone lets the iteration it admits run
         past the budget by its own duration. Capping the call is not
-        enough the sandbox runs after it so the last measured
+        enough, since the sandbox runs after it: the last measured
         iteration is what decides whether another one fits. One run
         reached 1 008 s against a 900 s ceiling without this.
         """
