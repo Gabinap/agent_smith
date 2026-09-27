@@ -43,11 +43,18 @@ def main() -> None:
             "--http",
             action="store_true",
         )
+        parser.add_argument(
+            "--choose",
+            action="store_true",
+            help="pick the provider and model from a menu instead "
+                 "of the SWEBench default",
+        )
 
         args = parser.parse_args()
         task_file = Path(args.task_file).expanduser().resolve()
         args.task_file = str(task_file)
-        profile = Profile("SWEBench", args.provider_url, args.model_name)
+        profile = Profile("SWEBench", args.provider_url, args.model_name,
+                          choose=args.choose)
 
         console.print("Starting MCP server")
         if args.http:

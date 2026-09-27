@@ -93,12 +93,18 @@ make run-mbpp          # cache/mbpp_task.json     -> runs/mbpp_solution.json
 make run-swebench      # cache/swebench_task.json -> runs/swebench_solution.json
 ```
 
-Without arguments, the provider and model are picked interactively. To
-skip the prompt:
+Without arguments, each agent runs its benchmark's default model —
+`ministral-8b-2512` for MBPP, `ministral-14b-2512` for SWE-bench, both
+on Mistral, the best scores of the benchmark campaign — so a run never
+stops to ask. To use another:
 
 ```sh
-make run-mbpp MODEL="codestral-latest" PROVIDER="https://api.mistral.ai/v1"
+make run-mbpp MODEL="codestral-2508" PROVIDER="https://api.mistral.ai/v1"
 ```
+
+or pass `--choose` to the agent to pick the provider and model from a
+menu. The defaults read their keys from `MISTRAL_STUDIO_1` to
+`MISTRAL_STUDIO_6` in `.env`.
 
 The agent starts its MCP server itself, over stdio. To reach a server
 already listening on `http://localhost:8000` instead, start it with
