@@ -91,9 +91,6 @@ def launch_agent(profile: Profile, console: Console,
         env_keys=profile.keys,
         console=console,
         client=mcp_client,
-        # Subject limits for MBPP: 10 iterations, 120s. The iteration
-        # cap stays at 5 on purpose (Q9 rewards efficiency); the time
-        # budget leaves room for the iteration already in flight.
         max_iteration=5,
         max_time_seconds=100,
         max_input_tokens=6000,

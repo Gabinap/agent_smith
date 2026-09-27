@@ -19,13 +19,8 @@ from sandbox.sandbox import Sandbox, SandboxConfig
 
 from .prompt import get_prompt, system_content
 
-# MBPP has 6000 input tokens for the whole run: a single unbounded
-# output can eat the budget the remaining iterations need.
 MAX_OUTPUT_LINES = 30
 
-# None keeps the provider default. A fixed value makes a run
-# comparable to the next one, which the benchmark needs more
-# than it needs variety.
 TEMPERATURE: float | None = 0.0
 
 
@@ -74,11 +69,8 @@ class Mbpp:
         self.max_input_tokens = max_input_tokens
         self.max_output_tokens = max_output_tokens
         self.llm_output_data: dict[str, Any] = {}
-        # Set when the loop starts, so a call can tell how much of the
-        # time budget it is still allowed to spend.
         self.started: float | None = None
-        # How long the last iteration took, which is what the time
-        # guard uses to forecast whether another one fits.
+
         self.last_iteration = 0.0
 
     def execute(self) -> None:
@@ -87,8 +79,6 @@ class Mbpp:
         `total_requests` counts API attempts, not iterations: a step
         rate-limited twice costs three requests.
         """
-        # Each iteration starts without a result: a step that never
-        # reaches the sandbox must not inherit the previous one's.
         self.sandbox_data = None
         self.prompt = get_prompt(self.task)
 
@@ -216,9 +206,6 @@ test_list={self.task.test_list}))"
                 if self.sandbox_data and self.sandbox_data.finished:
                     if (self.sandbox_data.final_answer or "").strip():
                         break
-                    # One chance to do the work, then stop. Told twice
-                    # and still empty, a model repeats the same call
-                    # forever: measured 13 identical submissions.
                     self.empty_answers += 1
                     if self.empty_answers > 1:
                         self.stop_reason = "Empty final answer"

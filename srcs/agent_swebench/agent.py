@@ -65,9 +65,7 @@ class SWEBench:
         self.max_input_tokens = max_input_tokens
         self.max_output_tokens = max_output_tokens
         self.llm_output_data: dict[str, Any] = {}
-        # Set when the loop starts
         self.started: float | None = None
-        # How long the last iteration took
         self.last_iteration = 0.0
 
         self.llm = LLM(api_url, model_name, env_keys,
@@ -80,8 +78,6 @@ class SWEBench:
         `total_requests` counts API attempts, not iterations: a step
         rate-limited twice costs three requests.
         """
-        # Each iteration starts without a result: a step that never
-        # reaches the sandbox must not inherit the previous one's.
         self.sandbox_data = None
         self.prompt = get_prompt(self.task)
 
@@ -114,11 +110,10 @@ class SWEBench:
                                       self.py_code)
             return
 
+        
+        
         if re.search(r'^[^#\n]*\brun_tests\s*\(', self.py_code, re.MULTILINE):
-
-            # The verdict alone leaves the model unable to know which
-            # test broke; the whole log swamps the conversation. The
-            # summary is what unittest itself reports.
+            
             message = summarise_tests(self.sandbox_data.output)
 
             self.llm.messages.append({
@@ -171,7 +166,7 @@ class SWEBench:
         A forecast, like the input-token guard, and for the same reason:
         checking the elapsed time alone lets the iteration it admits run
         past the budget by its own duration. Capping the call is not
-        enough — the sandbox runs after it — so the last measured
+        enough the sandbox runs after it so the last measured
         iteration is what decides whether another one fits. One run
         reached 1 008 s against a 900 s ceiling without this.
         """
@@ -228,9 +223,6 @@ class SWEBench:
                 if self.sandbox_data and self.sandbox_data.finished:
                     if (self.sandbox_data.final_answer or "").strip():
                         break
-                    # One chance to do the work, then stop. Told twice
-                    # and still empty, a model repeats the same call
-                    # forever: measured 13 identical submissions.
                     self.empty_answers += 1
                     if self.empty_answers > 1:
                         self.stop_reason = "Empty final answer"

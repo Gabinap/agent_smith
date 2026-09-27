@@ -22,7 +22,7 @@ def system_content(tools: str = "") -> str:
     The manual is appended after dedenting rather than interpolated
     into the template: its own lines start at column 0, so a manual of
     two tools or more leaves `textwrap.dedent` no common prefix to
-    strip and the whole prompt goes out indented — wasted tokens on a
+    strip and the whole prompt goes out indented wasted tokens on a
     6000-token budget, and a `system_prompt` that no longer starts
     where the prompt starts.
     """
