@@ -15,9 +15,8 @@
       "google/gemma-4-31b-it:free",
       "dots-studio/dots-3-note-preview:free",
       "poolside/laguna-s-2.1:free",
-      "z-ai/glm-5.2:free",
-      "nex-agi/nex-n2.5-mini:free",
-      "google/gemini-2.5-flash-lite"
+      "qwen/qwen3.8-27b:free",
+      "stealth/space-bunny-alpha"
     ]
   },
   "Mistral Studio": {
@@ -43,8 +42,7 @@
       "GROQ_CONSOLE_1"
     ],
     "model": [
-      "openai/gpt-oss-120b",
-      "qwen/qwen3.8-27b"
+      "openai/gpt-oss-120b"
     ]
   },
   "Together": {
