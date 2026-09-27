@@ -2,7 +2,7 @@
 
 ## How to reproduce
 
-- **Commit**: `d06e0c4` — **Python**: 3.10.19 — **platform**: Linux x86_64
+- **Commit**: `f2f509e` — **Python**: 3.10.19 — **platform**: Linux x86_64
 - **Campaign**: 11 catalogued models x (7 SWE-bench + 10 MBPP) tasks, plus 3 that left the catalogue during it — 238 cells in all, run between 2026-09-24T02:05 and 2026-09-27T01:23
 - **Verdicts**: 236/238 cells judged by `moulinette_eval validate`; the Result column is its verdict, never the run's own `success` field
 - **Models** (provider and key names in `srcs/call_llm/providers.json`, secrets in `.env`): `Prism-ML/Ternary-Bonsai-27B`, `codestral-2508`, `dots-studio/dots-3-note-preview:free`, `google/gemma-4-31b-it:free`, `ministral-14b-2512`, `ministral-3b-2512`, `ministral-8b-2512`, `openai/gpt-oss-120b`, `poolside/laguna-s-2.1:free`, `qwen/qwen3.8-27b:free`, `stealth/space-bunny-alpha`
@@ -40,6 +40,24 @@ make report                                   # this file
 - models reachable only on a paid plan, or only through an alias of a model already in (`mistral-code-latest` is `codestral`, by the provider's own `aliases` field).
 
 Version ids are pinned wherever the provider offers them (`codestral-2508`, `ministral-*-2512`), so a re-run meets the same weights rather than whatever `-latest` points to that day.
+
+## What the agent is given
+
+The prompt carries the task's `hints_text` — a field of the task input the subject itself defines (*Optional hints about the issue*). It is legitimate input, but not a neutral one: on 3 of the 7 tasks it gives the fix away.
+
+| Task | `hints_text` | What it gives | Resolved |
+|---|---:|---|---:|
+| django__django-11066 | 2,075 chars | a link to the pull request that fixed it | 7/11 (64 %) |
+| django__django-17029 | 44 chars | discussion | 6/11 (55 %) |
+| pydata__xarray-4629 | 0 chars | — | 8/11 (73 %) |
+| scikit-learn__scikit-learn-13439 | 285 chars | discussion | 3/11 (27 %) |
+| sympy__sympy-13480 | 146 chars | the line and the change to make | 6/11 (55 %) |
+| sympy__sympy-14711 | 0 chars | — | 1/11 (9 %) |
+| sympy__sympy-18189 | 2,027 chars | the fix's own diff | 6/11 (55 %) |
+
+Those 3 tasks resolve at 19/33 (58 %), the other 4 at 18/44 (41 %). The hint helps, without deciding everything: the task resolved most often has no hint at all, and even handed the diff, 5 models of 11 still fail `sympy__sympy-18189`. Scores here are therefore not comparable with SWE-bench's standard setting, which gives the issue alone.
+
+**No run reached outside its task.** Across every SWE-bench step, the agent's code contains no URL fetch, no `curl` or `wget`, no `git fetch` or `pull`; 1 step searched the whole local history — `git log --all …` by `stealth/space-bunny-alpha` on `django__django-11066` — and found nothing, the container holding no commit past the task's base.
 
 ## Summary
 
@@ -505,7 +523,7 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 
 - **Best overall: `ministral-8b-2512`**, 15 of 17 cells; best on SWE-bench: `ministral-14b-2512`, 7 of 7. Both are small Mistral models, ahead of `qwen3.8-27b`, `gemma-4-31b-it` and `gpt-oss-120b`; inside the same family the 3B trails well behind, so size matters, but only up to a point.
 - **A run's own `success` field is not a verdict.** On SWE-bench it claims 39 resolutions where the moulinette confirms 37: `success` only means the model called `final_answer` with something. Every figure here is the moulinette's verdict.
-- **Test feedback is not what separates success from failure** — see the ablation: seeing the tests won three cells and cost four, the loss coming from how the log was forwarded rather than from the feedback itself.
+- **Seeing the tests helps only once the log is summarised.** In the ablation, test results won three cells and cost four, the loss coming from how the log was forwarded rather than from the feedback itself. Tasks solved without the tests ever running were those whose hint gives the fix away — the hint, not the absence of tests, explains them.
 - **Free tiers are a moving target.** 3 models left the catalogue within three days of campaign — withdrawn by their provider, or capped below what a SWE-bench task needs. Cells with no data by provider: 1 Groq Console, 2 Open Router; none on Mistral Studio, Together.
 
 **Selection.** For this agent we would run `ministral-8b-2512`, with `ministral-14b-2512` where SWE-bench matters most: the best scores of the campaign, on a provider that left no cell without data and whose limits never bound. Among the free OpenRouter models, the strongest results come with the least dependable access — worth benchmarking, not worth depending on.
