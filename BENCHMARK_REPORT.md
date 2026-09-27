@@ -2,15 +2,10 @@
 
 ## How to reproduce
 
-- **Commit**: `eea9512` — **Python**: 3.10.19 — **platform**: Linux x86_64
-- **Campaign**: 11 catalogued models x (7 SWE-bench + 10 MBPP) tasks, plus 3 that left the catalogue during it — 238 cells in all, run between 2026-09-24T02:05 and 2026-09-27T01:23
-- **Verdicts**: 236/238 cells judged by `moulinette_eval validate`; the Result column is its verdict, never the run's own `success` field
-- **Models** (provider and key names in `srcs/call_llm/providers.json`, secrets in `.env`): `Prism-ML/Ternary-Bonsai-27B`, `codestral-2508`, `dots-studio/dots-3-note-preview:free`, `google/gemma-4-31b-it:free`, `ministral-14b-2512`, `ministral-3b-2512`, `ministral-8b-2512`, `openai/gpt-oss-120b`, `poolside/laguna-s-2.1:free`, `qwen/qwen3.8-27b:free`, `stealth/space-bunny-alpha`
-- **Left the catalogue during the campaign**: `nex-agi/nex-n2.5-mini:free`, `qwen/qwen3.8-27b`, `z-ai/glm-5.2:free`
-- **SWE-bench tasks**: `django__django-11066`, `django__django-17029`, `pydata__xarray-4629`, `scikit-learn__scikit-learn-13439`, `sympy__sympy-13480`, `sympy__sympy-14711`, `sympy__sympy-18189`
-- **MBPP tasks**: 11, 75, 103, 135, 227, 257, 285, 390, 418, 444 (every 25th id of the sorted test split)
-
-Budgets the agents enforce, and the sampling temperature:
+- **Commit** `59af4f4` — Python 3.10.19 — Linux x86_64
+- **Cells**: 11 models × (7 SWE-bench + 11 MBPP tasks), plus 3 models that left the catalogue — 239 cells, run 2026-09-24 to 2026-09-28, each judged by `moulinette_eval validate`
+- **SWE-bench**: `django__django-11066`, `django__django-17029`, `pydata__xarray-4629`, `scikit-learn__scikit-learn-13439`, `sympy__sympy-13480`, `sympy__sympy-14711`, `sympy__sympy-18189`
+- **MBPP**: 11, 75, 95, 103, 135, 227, 257, 285, 390, 418, 444
 
 | Benchmark | Iterations | Tokens in | Tokens out | Time | Temperature |
 |---|---:|---:|---:|---:|---:|
@@ -18,32 +13,22 @@ Budgets the agents enforce, and the sampling temperature:
 | SWE-bench | 30 | 300,000 | 10,000 | 840s | 0.0 |
 
 ```sh
-make install                                  # deps and venv
-uv run srcs/bench_matrix.py --benchmark mbpp      # 110 cells
-uv run srcs/bench_matrix.py --benchmark swebench  #  77 cells
-uv run srcs/bench_validate.py                 # moulinette verdicts
-make report                                   # this file
+uv run srcs/bench_matrix.py --benchmark mbpp
+uv run srcs/bench_matrix.py --benchmark swebench
+make validate && make report
 ```
 
-> Two caveats for anyone re-running this. The free tiers cap daily requests, so a cell can die on a quota rather than on the model — those cells carry an `error` and are counted in *Cells with no data*, not as failures. And temperature 0 is not a guarantee: the same id, same prompt, returned two different answers in three calls on one provider, so counts can move by a cell or two between campaigns.
+> Free-tier quotas can end a cell early — counted as *no data*, not as a failure — and temperature 0 is not strictly deterministic: a re-run can move by a cell or two.
 
 ## Selection rationale
 
-**SWE-bench — 7 tasks.** The moulinette's exam pool (`EXAM_POOL`), which `moulinette_eval select` draws the exam's tasks from and from nowhere else, plus `django__django-17029` outside it, to see the agent on ground the exam cannot serve.
+**Tasks.** SWE-bench: the moulinette's exam pool, plus `django__django-17029` outside it. MBPP has no exam pool: its ten tasks are every 25th id of the sorted test split.
 
-**MBPP — 10 tasks.** MBPP has no exam pool: the exam draws 5 tasks at random from the whole test split (257 tasks, ids 11 to 479). The ten here are every 25th id of that split once sorted — a spread sample rather than a lucky cluster.
-
-**Models — 11, on the free tiers of four providers** (OpenRouter, Mistral, Groq, Together), so that anyone can re-run the campaign at no cost. Chosen for spread rather than for rank: several vendors, a size ladder inside one family (`ministral` 3B, 8B and 14B), and a code-specialised model (`codestral`). Every candidate was first screened on MBPP task 11 and `django__django-11066`, and left out when it could not follow the protocol at all:
-
-- `openai/gpt-oss-20b` answers with native tool calls, which the API rejects since the agent declares no `tools`;
-- `allam-2-7b` writes the sandbox's output itself instead of waiting for it;
-- models reachable only on a paid plan, or only through an alias of a model already in (`mistral-code-latest` is `codestral`, by the provider's own `aliases` field).
-
-Version ids are pinned wherever the provider offers them (`codestral-2508`, `ministral-*-2512`), so a re-run meets the same weights rather than whatever `-latest` points to that day.
+**Models.** 11, on the free tiers of four providers (OpenRouter, Mistral, Groq, Together), chosen for spread: several vendors, a size ladder (`ministral` 3B, 8B, 14B), a code model (`codestral`). Each candidate was screened on one task per benchmark; left out were models that could not follow the protocol (`gpt-oss-20b` answers with native tool calls, `allam-2-7b` invents the sandbox's output), paid-only models, and aliases of models already in. Version ids are pinned where the provider offers them.
 
 ## What the agent is given
 
-The prompt carries the task's `hints_text` — a field of the task input the subject itself defines (*Optional hints about the issue*). It is legitimate input, but not a neutral one: on 3 of the 7 tasks it gives the fix away.
+The prompt carries the task's `hints_text`, an input the subject defines. On 3 of the 7 tasks it gives the fix away:
 
 | Task | `hints_text` | What it gives | Resolved |
 |---|---:|---|---:|
@@ -55,13 +40,13 @@ The prompt carries the task's `hints_text` — a field of the task input the sub
 | sympy__sympy-14711 | 0 chars | — | 1/11 (9 %) |
 | sympy__sympy-18189 | 2,027 chars | the fix's own diff | 6/11 (55 %) |
 
-Those 3 tasks resolve at 19/33 (58 %), the other 4 at 18/44 (41 %). The hint helps, without deciding everything: the task resolved most often has no hint at all, and even handed the diff, 5 models of 11 still fail `sympy__sympy-18189`. Scores here are therefore not comparable with SWE-bench's standard setting, which gives the issue alone.
+Those resolve at 19/33 (58 %), the others at 18/44 (41 %): the hint helps without deciding — 5 of 11 models still fail `sympy__sympy-18189` with its diff in hand.
 
-**No run reached outside its task.** Across every SWE-bench step, the agent's code contains no URL fetch, no `curl` or `wget`, no `git fetch` or `pull`; 1 step searched the whole local history — `git log --all …` by `stealth/space-bunny-alpha` on `django__django-11066` — and found nothing, the container holding no commit past the task's base.
+No run fetched anything from outside its task; one `git log --all …` (`stealth/space-bunny-alpha`) found nothing.
 
 ## Summary
 
-| Model | SWE-bench (/7) | MBPP (/10) | Total | Cells with no data |
+| Model | SWE-bench (/7) | MBPP (/11) | Total | Cells with no data |
 |---|---:|---:|---:|---:|
 | Prism-ML/Ternary-Bonsai-27B | 3 | 2 | **5** | — |
 | codestral-2508 | 2 | 7 | **9** | — |
@@ -74,11 +59,11 @@ Those 3 tasks resolve at 19/33 (58 %), the other 4 at 18/44 (41 %). The hint hel
 | poolside/laguna-s-2.1:free | 2 | 9 | **11** | — |
 | qwen/qwen3.8-27b:free | 3 | 8 | **11** | 2 |
 | stealth/space-bunny-alpha | 4 | 9 | **13** | — |
-| **all** | | | **116 / 187** | 3 |
+| **all** | | | **116 / 188** | 3 |
 
 Models that left the catalogue during the campaign — withdrawn by their provider, beyond what the account could pay for, or moved to another provider. Their cells ran while they were catalogued, and are kept apart rather than dropped:
 
-| Model | SWE-bench (/7) | MBPP (/10) | Total | Cells with no data |
+| Model | SWE-bench (/7) | MBPP (/11) | Total | Cells with no data |
 |---|---:|---:|---:|---:|
 | nex-agi/nex-n2.5-mini:free | 1 | 9 | **10** | 3 |
 | qwen/qwen3.8-27b | 2 | 10 | **12** | 5 |
@@ -92,7 +77,7 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 | Model | Runs | Avg response | Retries | Cells with data |
 |---|---:|---:|---:|---:|
 | Prism-ML/Ternary-Bonsai-27B | 17 | 10179 ms | 0 | 17/17 |
-| codestral-2508 | 17 | 1756 ms | 0 | 17/17 |
+| codestral-2508 | 18 | 1752 ms | 0 | 18/18 |
 | dots-studio/dots-3-note-preview:free | 17 | 5263 ms | 39 | 17/17 |
 | google/gemma-4-31b-it:free | 17 | 66485 ms | 0 | 17/17 |
 | ministral-14b-2512 | 17 | 2233 ms | 0 | 17/17 |
@@ -239,6 +224,7 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 | codestral-2508 | 418 | pass | 2 | 1,040 | 54 | 1.1s | solved | [`codestral-2508__mbpp-418.json`](runs/codestral-2508/mbpp_task/codestral-2508__mbpp-418.json) |
 | codestral-2508 | 444 | fail | 5 | 5,035 | 135 | 2.7s | Iterations limit reached | [`codestral-2508__mbpp-444.json`](runs/codestral-2508/mbpp_task/codestral-2508__mbpp-444.json) |
 | codestral-2508 | 75 | pass | 2 | 1,174 | 114 | 1.4s | solved | [`codestral-2508__mbpp-75.json`](runs/codestral-2508/mbpp_task/codestral-2508__mbpp-75.json) |
+| codestral-2508 | 95 | not judged | 2 | 1,080 | 142 | 3.2s | solved | [`mbpp_solution.json`](runs/mbpp_solution.json) |
 | dots-studio/dots-3-note-preview:free | 103 | fail | 1 | 471 | 1,500 | 21.4s | Output token limit reached | [`dots-studio-dots-3-note-preview:free__mbpp-103.json`](runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-103.json) |
 | dots-studio/dots-3-note-preview:free | 11 | fail | 1 | 472 | 1,500 | 20.3s | Output token limit reached | [`dots-studio-dots-3-note-preview:free__mbpp-11.json`](runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-11.json) |
 | dots-studio/dots-3-note-preview:free | 135 | pass | 2 | 972 | 392 | 10.5s | solved | [`dots-studio-dots-3-note-preview:free__mbpp-135.json`](runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-135.json) |
@@ -472,11 +458,9 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 
 </details>
 
-## Ablation: the sandbox pipe fix
+## Ablation: the agent reading its test results
 
-**The change.** The sandbox runs the model's code in a child process and returns the result through a pipe. The parent used to wait for the child to exit before reading, but a child whose result outgrows the pipe's buffer cannot exit until someone reads it: the two waited on each other until the time limit, which then reported a timeout. On a large test log — `run_tests` returns 356,000 characters on `sympy__sympy-13480` — the agent got that timeout instead of its test results. The fix reads before joining.
-
-**Held constant.** Same models, same tasks, same prompts, temperature 0. Between the two series the only other change to the agent is a guard that stops an iteration forecast to overrun the time budget; it concerns the two cells that stopped on *Time limit reached* before. Six of the 23 cells are left out: their re-run produced no data (a model withdrawn from its provider, a token-per-minute cap).
+**Before**, a large test log never reached the agent: `run_tests` came back as a timeout. **After**, the agent reads its test results. Same models, same tasks, temperature 0; the 6 cells whose re-run produced no data are left out.
 
 | | Before | After |
 |---|---:|---:|
@@ -486,7 +470,7 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 | Median iterations | 16 | 7 |
 | Stopped on the input budget | 0 | 4 |
 
-**What it shows.** Seeing its test results let the agent solve 3 cells it had failed blind. But on sympy, pytest and scikit-learn the agent receives the test log whole: `summarise_tests` only recognises unittest's summary, and otherwise forwards the full output. That log is resent with the conversation on every turn, so the median input tripled and 4 runs that had solved their task now stopped on their input budget — the 4 cells lost. Net, the fix is a wash on this sample, and within the spread temperature 0 already shows between identical calls. The lesson is the next change it points to: test feedback helps only once it is summarised for every runner, which this campaign's code does not yet do.
+Reading its tests let the agent solve 3 cells it had failed blind, but the full log, resent on every turn, tripled its input and cost 4 cells on the input budget. Test feedback helps only once it is summarised.
 
 <details>
 <summary>Per cell, with both solution.json files</summary>
@@ -521,9 +505,7 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 
 ## Conclusions
 
-- **Best overall: `ministral-8b-2512`**, 15 of 17 cells; best on SWE-bench: `ministral-14b-2512`, 7 of 7. Both are small Mistral models, ahead of `qwen3.8-27b`, `gemma-4-31b-it` and `gpt-oss-120b`; inside the same family the 3B trails well behind, so size matters, but only up to a point.
-- **A run's own `success` field is not a verdict.** On SWE-bench it claims 39 resolutions where the moulinette confirms 37: `success` only means the model called `final_answer` with something. Every figure here is the moulinette's verdict.
-- **Seeing the tests helps only once the log is summarised.** In the ablation, test results won three cells and cost four, the loss coming from how the log was forwarded rather than from the feedback itself. Tasks solved without the tests ever running were those whose hint gives the fix away — the hint, not the absence of tests, explains them.
-- **Free tiers are a moving target.** 3 models left the catalogue within three days of campaign — withdrawn by their provider, or capped below what a SWE-bench task needs. Cells with no data by provider: 1 Groq Console, 2 Open Router; none on Mistral Studio, Together.
-
-**Selection.** For this agent we would run `ministral-8b-2512`, with `ministral-14b-2512` where SWE-bench matters most: the best scores of the campaign, on a provider that left no cell without data and whose limits never bound. Among the free OpenRouter models, the strongest results come with the least dependable access — worth benchmarking, not worth depending on.
+- **Selected: `ministral-8b-2512`** (15/17), with `ministral-14b-2512` for SWE-bench (7/7) — the best scores, on a provider with no cell lost. They are the agent's defaults.
+- **Disregarded**: below the median, `google/gemma-4-31b-it:free` (9/17), `codestral-2508` (9/17), `ministral-3b-2512` (9/17), `Prism-ML/Ternary-Bonsai-27B` (5/17); and the 3 models no longer served.
+- **`success` is not a verdict**: 39 resolutions claimed on SWE-bench, 37 confirmed by the moulinette.
+- **Free tiers move**: 3 models left the catalogue in three days. Cells with no data: 1 on Groq Console, 2 on Open Router, none on Mistral Studio, Together.
