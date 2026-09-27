@@ -90,9 +90,8 @@ SAFE_BUILTINS = {
     "enumerate": enumerate, "filter": filter, "float": float, "int": int,
     "len": len, "list": list, "map": map, "max": max, "min": min,
     "range": range, "set": set, "str": str, "sum": sum, "tuple": tuple,
-    "zip": zip, "True": True, "False": False, "None": None,
+    "zip": zip, "True": True, "False": False, "None": None, "type": type,
     "SystemExit": SystemExit, "KeyboardInterrupt": KeyboardInterrupt,
-    # new
     "__build_class__": __build_class__, "super": super,
     "sorted": sorted, "reversed": reversed, "isinstance": isinstance,
     "issubclass": issubclass, "round": round, "divmod": divmod,

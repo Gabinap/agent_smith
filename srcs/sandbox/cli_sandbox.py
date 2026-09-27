@@ -102,7 +102,7 @@ class CLI_Sandbox:
         try:
             while True:
                 try:
-                    command = input("Sanbox> ")
+                    command = input("Sandbox> ")
                     if command == "manual":
                         print(self.sandbox.manual())
                         continue
