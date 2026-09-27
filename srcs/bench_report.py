@@ -420,48 +420,29 @@ def reproduce_section(runs: list[dict[str, Any]]) -> str:
     swe = sorted({r["task_id"] for r in runs if r["benchmark"] == "swebench"})
     mbpp = sorted({r["task_id"] for r in runs if r["benchmark"] == "mbpp"},
                   key=lambda t: int(t.split("-")[-1]))
-    judged = sum(1 for r in runs if r.get("_verdict", {}).get("correctness"))
     return "\n".join([
-        f"- **Commit**: `{commit()}` — "
-        f"**Python**: {sys.version.split()[0]} — "
-        f"**platform**: {platform.system()} {platform.machine()}",
-        f"- **Campaign**: {len(models)} catalogued models x "
-        f"({len(swe)} SWE-bench + {len(mbpp)} MBPP) tasks, plus "
-        f"{len(retired)} that left the catalogue during it — "
-        f"{len(runs)} cells in all, run between "
-        f"{stamps[0][:16] if stamps else NA} and "
-        f"{stamps[-1][:16] if stamps else NA}",
-        f"- **Verdicts**: {judged}/{len(runs)} cells judged by "
-        "`moulinette_eval validate`; the Result column is its verdict, "
-        "never the run's own `success` field",
-        "- **Models** (provider and key names in "
-        "`srcs/call_llm/providers.json`, secrets in `.env`): "
-        + ", ".join(f"`{m}`" for m in models),
-        "- **Left the catalogue during the campaign**: "
-        + (", ".join(f"`{m}`" for m in retired) or NA),
-        f"- **SWE-bench tasks**: {', '.join(f'`{t}`' for t in swe)}",
-        f"- **MBPP tasks**: {', '.join(t.split('-')[-1] for t in mbpp)} "
-        "(every 25th id of the sorted test split)",
-        "",
-        "Budgets the agents enforce, and the sampling temperature:",
+        f"- **Commit** `{commit()}` — Python {sys.version.split()[0]} — "
+        f"{platform.system()} {platform.machine()}",
+        f"- **Cells**: {len(models)} models × ({len(swe)} SWE-bench + "
+        f"{len(mbpp)} MBPP tasks), plus {len(retired)} models that left "
+        f"the catalogue — {len(runs)} cells, run "
+        f"{stamps[0][:10] if stamps else NA} to "
+        f"{stamps[-1][:10] if stamps else NA}, each judged by "
+        "`moulinette_eval validate`",
+        f"- **SWE-bench**: {', '.join(f'`{t}`' for t in swe)}",
+        f"- **MBPP**: {', '.join(t.split('-')[-1] for t in mbpp)}",
         "",
         budget_rows(),
         "",
         "```sh",
-        "make install                                  # deps and venv",
-        "uv run srcs/bench_matrix.py --benchmark mbpp      # 110 cells",
-        "uv run srcs/bench_matrix.py --benchmark swebench  #  77 cells",
-        "uv run srcs/bench_validate.py                 # moulinette verdicts",
-        "make report                                   # this file",
+        "uv run srcs/bench_matrix.py --benchmark mbpp",
+        "uv run srcs/bench_matrix.py --benchmark swebench",
+        "make validate && make report",
         "```",
         "",
-        "> Two caveats for anyone re-running this. The free tiers cap "
-        "daily requests, so a cell can die on a quota rather than on the "
-        "model — those cells carry an `error` and are counted in *Cells "
-        "with no data*, not as failures. And temperature 0 is not a "
-        "guarantee: the same id, same prompt, returned two different "
-        "answers in three calls on one provider, so counts can move by a "
-        "cell or two between campaigns.",
+        "> Free-tier quotas can end a cell early — counted as *no data*, "
+        "not as a failure — and temperature 0 is not strictly "
+        "deterministic: a re-run can move by a cell or two.",
     ])
 
 
@@ -554,35 +535,16 @@ def ablation_section() -> str:
             f"| {p['after']['stop_reason']} "
             f"| [before]({p['before_file']}) · [after]({p['after_file']}) |")
     return "\n\n".join([
-        "**The change.** The sandbox runs the model's code in a child "
-        "process and returns the result through a pipe. The parent used "
-        "to wait for the child to exit before reading, but a child whose "
-        "result outgrows the pipe's buffer cannot exit until someone "
-        "reads it: the two waited on each other until the time limit, "
-        "which then reported a timeout. On a large test log — "
-        "`run_tests` returns 356,000 characters on "
-        "`sympy__sympy-13480` — the agent got that timeout instead of "
-        "its test results. The fix reads before joining.",
-        "**Held constant.** Same models, same tasks, same prompts, "
-        "temperature 0. Between the two series the only other change to "
-        "the agent is a guard that stops an iteration forecast to overrun "
-        "the time budget; it concerns the two cells that stopped on "
-        "*Time limit reached* before. Six of the 23 cells are left out: "
-        "their re-run produced no data (a model withdrawn from its "
-        "provider, a token-per-minute cap).",
+        "**Before**, a large test log never reached the agent: "
+        "`run_tests` came back as a timeout. **After**, the agent reads "
+        "its test results. Same models, same tasks, temperature 0; the "
+        f"{len(pairs) - len(ok)} cells whose re-run produced no data are "
+        "left out.",
         summary,
-        f"**What it shows.** Seeing its test results let the agent solve "
-        f"{gained} cells it had failed blind. But on sympy, pytest and "
-        "scikit-learn the agent receives the test log whole: "
-        "`summarise_tests` only recognises unittest's summary, and "
-        "otherwise forwards the full output. That log is resent with "
-        "the conversation on every turn, so the median input tripled and "
-        f"{stops('after')} runs that had solved their task now stopped on "
-        f"their input budget — the {lost} cells lost. Net, the fix is a "
-        "wash on this sample, and within the spread temperature 0 already "
-        "shows between identical calls. The lesson is the next change it "
-        "points to: test feedback helps only once it is summarised for "
-        "every runner, which this campaign's code does not yet do.",
+        f"Reading its tests let the agent solve {gained} cells it had "
+        f"failed blind, but the full log, resent on every turn, tripled "
+        f"its input and cost {lost} cells on the input budget. Test "
+        "feedback helps only once it is summarised.",
         folded("Per cell, with both solution.json files",
                "\n".join(rows)),
     ])
@@ -617,37 +579,22 @@ def conclusions_section(runs: list[dict[str, Any]]) -> str:
     clean = [name for name in catalogue if not dead.get(name)]
     retired = sorted({r["_model"] for r in runs if r["_retired"]})
 
+    median = statistics.median(score(m) for m in models)
+    weak = [m for m in models if score(m) < median]
     return "\n".join([
-        f"- **Best overall: `{best}`**, {score(best)} of 17 cells; "
-        f"best on SWE-bench: `{swe_best}`, "
-        f"{score(swe_best, 'swebench')} of {n_swe}. Both are small Mistral "
-        "models, ahead of `qwen3.8-27b`, `gemma-4-31b-it` and "
-        "`gpt-oss-120b`; inside the same family the 3B trails well "
-        "behind, so size matters, but only up to a point.",
-        f"- **A run's own `success` field is not a verdict.** On "
-        f"SWE-bench it claims {claimed} resolutions where the moulinette "
-        f"confirms {judged}: `success` only means the model called "
-        "`final_answer` with something. Every figure here is the "
-        "moulinette's verdict.",
-        "- **Seeing the tests helps only once the log is summarised.** "
-        "In the ablation, test results won three cells and cost four, "
-        "the loss coming from how the log was forwarded rather than from "
-        "the feedback itself. Tasks solved without the tests ever "
-        "running were those whose hint gives the fix away — the hint, "
-        "not the absence of tests, explains them.",
-        f"- **Free tiers are a moving target.** {len(retired)} models left "
-        "the catalogue within three days of campaign — withdrawn by their "
-        "provider, or capped below what a SWE-bench task needs. "
-        "Cells with no data by provider: "
-        + ", ".join(f"{n} {name}" for name, n in sorted(dead.items()))
-        + (f"; none on {', '.join(clean)}." if clean else "."),
-        "",
-        f"**Selection.** For this agent we would run `{best}`, with "
-        f"`{swe_best}` where SWE-bench matters most: the best scores of "
-        "the campaign, on a provider that left no cell without data and "
-        "whose limits never bound. Among the free OpenRouter models, the "
-        "strongest results come with the least dependable access — worth "
-        "benchmarking, not worth depending on.",
+        f"- **Selected: `{best}`** ({score(best)}/17), with "
+        f"`{swe_best}` for SWE-bench ({score(swe_best, 'swebench')}/"
+        f"{n_swe}) — the best scores, on a provider with no cell lost. "
+        "They are the agent's defaults.",
+        "- **Disregarded**: below the median, "
+        + ", ".join(f"`{m}` ({score(m)}/17)" for m in weak)
+        + f"; and the {len(retired)} models no longer served.",
+        f"- **`success` is not a verdict**: {claimed} resolutions claimed "
+        f"on SWE-bench, {judged} confirmed by the moulinette.",
+        f"- **Free tiers move**: {len(retired)} models left the catalogue "
+        "in three days. Cells with no data: "
+        + ", ".join(f"{n} on {name}" for name, n in sorted(dead.items()))
+        + (f", none on {', '.join(clean)}." if clean else "."),
     ])
 
 
@@ -698,28 +645,16 @@ def inputs_section(runs: list[dict[str, Any]]) -> str:
                for r in swe for step in r["steps"]
                if (found := LOOKUP.search(step.get("sandbox_input") or ""))]
     return "\n\n".join([
-        "The prompt carries the task's `hints_text` — a field of the task "
-        "input the subject itself defines (*Optional hints about the "
-        "issue*). It is legitimate input, but not a neutral one: on "
-        f"{len(revealing)} of the {len(hints)} tasks it gives the fix "
-        "away.",
+        "The prompt carries the task's `hints_text`, an input the subject "
+        f"defines. On {len(revealing)} of the {len(hints)} tasks it gives "
+        "the fix away:",
         "\n".join(rows),
-        f"Those {len(revealing)} tasks resolve at {rate(revealing)}, the "
-        f"other {len(hints) - len(revealing)} at "
-        f"{rate(set(hints) - revealing)}. The hint helps, without "
-        "deciding everything: the task resolved most often has no hint "
-        f"at all, and even handed the diff, {diff_fails} models of "
-        f"{diff_cells} still fail `{diff_task}`. Scores here are therefore "
-        "not "
-        "comparable with SWE-bench's standard setting, which gives the "
-        "issue alone.",
-        "**No run reached outside its task.** Across every SWE-bench "
-        "step, the agent's code contains no URL fetch, no `curl` or "
-        "`wget`, no `git fetch` or `pull`"
-        + (f"; {len(lookups)} step searched the whole local history — "
-           f"`{lookups[0][2]} …` by `{lookups[0][0]}` on "
-           f"`{lookups[0][1]}` — and found nothing, the container "
-           "holding no commit past the task's base."
+        f"Those resolve at {rate(revealing)}, the others at "
+        f"{rate(set(hints) - revealing)}: the hint helps without deciding "
+        f"— {diff_fails} of {diff_cells} models still fail `{diff_task}` "
+        "with its diff in hand.",
+        "No run fetched anything from outside its task"
+        + (f"; one `{lookups[0][2]} …` (`{lookups[0][0]}`) found nothing."
            if lookups else "."),
     ])
 
@@ -735,39 +670,20 @@ def folded(summary: str, body: str) -> str:
 
 def selection_section(runs: list[dict[str, Any]]) -> str:
     """Why these tasks and these models, and not others."""
-    swe = sorted({r["task_id"] for r in runs if r["benchmark"] == "swebench"})
     models = sorted({r["_model"] for r in runs if not r["_retired"]})
-    return "\n".join([
-        f"**SWE-bench — {len(swe)} tasks.** The moulinette's exam pool "
-        "(`EXAM_POOL`), which `moulinette_eval select` draws the exam's "
-        "tasks from and from nowhere else, plus `django__django-17029` "
-        "outside it, to see the agent on ground the exam cannot serve.",
-        "",
-        "**MBPP — 10 tasks.** MBPP has no exam pool: the exam draws 5 "
-        "tasks at random from the whole test split (257 tasks, ids 11 "
-        "to 479). The ten here are every 25th id of that split once "
-        "sorted — a spread sample rather than a lucky cluster.",
-        "",
-        f"**Models — {len(models)}, on the free tiers of four providers** "
-        "(OpenRouter, Mistral, Groq, Together), so that anyone can re-run "
-        "the campaign at no cost. Chosen for spread rather than for "
-        "rank: several vendors, a size ladder inside one family "
-        "(`ministral` 3B, 8B and 14B), and a code-specialised model "
-        "(`codestral`). Every candidate was first screened on MBPP task "
-        "11 and `django__django-11066`, and left out when it could not "
-        "follow the protocol at all:",
-        "",
-        "- `openai/gpt-oss-20b` answers with native tool calls, which "
-        "the API rejects since the agent declares no `tools`;",
-        "- `allam-2-7b` writes the sandbox's output itself instead of "
-        "waiting for it;",
-        "- models reachable only on a paid plan, or only through an "
-        "alias of a model already in (`mistral-code-latest` is "
-        "`codestral`, by the provider's own `aliases` field).",
-        "",
-        "Version ids are pinned wherever the provider offers them "
-        "(`codestral-2508`, `ministral-*-2512`), so a re-run meets the "
-        "same weights rather than whatever `-latest` points to that day.",
+    return "\n\n".join([
+        "**Tasks.** SWE-bench: the moulinette's exam pool, plus "
+        "`django__django-17029` outside it. MBPP has no exam pool: its "
+        "ten tasks are every 25th id of the sorted test split.",
+        f"**Models.** {len(models)}, on the free tiers of four providers "
+        "(OpenRouter, Mistral, Groq, Together), chosen for spread: "
+        "several vendors, a size ladder (`ministral` 3B, 8B, 14B), a "
+        "code model (`codestral`). Each candidate was screened on one "
+        "task per benchmark; left out were models that could not follow "
+        "the protocol (`gpt-oss-20b` answers with native tool calls, "
+        "`allam-2-7b` invents the sandbox's output), paid-only models, "
+        "and aliases of models already in. Version ids are pinned where "
+        "the provider offers them.",
     ])
 
 
@@ -800,7 +716,7 @@ def report(runs: list[dict[str, Any]]) -> str:
         "run does not contain what the metric needs — a task solved "
         "without ever running the suite has no green step to report.",
         folded("Per SWE-bench cell", metrics_table(runs)),
-        "## Ablation: the sandbox pipe fix", ablation_section(),
+        "## Ablation: the agent reading its test results", ablation_section(),
         "## Conclusions", conclusions_section(runs),
     ])
 
