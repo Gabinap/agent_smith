@@ -1,0 +1,186 @@
+{
+  "ablation/pipe_deadlock/before/codestral-2508__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T02:32:17",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T13:01:45.756393"
+  },
+  "ablation/pipe_deadlock/before/codestral-2508__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:33:10",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:04:17.027030"
+  },
+  "ablation/pipe_deadlock/before/codestral-2508__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:34:20",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:07:32.139565"
+  },
+  "ablation/pipe_deadlock/before/dots-studio-dots-3-note-preview:free__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T02:32:20",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-24T12:22:36.242823"
+  },
+  "ablation/pipe_deadlock/before/dots-studio-dots-3-note-preview:free__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:33:59",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:25:15.489535"
+  },
+  "ablation/pipe_deadlock/before/dots-studio-dots-3-note-preview:free__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:36:13",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T12:31:13.992277"
+  },
+  "ablation/pipe_deadlock/before/google-gemma-4-31b-it:free__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T02:32:25",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T08:02:28.319490"
+  },
+  "ablation/pipe_deadlock/before/ministral-14b-2512__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:33:00",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:10:56.539808"
+  },
+  "ablation/pipe_deadlock/before/ministral-14b-2512__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:34:49",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:13:21.983127"
+  },
+  "ablation/pipe_deadlock/before/ministral-14b-2512__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:38:03",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:18:39.855492"
+  },
+  "ablation/pipe_deadlock/before/ministral-3b-2512__django__django-17029.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:32:51",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:34:58.491284"
+  },
+  "ablation/pipe_deadlock/before/ministral-3b-2512__sympy__sympy-13480.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T02:35:35",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": "RESOLVED_NO",
+    "run_timestamp": "2026-09-24T13:35:44.090464"
+  },
+  "ablation/pipe_deadlock/before/ministral-8b-2512__pydata__xarray-4629.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:32:57",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:19:40.487139"
+  },
+  "ablation/pipe_deadlock/before/ministral-8b-2512__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T02:33:33",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": "RESOLVED_NO",
+    "run_timestamp": "2026-09-24T13:24:41.495964"
+  },
+  "ablation/pipe_deadlock/before/ministral-8b-2512__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:36:22",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:29:10.793643"
+  },
+  "ablation/pipe_deadlock/before/ministral-8b-2512__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:39:54",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T13:34:06.123006"
+  },
+  "ablation/pipe_deadlock/before/nex-agi-nex-n2.5-mini:free__scikit-learn__scikit-learn-13439.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T02:33:37",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:47:53.893542"
+  },
+  "ablation/pipe_deadlock/before/nex-agi-nex-n2.5-mini:free__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:37:09",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T04:50:46.047518"
+  },
+  "ablation/pipe_deadlock/before/nex-agi-nex-n2.5-mini:free__sympy__sympy-18189.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T02:39:57",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:56:19.584811"
+  },
+  "ablation/pipe_deadlock/before/openai-gpt-oss-120b__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:37:55",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-25T08:49:03.884829"
+  },
+  "ablation/pipe_deadlock/before/poolside-laguna-s-2.1:free__sympy__sympy-13480.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-27T02:37:59",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-25T04:26:23.641416"
+  },
+  "ablation/pipe_deadlock/before/qwen-qwen3.8-27b__sympy__sympy-13480.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:38:45",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T14:02:59.548195"
+  },
+  "ablation/pipe_deadlock/before/qwen-qwen3.8-27b__sympy__sympy-18189.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-27T02:41:48",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-24T14:15:26.180911"
+  }
+}

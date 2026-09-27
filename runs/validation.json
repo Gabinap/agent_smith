@@ -407,62 +407,6 @@
     "resolution": null,
     "run_timestamp": "2026-09-24T10:44:12.219358"
   },
-  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__django__django-11066.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-27T00:03:11",
-    "metrics": "VALID",
-    "passed": false,
-    "resolution": null,
-    "run_timestamp": "2026-09-26T16:06:04.130206"
-  },
-  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__django__django-17029.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-27T00:03:40",
-    "metrics": "VALID",
-    "passed": false,
-    "resolution": null,
-    "run_timestamp": "2026-09-26T16:06:32.294440"
-  },
-  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__pydata__xarray-4629.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-27T00:03:08",
-    "metrics": "VALID",
-    "passed": false,
-    "resolution": null,
-    "run_timestamp": "2026-09-26T16:06:39.401636"
-  },
-  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__scikit-learn__scikit-learn-13439.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-27T00:03:47",
-    "metrics": "VALID",
-    "passed": false,
-    "resolution": null,
-    "run_timestamp": "2026-09-26T16:06:46.497720"
-  },
-  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__sympy__sympy-13480.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-27T00:05:34",
-    "metrics": "VALID",
-    "passed": false,
-    "resolution": null,
-    "run_timestamp": "2026-09-26T16:06:53.568066"
-  },
-  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__sympy__sympy-14711.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-27T00:04:49",
-    "metrics": "VALID",
-    "passed": false,
-    "resolution": null,
-    "run_timestamp": "2026-09-26T16:07:00.621269"
-  },
-  "runs/google-gemini-2.5-flash-lite/google-gemini-2.5-flash-lite__sympy__sympy-18189.json": {
-    "correctness": "FAILED",
-    "judged_at": "2026-09-27T00:07:19",
-    "metrics": "VALID",
-    "passed": false,
-    "resolution": null,
-    "run_timestamp": "2026-09-26T16:07:07.703195"
-  },
   "runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__django__django-11066.json": {
     "correctness": "PASSED",
     "judged_at": "2026-09-25T16:20:09",

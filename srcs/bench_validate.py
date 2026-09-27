@@ -83,12 +83,12 @@ def judge(run_path: pathlib.Path, run: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def load_cache() -> dict[str, Any]:
+def load_cache(cache_file: pathlib.Path = VALIDATION) -> dict[str, Any]:
     """The verdicts recorded so far, empty when there are none."""
-    if not VALIDATION.is_file():
+    if not cache_file.is_file():
         return {}
     try:
-        return dict(json.loads(VALIDATION.read_text(encoding="utf-8")))
+        return dict(json.loads(cache_file.read_text(encoding="utf-8")))
     except (json.JSONDecodeError, OSError, TypeError):
         return {}
 
@@ -118,13 +118,20 @@ def main() -> None:
                         help="judge every run again, ignoring the cache")
     parser.add_argument("--jobs", type=int, default=4,
                         help="tasks judged in parallel (default 4)")
+    # Both default to the campaign; the ablation keeps its earlier runs
+    # outside runs/ and judges them into a cache of its own.
+    parser.add_argument("--runs", type=pathlib.Path, default=None,
+                        help="directory of runs to judge (default: runs/)")
+    parser.add_argument("--cache", type=pathlib.Path, default=VALIDATION,
+                        help="verdict cache to read and write")
     args = parser.parse_args()
+    cache_file = args.cache.resolve()
 
-    runs = iter_runs()
+    runs = iter_runs(args.runs.resolve() if args.runs else None)
     if not runs:
         raise SystemExit("no run to validate: launch the matrix first")
 
-    cache = {} if args.force else load_cache()
+    cache = {} if args.force else load_cache(cache_file)
     todo = []
     for path in runs:
         try:
@@ -158,12 +165,12 @@ def main() -> None:
                             f"/{verdict.get('metrics')}")
                 print(f"[{done}/{len(todo)}] {key}: {label}", flush=True)
 
-    VALIDATION.parent.mkdir(parents=True, exist_ok=True)
-    VALIDATION.write_text(json.dumps(cache, indent=2, sort_keys=True) + "\n",
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+    cache_file.write_text(json.dumps(cache, indent=2, sort_keys=True) + "\n",
                           encoding="utf-8")
     passed = sum(1 for v in cache.values() if v.get("passed"))
     print(f"\n{passed}/{len(cache)} cell(s) passed "
-          f"-> {VALIDATION.relative_to(ROOT)}")
+          f"-> {cache_file.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

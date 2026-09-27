@@ -26,7 +26,8 @@ import subprocess
 import sys
 from typing import Any
 
-from paths import ROOT, RUNS, VALIDATION, iter_runs
+from bench_matrix import CATALOG, model_to_url
+from paths import ROOT, RUNS, VALIDATION, iter_runs, run_path
 
 NA = "—"
 # No API call answers this fast: a mean below it means the run predates
@@ -60,20 +61,39 @@ def load_verdicts() -> dict[str, dict[str, Any]]:
 
 
 def load_runs(runs_dir: pathlib.Path) -> list[dict[str, Any]]:
-    """Return every solution file under `runs_dir`, oldest name first."""
+    """Return every solution file under `runs_dir`, oldest name first.
+
+    A run that died on its very first call has no step, and so no model
+    name inside it. It is kept all the same: dropping it hid exactly the
+    hardest failures — a provider withdrawing a model, a 402 on the
+    first request — from the column that exists to count them. Its model
+    is recovered from the file name, which the runner builds from the
+    same slug as every other run of that model.
+    """
     verdicts = load_verdicts()
-    runs = []
+    loaded = []
     for path in iter_runs(runs_dir):
         try:
             run = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             print(f"<!-- skipped {path.name}: not valid json -->")
             continue
-        if not run.get("steps"):
-            print(f"<!-- skipped {path.name}: no step to read -->")
-            continue
+        loaded.append((path, run))
+
+    # slug -> model id, learned from the runs that did record a step.
+    names = {
+        path.stem.split("__", 1)[0]: run["steps"][0].get("model_name")
+        for path, run in loaded if run.get("steps")
+    }
+    catalogue = set(model_to_url())
+
+    runs = []
+    for path, run in loaded:
+        slug_ = path.stem.split("__", 1)[0]
         run["_file"] = str(path.relative_to(ROOT))
-        run["_model"] = run["steps"][0].get("model_name", "unknown")
+        run["_model"] = (run["steps"][0].get("model_name")
+                         if run.get("steps") else names.get(slug_) or slug_)
+        run["_retired"] = run["_model"] not in catalogue
         # A verdict judged against an older run is not this run's
         # verdict: the entry is dropped rather than reused.
         entry = verdicts.get(run["_file"], {})
@@ -206,27 +226,43 @@ def scoreboard(runs: list[dict[str, Any]]) -> str:
         b: {t for r in runs if r["benchmark"] == b for t in [r["task_id"]]}
         for b in ("swebench", "mbpp")
     }
-    rows = [
+    header = [
         f"| Model | SWE-bench (/{len(counts['swebench'])}) "
         f"| MBPP (/{len(counts['mbpp'])}) | Total | Cells with no data |",
         "|---|---:|---:|---:|---:|",
     ]
-    for model in sorted({run["_model"] for run in runs}):
-        mine = [r for r in runs if r["_model"] == model]
-        line = []
-        for b in ("swebench", "mbpp"):
-            ok = sum(1 for r in mine
-                     if r["benchmark"] == b and outcome(r) == "pass")
-            line.append(ok)
-        dead = sum(1 for r in mine if r.get("error"))
-        rows.append(
-            f"| {model} | {line[0]} | {line[1]} "
-            f"| **{sum(line)}** | {dead or NA} |"
-        )
-    total = sum(1 for r in runs if outcome(r) == "pass")
-    rows.append(f"| **all models** | | | **{total} / {len(runs)}** | "
-                f"{sum(1 for r in runs if r.get('error'))} |")
-    return "\n".join(rows)
+
+    def rows_for(group: list[dict[str, Any]]) -> list[str]:
+        out = []
+        for model in sorted({run["_model"] for run in group}):
+            mine = [r for r in group if r["_model"] == model]
+            line = [sum(1 for r in mine
+                        if r["benchmark"] == b and outcome(r) == "pass")
+                    for b in ("swebench", "mbpp")]
+            dead = sum(1 for r in mine if r.get("error"))
+            out.append(f"| {model} | {line[0]} | {line[1]} "
+                       f"| **{sum(line)}** | {dead or NA} |")
+        passed = sum(1 for r in group if outcome(r) == "pass")
+        dead = sum(1 for r in group if r.get("error"))
+        out.append(f"| **all** | | | **{passed} / {len(group)}** "
+                   f"| {dead or NA} |")
+        return out
+
+    current = [r for r in runs if not r["_retired"]]
+    retired = [r for r in runs if r["_retired"]]
+    parts = ["\n".join(header + rows_for(current))]
+    if retired:
+        # Kept, not hidden: their cells were run while the models were
+        # served, and a model withdrawn mid-campaign is itself a finding
+        # about building on free tiers.
+        parts.append(
+            "Models that left the catalogue during the campaign — "
+            "withdrawn by their provider, beyond what the account could "
+            "pay for, or moved to another provider. Their cells ran while "
+            "they were catalogued, and are kept apart rather than "
+            "dropped:\n\n"
+            + "\n".join(header + rows_for(retired)))
+    return "\n\n".join(parts)
 
 
 def availability(runs: list[dict[str, Any]]) -> dict[str, tuple[int, int]]:
@@ -378,7 +414,8 @@ def budget_rows() -> str:
 
 def reproduce_section(runs: list[dict[str, Any]]) -> str:
     """Everything needed to run this campaign again elsewhere."""
-    models = sorted({run["_model"] for run in runs})
+    models = sorted({r["_model"] for r in runs if not r["_retired"]})
+    retired = sorted({r["_model"] for r in runs if r["_retired"]})
     stamps = sorted(run["timestamp"] for run in runs if run.get("timestamp"))
     swe = sorted({r["task_id"] for r in runs if r["benchmark"] == "swebench"})
     mbpp = sorted({r["task_id"] for r in runs if r["benchmark"] == "mbpp"},
@@ -388,9 +425,11 @@ def reproduce_section(runs: list[dict[str, Any]]) -> str:
         f"- **Commit**: `{commit()}` — "
         f"**Python**: {sys.version.split()[0]} — "
         f"**platform**: {platform.system()} {platform.machine()}",
-        f"- **Campaign**: {len(runs)} cells, "
-        f"{len(models)} models x ({len(swe)} SWE-bench + {len(mbpp)} MBPP) "
-        f"tasks, run between {stamps[0][:16] if stamps else NA} and "
+        f"- **Campaign**: {len(models)} catalogued models x "
+        f"({len(swe)} SWE-bench + {len(mbpp)} MBPP) tasks, plus "
+        f"{len(retired)} that left the catalogue during it — "
+        f"{len(runs)} cells in all, run between "
+        f"{stamps[0][:16] if stamps else NA} and "
         f"{stamps[-1][:16] if stamps else NA}",
         f"- **Verdicts**: {judged}/{len(runs)} cells judged by "
         "`moulinette_eval validate`; the Result column is its verdict, "
@@ -398,6 +437,8 @@ def reproduce_section(runs: list[dict[str, Any]]) -> str:
         "- **Models** (provider and key names in "
         "`srcs/call_llm/providers.json`, secrets in `.env`): "
         + ", ".join(f"`{m}`" for m in models),
+        "- **Left the catalogue during the campaign**: "
+        + (", ".join(f"`{m}`" for m in retired) or NA),
         f"- **SWE-bench tasks**: {', '.join(f'`{t}`' for t in swe)}",
         f"- **MBPP tasks**: {', '.join(t.split('-')[-1] for t in mbpp)} "
         "(every 25th id of the sorted test split)",
@@ -424,24 +465,267 @@ def reproduce_section(runs: list[dict[str, Any]]) -> str:
     ])
 
 
+ABLATION = ROOT / "ablation" / "pipe_deadlock"
+BUDGET_STOP = "Input token limit reached"
+
+
+def ablation_pairs() -> list[dict[str, Any]]:
+    """Each earlier run of the ablation next to its re-run in runs/.
+
+    The earlier runs keep their own verdict cache; a pair counts only
+    when both sides produced data, since a re-run that died on a
+    withdrawn model or a quota measures the provider, not the change.
+    """
+    before_dir = ABLATION / "before"
+    if not before_dir.is_dir():
+        return []
+    verdicts_before = json.loads(
+        (ABLATION / "validation.json").read_text(encoding="utf-8"))
+    verdicts_after = load_verdicts()
+    pairs = []
+    for path in iter_runs(before_dir):
+        before = json.loads(path.read_text(encoding="utf-8"))
+        slug_ = path.stem.split("__", 1)[0]
+        after_path = run_path(slug_, str(before["task_id"]), "swebench")
+        if not after_path.is_file():
+            continue
+        after = json.loads(after_path.read_text(encoding="utf-8"))
+        pair = {
+            "model": slug_, "task": before["task_id"],
+            "before": before, "after": after,
+            "before_file": str(path.relative_to(ROOT)),
+            "after_file": str(after_path.relative_to(ROOT)),
+            "usable": not before.get("error") and not after.get("error"),
+        }
+        vb = verdicts_before.get(pair["before_file"], {})
+        va = verdicts_after.get(pair["after_file"], {})
+        pair["passed_before"] = bool(vb.get("passed"))
+        pair["passed_after"] = bool(va.get("passed"))
+        pairs.append(pair)
+    return pairs
+
+
+def ablation_section() -> str:
+    """Before/after of the sandbox pipe fix, measured on the same cells."""
+    pairs = ablation_pairs()
+    if not pairs:
+        return f"{NA} — no earlier runs under `ablation/pipe_deadlock/`."
+    ok = [p for p in pairs if p["usable"]]
+    gained = sum(1 for p in ok if p["passed_after"] and not p["passed_before"])
+    lost = sum(1 for p in ok if p["passed_before"] and not p["passed_after"])
+
+    def med(side: str, field: str) -> float:
+        return float(statistics.median(p[side][field] for p in ok))
+
+    def stops(side: str) -> int:
+        return sum(1 for p in ok if p[side]["stop_reason"] == BUDGET_STOP)
+
+    summary = "\n".join([
+        "| | Before | After |",
+        "|---|---:|---:|",
+        f"| Cells resolved (of {len(ok)}) "
+        f"| {sum(p['passed_before'] for p in ok)} "
+        f"| {sum(p['passed_after'] for p in ok)} |",
+        f"| Gained / lost | | +{gained} / −{lost} |",
+        f"| Median input tokens | {med('before', 'total_input_tokens'):,.0f} "
+        f"| {med('after', 'total_input_tokens'):,.0f} |",
+        f"| Median iterations | {med('before', 'iterations'):.0f} "
+        f"| {med('after', 'iterations'):.0f} |",
+        f"| Stopped on the input budget | {stops('before')} "
+        f"| {stops('after')} |",
+    ])
+    rows = [
+        "| Model | Task | Before | After | Input tokens | Stopped because "
+        "| Evidence |",
+        "|---|---|---|---|---:|---|---|",
+    ]
+    for p in pairs:
+        if not p["usable"]:
+            rows.append(f"| {p['model']} | {p['task']} | {NA} | {NA} | {NA} "
+                        "| excluded: the re-run produced no data | "
+                        f"[before]({p['before_file']}) |")
+            continue
+        rows.append(
+            f"| {p['model']} | {p['task']} "
+            f"| {'pass' if p['passed_before'] else 'fail'} "
+            f"| {'pass' if p['passed_after'] else 'fail'} "
+            f"| {p['before']['total_input_tokens']:,} → "
+            f"{p['after']['total_input_tokens']:,} "
+            f"| {p['after']['stop_reason']} "
+            f"| [before]({p['before_file']}) · [after]({p['after_file']}) |")
+    return "\n\n".join([
+        "**The change.** The sandbox runs the model's code in a child "
+        "process and returns the result through a pipe. The parent used "
+        "to wait for the child to exit before reading, but a child whose "
+        "result outgrows the pipe's buffer cannot exit until someone "
+        "reads it: the two waited on each other until the time limit, "
+        "which then reported a timeout. On a large test log — "
+        "`run_tests` returns 356,000 characters on "
+        "`sympy__sympy-13480` — the agent got that timeout instead of "
+        "its test results. The fix reads before joining.",
+        "**Held constant.** Same models, same tasks, same prompts, "
+        "temperature 0. Between the two series the only other change to "
+        "the agent is a guard that stops an iteration forecast to overrun "
+        "the time budget; it concerns the two cells that stopped on "
+        "*Time limit reached* before. Six of the 23 cells are left out: "
+        "their re-run produced no data (a model withdrawn from its "
+        "provider, a token-per-minute cap).",
+        summary,
+        f"**What it shows.** Seeing its test results let the agent solve "
+        f"{gained} cells it had failed blind. But on sympy, pytest and "
+        "scikit-learn the agent receives the test log whole: "
+        "`summarise_tests` only recognises unittest's summary, and "
+        "otherwise forwards the full output. That log is resent with "
+        "the conversation on every turn, so the median input tripled and "
+        f"{stops('after')} runs that had solved their task now stopped on "
+        f"their input budget — the {lost} cells lost. Net, the fix is a "
+        "wash on this sample, and within the spread temperature 0 already "
+        "shows between identical calls. The lesson is the next change it "
+        "points to: test feedback helps only once it is summarised for "
+        "every runner, which this campaign's code does not yet do.",
+        folded("Per cell, with both solution.json files",
+               "\n".join(rows)),
+    ])
+
+
+def conclusions_section(runs: list[dict[str, Any]]) -> str:
+    """What the data supports, and the model it would lead us to pick."""
+    current = [r for r in runs if not r["_retired"]]
+    catalogue = json.loads(CATALOG.read_text(encoding="utf-8"))
+    provider = {m: name for name, p in catalogue.items() for m in p["model"]}
+
+    def score(model: str, bench: str | None = None) -> int:
+        return sum(1 for r in current if r["_model"] == model
+                   and (bench is None or r["benchmark"] == bench)
+                   and outcome(r) == "pass")
+
+    models = sorted({r["_model"] for r in current},
+                    key=lambda m: (-score(m), -score(m, "swebench"), m))
+    best, swe_best = models[0], max(models, key=lambda m: score(m, "swebench"))
+    n_swe = len({r["task_id"] for r in current
+                 if r["benchmark"] == "swebench"})
+
+    claimed = sum(1 for r in current
+                  if r["benchmark"] == "swebench" and r.get("success"))
+    judged = sum(1 for r in current
+                 if r["benchmark"] == "swebench" and outcome(r) == "pass")
+    dead: dict[str, int] = {}
+    for r in current:
+        if r.get("error"):
+            name = provider.get(r["_model"], "?")
+            dead[name] = dead.get(name, 0) + 1
+    clean = [name for name in catalogue if not dead.get(name)]
+    retired = sorted({r["_model"] for r in runs if r["_retired"]})
+
+    return "\n".join([
+        f"- **Best overall: `{best}`**, {score(best)} of 17 cells; "
+        f"best on SWE-bench: `{swe_best}`, "
+        f"{score(swe_best, 'swebench')} of {n_swe}. Both are small Mistral "
+        "models, ahead of `qwen3.8-27b`, `gemma-4-31b-it` and "
+        "`gpt-oss-120b`; inside the same family the 3B trails well "
+        "behind, so size matters, but only up to a point.",
+        f"- **A run's own `success` field is not a verdict.** On "
+        f"SWE-bench it claims {claimed} resolutions where the moulinette "
+        f"confirms {judged}: `success` only means the model called "
+        "`final_answer` with something. Every figure here is the "
+        "moulinette's verdict.",
+        "- **Test feedback is not what separates success from failure** "
+        "— see the ablation: seeing the tests won three cells and cost "
+        "four, the loss coming from how the log was forwarded rather "
+        "than from the feedback itself.",
+        f"- **Free tiers are a moving target.** {len(retired)} models left "
+        "the catalogue within three days of campaign — withdrawn by their "
+        "provider, or capped below what a SWE-bench task needs. "
+        "Cells with no data by provider: "
+        + ", ".join(f"{n} {name}" for name, n in sorted(dead.items()))
+        + (f"; none on {', '.join(clean)}." if clean else "."),
+        "",
+        f"**Selection.** For this agent we would run `{best}`, with "
+        f"`{swe_best}` where SWE-bench matters most: the best scores of "
+        "the campaign, on a provider that left no cell without data and "
+        "whose limits never bound. Among the free OpenRouter models, the "
+        "strongest results come with the least dependable access — worth "
+        "benchmarking, not worth depending on.",
+    ])
+
+
+def folded(summary: str, body: str) -> str:
+    """`body` behind a disclosure: there for the corrector, not in the way.
+
+    The blank lines around the body are load-bearing — without them a
+    Markdown table inside <details> is rendered as raw pipes.
+    """
+    return f"<details>\n<summary>{summary}</summary>\n\n{body}\n\n</details>"
+
+
+def selection_section(runs: list[dict[str, Any]]) -> str:
+    """Why these tasks and these models, and not others."""
+    swe = sorted({r["task_id"] for r in runs if r["benchmark"] == "swebench"})
+    models = sorted({r["_model"] for r in runs if not r["_retired"]})
+    return "\n".join([
+        f"**SWE-bench — {len(swe)} tasks.** The moulinette's exam pool "
+        "(`EXAM_POOL`), which `moulinette_eval select` draws the exam's "
+        "tasks from and from nowhere else, plus `django__django-17029` "
+        "outside it, to see the agent on ground the exam cannot serve.",
+        "",
+        "**MBPP — 10 tasks.** MBPP has no exam pool: the exam draws 5 "
+        "tasks at random from the whole test split (257 tasks, ids 11 "
+        "to 479). The ten here are every 25th id of that split once "
+        "sorted — a spread sample rather than a lucky cluster.",
+        "",
+        f"**Models — {len(models)}, on the free tiers of four providers** "
+        "(OpenRouter, Mistral, Groq, Together), so that anyone can re-run "
+        "the campaign at no cost. Chosen for spread rather than for "
+        "rank: several vendors, a size ladder inside one family "
+        "(`ministral` 3B, 8B and 14B), and a code-specialised model "
+        "(`codestral`). Every candidate was first screened on MBPP task "
+        "11 and `django__django-11066`, and left out when it could not "
+        "follow the protocol at all:",
+        "",
+        "- `openai/gpt-oss-20b` answers with native tool calls, which "
+        "the API rejects since the agent declares no `tools`;",
+        "- `allam-2-7b` writes the sandbox's output itself instead of "
+        "waiting for it;",
+        "- models reachable only on a paid plan, or only through an "
+        "alias of a model already in (`mistral-code-latest` is "
+        "`codestral`, by the provider's own `aliases` field).",
+        "",
+        "Version ids are pinned wherever the provider offers them "
+        "(`codestral-2508`, `ministral-*-2512`), so a re-run meets the "
+        "same weights rather than whatever `-latest` points to that day.",
+    ])
+
+
 def report(runs: list[dict[str, Any]]) -> str:
-    """Assemble every section, in the order a reader needs them."""
+    """Assemble every section, in the order a reader needs them.
+
+    The per-cell tables are folded: the grid requires them — the
+    corrector checks a solution.json against its row — but at 187 rows
+    they buried the summary a reader wants first.
+    """
     return "\n\n".join([
         "# Benchmark report",
         "## How to reproduce", reproduce_section(runs),
+        "## Selection rationale", selection_section(runs),
         "## Summary", scoreboard(runs),
         "> `pass` means the moulinette returned both `Correctness: "
         "PASSED` and `Metrics: VALID`. `fail (budget)` means the answer "
         "was correct but a budget was overrun, which the moulinette "
         "counts as a failure.",
-        "## SWE-bench results", results_table(runs, "swebench"),
-        "## MBPP results", results_table(runs, "mbpp"),
         "## Provider reliability", reliability_table(runs),
-        "## Intermediary metrics", metrics_table(runs),
+        "## Results per cell",
+        folded("SWE-bench — every (model, task) cell, with the "
+               "solution.json behind it", results_table(runs, "swebench")),
+        folded("MBPP — every (model, task) cell, with the solution.json "
+               "behind it", results_table(runs, "mbpp")),
+        "## Intermediary metrics",
         "> SWE-bench only: these metrics read a unified diff and a test "
         "suite, which an MBPP cell has neither of. An em dash means the "
         "run does not contain what the metric needs — a task solved "
         "without ever running the suite has no green step to report.",
+        folded("Per SWE-bench cell", metrics_table(runs)),
+        "## Ablation: the sandbox pipe fix", ablation_section(),
+        "## Conclusions", conclusions_section(runs),
     ])
 
 
