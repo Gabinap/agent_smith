@@ -122,8 +122,8 @@ class SWEBench:
             })
             cli_agent.display_sandbox_tests(self.console,
                                             clean_run_tests(
-                                                self.sandbox_data.output),
-                                            message)
+                                                message),
+                                            )
             return
 
         self.sandbox_data.output = truncate_output(

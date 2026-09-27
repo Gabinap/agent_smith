@@ -114,13 +114,20 @@ def observation(error: str | None, output: str, repair: str = "") -> str:
         parts.append("Ran with no error and printed nothing.")
     return "\n".join(parts)
 
-TEST_FAILURE = re.compile(r"^(?:FAIL|ERROR): .*", re.MULTILINE)
 TEST_VERDICT = re.compile(
     r"^(?:Ran \d+ tests?|OK\b|FAILED\b).*", re.MULTILINE)
+TEST_FAILURE = re.compile(r"^(?:FAIL|ERROR): .*", re.MULTILINE)
 
 
 def summarise_tests(output: str, max_failures: int = 10) -> str:
-    """Return the verdict and what failed"""
+    """Keep the verdict and what failed, drop the build noise.
+
+    A Django suite prints locale generation, git status and teardown
+    around a two-line summary: 393 lines measured, of which 2 matter.
+    Sending the whole log would swamp the conversation, and sending
+    only "Test Failed" leaves the model without the one thing it needs
+    — which test failed.
+    """
     failures = TEST_FAILURE.findall(output)
     verdicts = TEST_VERDICT.findall(output)
 
@@ -128,7 +135,4 @@ def summarise_tests(output: str, max_failures: int = 10) -> str:
     if len(failures) > max_failures:
         lines.append(f"({len(failures) - max_failures} more failures...)")
     lines.extend(verdicts[-2:])
-
-    if lines:
-        return "\n".join(lines)
-    return "FAILED (couldn't parse output)" if "Traceback" in output or "Error" in output else "PASSED"
+    return "\n".join(lines) if lines else output
