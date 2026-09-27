@@ -2,7 +2,7 @@
 
 ## How to reproduce
 
-- **Commit**: `f2f509e` — **Python**: 3.10.19 — **platform**: Linux x86_64
+- **Commit**: `eea9512` — **Python**: 3.10.19 — **platform**: Linux x86_64
 - **Campaign**: 11 catalogued models x (7 SWE-bench + 10 MBPP) tasks, plus 3 that left the catalogue during it — 238 cells in all, run between 2026-09-24T02:05 and 2026-09-27T01:23
 - **Verdicts**: 236/238 cells judged by `moulinette_eval validate`; the Result column is its verdict, never the run's own `success` field
 - **Models** (provider and key names in `srcs/call_llm/providers.json`, secrets in `.env`): `Prism-ML/Ternary-Bonsai-27B`, `codestral-2508`, `dots-studio/dots-3-note-preview:free`, `google/gemma-4-31b-it:free`, `ministral-14b-2512`, `ministral-3b-2512`, `ministral-8b-2512`, `openai/gpt-oss-120b`, `poolside/laguna-s-2.1:free`, `qwen/qwen3.8-27b:free`, `stealth/space-bunny-alpha`
@@ -47,7 +47,7 @@ The prompt carries the task's `hints_text` — a field of the task input the sub
 
 | Task | `hints_text` | What it gives | Resolved |
 |---|---:|---|---:|
-| django__django-11066 | 2,075 chars | a link to the pull request that fixed it | 7/11 (64 %) |
+| django__django-11066 | 2,075 chars | a link to the upstream fix | 7/11 (64 %) |
 | django__django-17029 | 44 chars | discussion | 6/11 (55 %) |
 | pydata__xarray-4629 | 0 chars | — | 8/11 (73 %) |
 | scikit-learn__scikit-learn-13439 | 285 chars | discussion | 3/11 (27 %) |

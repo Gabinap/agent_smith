@@ -657,7 +657,7 @@ def conclusions_section(runs: list[dict[str, Any]]) -> str:
 REVEALING_HINTS = {
     "sympy__sympy-18189": "the fix's own diff",
     "sympy__sympy-13480": "the line and the change to make",
-    "django__django-11066": "a link to the pull request that fixed it",
+    "django__django-11066": "a link to the upstream fix",
 }
 # Code an agent should never need: network access, or history beyond
 # the task's base commit.
