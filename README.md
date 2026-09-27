@@ -134,13 +134,17 @@ matching task it finds in `cache/`.
 ```sh
 make bench                    # every catalogued model on the SWE-bench set
 make bench-mbpp               # the same, on the MBPP set
-make bench MODELS="codestral-latest,openai/gpt-oss-20b"
+make bench MODELS="codestral-2508,ministral-8b-2512"
+make validate                 # the moulinette's verdict on every run
 make graph                    # success rate per model, in the terminal
-make report                   # Markdown tables derived from runs/
+make report                   # writes BENCHMARK_REPORT.md from runs/
 ```
 
-Each (model, task) pair leaves one `runs/<model>__<task>.json`, and a
-re-run skips the pairs already done.
+Each (model, task) pair leaves one solution file, under
+`runs/<model>/` for SWE-bench and `runs/<model>/mbpp_task/` for MBPP,
+and a re-run skips the pairs already done. `make validate` caches the
+moulinette's verdicts in `runs/validation.json`; the report reads its
+results from there, never from a run's own `success` field.
 
 ## Checks
 
@@ -541,4 +545,22 @@ agent still runs its cleanup instead of leaking a container.
 
 ___
 # Benchmark results and analysis
+
+The full report is [BENCHMARK_REPORT.md](BENCHMARK_REPORT.md), generated
+from the runs by `make report`. It covers eleven models on the free tiers
+of four providers, against seven SWE-bench tasks and ten MBPP tasks, and
+holds:
+
+- **how to reproduce** the campaign — commit, budgets, temperature,
+  commands;
+- **why these tasks and models**, and why others were left out;
+- **what the agent is given** — including the task's `hints_text`,
+  which on three tasks gives the fix away, and a check that no run
+  reached outside its task;
+- **results** per model and per cell, each row linked to the
+  `solution.json` behind it, every verdict the moulinette's;
+- **provider reliability** and the **intermediary metrics**;
+- **an ablation** of the sandbox pipe fix, before and after, on the
+  same cells;
+- **conclusions**, and the model the data would lead us to choose.
 

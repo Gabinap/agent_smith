@@ -27,7 +27,7 @@ import sys
 from typing import Any
 
 from bench_matrix import CATALOG, model_to_url
-from paths import ROOT, RUNS, VALIDATION, iter_runs, run_path
+from paths import CACHE, ROOT, RUNS, VALIDATION, iter_runs, run_path
 
 NA = "—"
 # No API call answers this fast: a mean below it means the run predates
@@ -629,10 +629,12 @@ def conclusions_section(runs: list[dict[str, Any]]) -> str:
         f"confirms {judged}: `success` only means the model called "
         "`final_answer` with something. Every figure here is the "
         "moulinette's verdict.",
-        "- **Test feedback is not what separates success from failure** "
-        "— see the ablation: seeing the tests won three cells and cost "
-        "four, the loss coming from how the log was forwarded rather "
-        "than from the feedback itself.",
+        "- **Seeing the tests helps only once the log is summarised.** "
+        "In the ablation, test results won three cells and cost four, "
+        "the loss coming from how the log was forwarded rather than from "
+        "the feedback itself. Tasks solved without the tests ever "
+        "running were those whose hint gives the fix away — the hint, "
+        "not the absence of tests, explains them.",
         f"- **Free tiers are a moving target.** {len(retired)} models left "
         "the catalogue within three days of campaign — withdrawn by their "
         "provider, or capped below what a SWE-bench task needs. "
@@ -646,6 +648,79 @@ def conclusions_section(runs: list[dict[str, Any]]) -> str:
         "whose limits never bound. Among the free OpenRouter models, the "
         "strongest results come with the least dependable access — worth "
         "benchmarking, not worth depending on.",
+    ])
+
+
+# Tasks whose `hints_text` gives the fix away rather than discussing it:
+# read by hand from cache/swebench/, stated here so the report can
+# measure what they are worth.
+REVEALING_HINTS = {
+    "sympy__sympy-18189": "the fix's own diff",
+    "sympy__sympy-13480": "the line and the change to make",
+    "django__django-11066": "a link to the pull request that fixed it",
+}
+# Code an agent should never need: network access, or history beyond
+# the task's base commit.
+LOOKUP = re.compile(
+    r"https?://|\bcurl\b|\bwget\b|requests\.get|urllib"
+    r"|git\s+(?:fetch|pull|log\s+--all|show\s+[0-9a-f]{7,})", re.I)
+
+
+def inputs_section(runs: list[dict[str, Any]]) -> str:
+    """What the agent is given, and whether it reached for anything else."""
+    swe = [r for r in runs if not r["_retired"]
+           and r["benchmark"] == "swebench"]
+    hints = {
+        t: len(json.loads((CACHE / "swebench" / f"{t}.json")
+                          .read_text(encoding="utf-8")).get("hints_text")
+               or "")
+        for t in sorted({r["task_id"] for r in swe})
+    }
+
+    def rate(tasks: set[str]) -> str:
+        cells = [r for r in swe if r["task_id"] in tasks]
+        won = sum(1 for r in cells if outcome(r) == "pass")
+        return f"{won}/{len(cells)} ({100 * won / max(len(cells), 1):.0f} %)"
+
+    rows = ["| Task | `hints_text` | What it gives | Resolved |",
+            "|---|---:|---|---:|"]
+    for task, size in hints.items():
+        gives = REVEALING_HINTS.get(task, "discussion" if size else NA)
+        rows.append(f"| {task} | {size:,} chars | {gives} "
+                    f"| {rate({task})} |")
+    revealing = set(REVEALING_HINTS) & set(hints)
+    diff_task = "sympy__sympy-18189"
+    diff_fails = sum(1 for r in swe if r["task_id"] == diff_task
+                     and outcome(r) != "pass")
+    diff_cells = sum(1 for r in swe if r["task_id"] == diff_task)
+
+    lookups = [(r["_model"], r["task_id"], found.group(0))
+               for r in swe for step in r["steps"]
+               if (found := LOOKUP.search(step.get("sandbox_input") or ""))]
+    return "\n\n".join([
+        "The prompt carries the task's `hints_text` — a field of the task "
+        "input the subject itself defines (*Optional hints about the "
+        "issue*). It is legitimate input, but not a neutral one: on "
+        f"{len(revealing)} of the {len(hints)} tasks it gives the fix "
+        "away.",
+        "\n".join(rows),
+        f"Those {len(revealing)} tasks resolve at {rate(revealing)}, the "
+        f"other {len(hints) - len(revealing)} at "
+        f"{rate(set(hints) - revealing)}. The hint helps, without "
+        "deciding everything: the task resolved most often has no hint "
+        f"at all, and even handed the diff, {diff_fails} models of "
+        f"{diff_cells} still fail `{diff_task}`. Scores here are therefore "
+        "not "
+        "comparable with SWE-bench's standard setting, which gives the "
+        "issue alone.",
+        "**No run reached outside its task.** Across every SWE-bench "
+        "step, the agent's code contains no URL fetch, no `curl` or "
+        "`wget`, no `git fetch` or `pull`"
+        + (f"; {len(lookups)} step searched the whole local history — "
+           f"`{lookups[0][2]} …` by `{lookups[0][0]}` on "
+           f"`{lookups[0][1]}` — and found nothing, the container "
+           "holding no commit past the task's base."
+           if lookups else "."),
     ])
 
 
@@ -707,6 +782,7 @@ def report(runs: list[dict[str, Any]]) -> str:
         "# Benchmark report",
         "## How to reproduce", reproduce_section(runs),
         "## Selection rationale", selection_section(runs),
+        "## What the agent is given", inputs_section(runs),
         "## Summary", scoreboard(runs),
         "> `pass` means the moulinette returned both `Correctness: "
         "PASSED` and `Metrics: VALID`. `fail (budget)` means the answer "

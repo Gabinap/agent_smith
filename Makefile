@@ -34,7 +34,7 @@ graph:
 
 # the Markdown sections of BENCHMARK_REPORT.md, derived from runs/
 report:
-	uv run srcs/bench_report.py
+	uv run srcs/bench_report.py --output BENCHMARK_REPORT.md
 
 # one solution.json per (model, task); the runner dumps whatever task
 # of its set is missing, then skips the cells already done
