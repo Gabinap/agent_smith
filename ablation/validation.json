@@ -1,0 +1,674 @@
+{
+  "ablation/baseline/ministral-14b-2512__django__django-11066__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:20:08",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:17:53.168138"
+  },
+  "ablation/baseline/ministral-14b-2512__django__django-11066__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:20:41",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:46:46.531839"
+  },
+  "ablation/baseline/ministral-14b-2512__django__django-11066__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:21:12",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:25:05.429057"
+  },
+  "ablation/baseline/ministral-14b-2512__django__django-17029__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:21:42",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:20:15.869606"
+  },
+  "ablation/baseline/ministral-14b-2512__django__django-17029__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:22:13",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:55:54.718109"
+  },
+  "ablation/baseline/ministral-14b-2512__django__django-17029__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:22:42",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:27:33.036712"
+  },
+  "ablation/baseline/ministral-14b-2512__pydata__xarray-4629__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:23:14",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:22:29.131783"
+  },
+  "ablation/baseline/ministral-14b-2512__pydata__xarray-4629__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:23:45",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:58:18.048270"
+  },
+  "ablation/baseline/ministral-14b-2512__pydata__xarray-4629__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:24:19",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:29:44.585998"
+  },
+  "ablation/baseline/ministral-14b-2512__scikit-learn__scikit-learn-13439__r1.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:24:22",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:25:39.805511"
+  },
+  "ablation/baseline/ministral-14b-2512__scikit-learn__scikit-learn-13439__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:24:50",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:01:37.865379"
+  },
+  "ablation/baseline/ministral-14b-2512__scikit-learn__scikit-learn-13439__r3.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:24:53",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:34:21.863278"
+  },
+  "ablation/baseline/ministral-14b-2512__sympy__sympy-13480__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:25:37",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:29:35.391211"
+  },
+  "ablation/baseline/ministral-14b-2512__sympy__sympy-13480__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:26:21",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:07:02.852938"
+  },
+  "ablation/baseline/ministral-14b-2512__sympy__sympy-13480__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:27:03",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:38:07.616780"
+  },
+  "ablation/baseline/ministral-14b-2512__sympy__sympy-14711__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:27:33",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:33:44.466416"
+  },
+  "ablation/baseline/ministral-14b-2512__sympy__sympy-14711__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:28:02",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:12:53.844831"
+  },
+  "ablation/baseline/ministral-14b-2512__sympy__sympy-14711__r3.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:28:05",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:42:56.930332"
+  },
+  "ablation/baseline/ministral-14b-2512__sympy__sympy-18189__r1.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:28:08",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:38:24.676174"
+  },
+  "ablation/baseline/ministral-14b-2512__sympy__sympy-18189__r2.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:28:11",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:18:25.122078"
+  },
+  "ablation/baseline/ministral-14b-2512__sympy__sympy-18189__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:29:47",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:49:01.538476"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__django__django-11066__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:30:17",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:19:02.719844"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__django__django-11066__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:30:49",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:54:46.516737"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__django__django-11066__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:31:24",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:26:16.922944"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__django__django-17029__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:31:56",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:21:23.931289"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__django__django-17029__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:32:24",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:57:08.993029"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__django__django-17029__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:32:53",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:28:42.259428"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__pydata__xarray-4629__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:33:25",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:23:32.053510"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__pydata__xarray-4629__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:33:55",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:59:56.932708"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__pydata__xarray-4629__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:34:26",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:30:56.493748"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__scikit-learn__scikit-learn-13439__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:34:54",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:27:21.907708"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__scikit-learn__scikit-learn-13439__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:35:22",
+    "metrics": "INVALID",
+    "passed": false,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:04:04.860124"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__scikit-learn__scikit-learn-13439__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:35:50",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:36:11.080972"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__sympy__sympy-13480__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:36:32",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:31:36.608246"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__sympy__sympy-13480__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:37:14",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:09:47.147213"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__sympy__sympy-13480__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:37:57",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:39:50.524106"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__sympy__sympy-14711__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:38:25",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:35:59.740834"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__sympy__sympy-14711__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:38:54",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:14:47.873724"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__sympy__sympy-14711__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:39:24",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:45:40.811245"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__sympy__sympy-18189__r1.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:39:27",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:43:24.887214"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__sympy__sympy-18189__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:41:03",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:23:05.325321"
+  },
+  "ablation/fewer-tools/ministral-14b-2512__sympy__sympy-18189__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:42:40",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:53:35.480978"
+  },
+  "ablation/no-hints/ministral-14b-2512__django__django-11066__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:43:10",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:19:38.193103"
+  },
+  "ablation/no-hints/ministral-14b-2512__django__django-11066__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:43:40",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:55:21.211887"
+  },
+  "ablation/no-hints/ministral-14b-2512__django__django-11066__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:44:09",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:26:52.042621"
+  },
+  "ablation/no-hints/ministral-14b-2512__django__django-17029__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:44:37",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:21:55.685552"
+  },
+  "ablation/no-hints/ministral-14b-2512__django__django-17029__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:45:06",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:57:49.981292"
+  },
+  "ablation/no-hints/ministral-14b-2512__django__django-17029__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:45:39",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:29:16.919980"
+  },
+  "ablation/no-hints/ministral-14b-2512__pydata__xarray-4629__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:46:11",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:24:00.394064"
+  },
+  "ablation/no-hints/ministral-14b-2512__pydata__xarray-4629__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:46:42",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:00:28.500684"
+  },
+  "ablation/no-hints/ministral-14b-2512__pydata__xarray-4629__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:47:14",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:31:23.445304"
+  },
+  "ablation/no-hints/ministral-14b-2512__scikit-learn__scikit-learn-13439__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:47:42",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:28:36.295700"
+  },
+  "ablation/no-hints/ministral-14b-2512__scikit-learn__scikit-learn-13439__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:48:09",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:05:58.950214"
+  },
+  "ablation/no-hints/ministral-14b-2512__scikit-learn__scikit-learn-13439__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:48:37",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:37:07.721952"
+  },
+  "ablation/no-hints/ministral-14b-2512__sympy__sympy-13480__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:49:21",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:32:43.163742"
+  },
+  "ablation/no-hints/ministral-14b-2512__sympy__sympy-13480__r2.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:49:24",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:11:39.924037"
+  },
+  "ablation/no-hints/ministral-14b-2512__sympy__sympy-13480__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:50:08",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:41:14.660328"
+  },
+  "ablation/no-hints/ministral-14b-2512__sympy__sympy-14711__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:50:38",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:36:43.393946"
+  },
+  "ablation/no-hints/ministral-14b-2512__sympy__sympy-14711__r2.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:50:41",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:16:15.584701"
+  },
+  "ablation/no-hints/ministral-14b-2512__sympy__sympy-14711__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:51:11",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:46:24.576487"
+  },
+  "ablation/no-hints/ministral-14b-2512__sympy__sympy-18189__r1.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:51:14",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:46:11.813964"
+  },
+  "ablation/no-hints/ministral-14b-2512__sympy__sympy-18189__r2.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:51:17",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:24:28.163571"
+  },
+  "ablation/no-hints/ministral-14b-2512__sympy__sympy-18189__r3.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:51:20",
+    "metrics": "INVALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:57:01.189902"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__django__django-11066__r1.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:51:23",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:18:24.343050"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__django__django-11066__r2.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:51:25",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:54:10.011258"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__django__django-11066__r3.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:51:28",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:25:43.575405"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__django__django-17029__r1.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:51:31",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:20:50.183380"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__django__django-17029__r2.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:51:34",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:56:27.580828"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__django__django-17029__r3.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:51:36",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:28:06.988861"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__pydata__xarray-4629__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:52:08",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:22:58.511273"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__pydata__xarray-4629__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:52:39",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:59:18.941588"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__pydata__xarray-4629__r3.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:52:42",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:30:22.625973"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__scikit-learn__scikit-learn-13439__r1.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:52:45",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:26:19.771748"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__scikit-learn__scikit-learn-13439__r2.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:52:47",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:02:12.674548"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__scikit-learn__scikit-learn-13439__r3.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:52:50",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:35:14.405316"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__sympy__sympy-13480__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:53:38",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:30:35.941527"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__sympy__sympy-13480__r2.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:53:41",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:08:43.331065"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__sympy__sympy-13480__r3.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:53:44",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:38:46.952235"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__sympy__sympy-14711__r1.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:53:47",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T10:34:17.773469"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__sympy__sympy-14711__r2.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:53:51",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:13:28.002134"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__sympy__sympy-14711__r3.json": {
+    "correctness": "FAILED",
+    "judged_at": "2026-09-28T13:53:54",
+    "metrics": "VALID",
+    "passed": false,
+    "resolution": null,
+    "run_timestamp": "2026-09-28T11:43:34.126063"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__sympy__sympy-18189__r1.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:55:42",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T10:41:44.505920"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__sympy__sympy-18189__r2.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:57:24",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:20:09.510836"
+  },
+  "ablation/no-reasoning-guide/ministral-14b-2512__sympy__sympy-18189__r3.json": {
+    "correctness": "PASSED",
+    "judged_at": "2026-09-28T13:59:00",
+    "metrics": "VALID",
+    "passed": true,
+    "resolution": "RESOLVED_FULL",
+    "run_timestamp": "2026-09-28T11:50:44.557055"
+  }
+}
