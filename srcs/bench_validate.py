@@ -23,7 +23,6 @@ import json
 import pathlib
 import re
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from paths import CACHE, ROOT, VALIDATION, iter_runs
@@ -99,25 +98,18 @@ def is_fresh(entry: dict[str, Any], run: dict[str, Any]) -> bool:
             and entry.get("run_timestamp") == run.get("timestamp"))
 
 
-def judge_group(cells: list[tuple[str, pathlib.Path, dict[str, Any]]],
-                ) -> list[tuple[str, dict[str, Any]]]:
-    """Judge every cell of one task, in order.
-
-    A whole task per worker, never a task split across workers: the
-    moulinette reuses any running container whose image matches the
-    instance, so two verdicts on the same task at once would share one
-    container and patch over each other.
-    """
-    return [(key, judge(path, run)) for key, path, run in cells]
-
-
 def main() -> None:
-    """Judge every run missing a fresh verdict, then write the cache."""
+    """Judge every run missing a fresh verdict, then write the cache.
+
+    One verdict at a time. The moulinette stages each SWE-bench patch,
+    eval script and test log at fixed paths under /tmp, so two verdicts
+    in flight overwrite each other's files: a run gets graded on another
+    run's patch or another task's test log. Judged four at a time, 52 of
+    84 ablation cells came back failed that pass when judged alone.
+    """
     parser = argparse.ArgumentParser(prog="bench_validate")
     parser.add_argument("--force", action="store_true",
                         help="judge every run again, ignoring the cache")
-    parser.add_argument("--jobs", type=int, default=4,
-                        help="tasks judged in parallel (default 4)")
     # Both default to the campaign; the ablation keeps its earlier runs
     # outside runs/ and judges them into a cache of its own.
     parser.add_argument("--runs", type=pathlib.Path, default=None,
@@ -143,27 +135,13 @@ def main() -> None:
             continue
         todo.append((key, path, run))
 
-    groups: dict[str, list[tuple[str, pathlib.Path, dict[str, Any]]]] = {}
-    for key, path, run in todo:
-        groups.setdefault(str(run["task_id"]), []).append((key, path, run))
-
-    jobs = max(1, min(args.jobs, len(groups))) if groups else 1
-    print(f"{len(runs)} run(s), {len(todo)} to judge "
-          f"over {len(groups)} task(s), {jobs} at a time\n")
-
-    done = 0
-    with ThreadPoolExecutor(max_workers=jobs) as pool:
-        futures = {pool.submit(judge_group, cells): task
-                   for task, cells in groups.items()}
-        for future in as_completed(futures):
-            for key, verdict in future.result():
-                cache[key] = verdict
-                done += 1
-                label = ("PASSED" if verdict.get("passed")
-                         else verdict.get("error")
-                         or f"{verdict.get('correctness')}"
-                            f"/{verdict.get('metrics')}")
-                print(f"[{done}/{len(todo)}] {key}: {label}", flush=True)
+    print(f"{len(runs)} run(s), {len(todo)} to judge\n")
+    for done, (key, path, run) in enumerate(todo, start=1):
+        verdict = cache[key] = judge(path, run)
+        label = ("PASSED" if verdict.get("passed")
+                 else verdict.get("error")
+                 or f"{verdict.get('correctness')}/{verdict.get('metrics')}")
+        print(f"[{done}/{len(todo)}] {key}: {label}", flush=True)
 
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps(cache, indent=2, sort_keys=True) + "\n",

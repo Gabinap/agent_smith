@@ -28,9 +28,6 @@ sandbox-mbpp:
 sandbox-swebench:
 	uv run sandbox --mcp-stdio "python mcp_tools_swebench.py" sandbox_template.json
 
-graph:
-	uv run srcs/build_graph.py
-
 report:
 	uv run srcs/bench_report.py --output BENCHMARK_REPORT.md
 
@@ -44,7 +41,7 @@ bench-mbpp:
 		$(if $(TASKS),--tasks $(TASKS))
 
 validate:
-	uv run srcs/bench_validate.py $(if $(FORCE),--force) $(if $(JOBS),--jobs $(JOBS))
+	uv run srcs/bench_validate.py $(if $(FORCE),--force)
 
 # ========================= dev commands =========================
 
