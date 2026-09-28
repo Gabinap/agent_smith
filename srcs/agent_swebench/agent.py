@@ -112,15 +112,14 @@ class SWEBench:
 
         if re.search(r'^[^#\n]*\brun_tests\s*\(', self.py_code, re.MULTILINE):
             message = summarise_tests(self.sandbox_data.output)
+            message = clean_run_tests(message)
 
             self.llm.messages.append({
                 "role": "user",
                 "content": message
             })
-            cli_agent.display_sandbox_tests(self.console,
-                                            clean_run_tests(
-                                                message),
-                                            )
+            cli_agent.display_sandbox_tests(self.console, message)
+
             return
 
         self.sandbox_data.output = truncate_output(
