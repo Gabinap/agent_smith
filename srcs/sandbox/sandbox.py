@@ -1,9 +1,3 @@
-# Every callable injected into the namespace is defined in this file, so
-# `injected.__globals__` hands sandboxed code whatever sits here. Nothing
-# that grants a capability is bound at module level: the real open() and
-# __import__(), and every module, are imported inside the methods that
-# use them, where they live as locals out of reach. __build_class__ is
-# the exception, and a harmless one: SAFE_BUILTINS grants it anyway.
 from builtins import __build_class__
 from collections.abc import Callable
 from multiprocessing.connection import Connection

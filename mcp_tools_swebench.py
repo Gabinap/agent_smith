@@ -118,4 +118,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        # stderr, not stdout: over stdio, stdout is the protocol channel.
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)

@@ -28,6 +28,15 @@ sandbox-mbpp:
 sandbox-swebench:
 	uv run sandbox --mcp-stdio "python mcp_tools_swebench.py" sandbox_template.json
 
+backend-mbpp-http:
+	MBPP_TASK_FILE=./cache/mbpp_task.json uv run python mcp_tools_mbpp.py --http
+
+backend-swebench-http:
+	SWE_TASK_FILE=./cache/swebench_task.json uv run python mcp_tools_swebench.py --http
+
+sandbox-http:
+	uv run sandbox --mcp-server "http://localhost:8000" sandbox_template.json
+
 report:
 	uv run srcs/bench_report.py --output BENCHMARK_REPORT.md
 

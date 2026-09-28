@@ -13,7 +13,7 @@ EXEC_TOOL_TIMEOUT_SECONDS = 300
 
 # Directories a bug fix never lives in: version control, build and
 # test scaffolding, vendored dependencies. `grep -r` walks all of them
-# by default — which costs time against a 15-second budget and, worse,
+# by default, which costs time against a 15-second budget and, worse,
 # reports hits inside a vendored or built copy of the very module
 # being fixed, sending the agent to edit a file the patch ignores.
 NOISE_DIRS = (
