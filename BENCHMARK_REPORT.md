@@ -2,10 +2,10 @@
 
 ## How to reproduce
 
-- **Commit** `59af4f4` — Python 3.10.19 — Linux x86_64
-- **Cells**: 11 models × (7 SWE-bench + 11 MBPP tasks), plus 3 models that left the catalogue — 239 cells, run 2026-09-24 to 2026-09-28, each judged by `moulinette_eval validate`
+- **Commit** `4f1f9be` — Python 3.10.19 — Linux x86_64
+- **Cells**: 11 models × (7 SWE-bench + 10 MBPP tasks), plus 3 models that left the catalogue — 238 cells, run 2026-09-24 to 2026-09-27, each judged by `moulinette_eval validate`
 - **SWE-bench**: `django__django-11066`, `django__django-17029`, `pydata__xarray-4629`, `scikit-learn__scikit-learn-13439`, `sympy__sympy-13480`, `sympy__sympy-14711`, `sympy__sympy-18189`
-- **MBPP**: 11, 75, 95, 103, 135, 227, 257, 285, 390, 418, 444
+- **MBPP**: 11, 75, 103, 135, 227, 257, 285, 390, 418, 444
 
 | Benchmark | Iterations | Tokens in | Tokens out | Time | Temperature |
 |---|---:|---:|---:|---:|---:|
@@ -30,23 +30,23 @@ make validate && make report
 
 The prompt carries the task's `hints_text`, an input the subject defines. On 3 of the 7 tasks it gives the fix away:
 
-| Task | `hints_text` | What it gives | Resolved |
-|---|---:|---|---:|
-| django__django-11066 | 2,075 chars | a link to the upstream fix | 7/11 (64 %) |
-| django__django-17029 | 44 chars | discussion | 6/11 (55 %) |
-| pydata__xarray-4629 | 0 chars | — | 8/11 (73 %) |
-| scikit-learn__scikit-learn-13439 | 285 chars | discussion | 3/11 (27 %) |
-| sympy__sympy-13480 | 146 chars | the line and the change to make | 6/11 (55 %) |
-| sympy__sympy-14711 | 0 chars | — | 1/11 (9 %) |
-| sympy__sympy-18189 | 2,027 chars | the fix's own diff | 6/11 (55 %) |
+| Task | `hints_text` | What it gives |
+|---|---:|---|
+| django__django-11066 | 2,075 chars | a link to the upstream fix |
+| django__django-17029 | 44 chars | discussion |
+| pydata__xarray-4629 | 0 chars | — |
+| scikit-learn__scikit-learn-13439 | 285 chars | discussion |
+| sympy__sympy-13480 | 146 chars | the line and the change to make |
+| sympy__sympy-14711 | 0 chars | — |
+| sympy__sympy-18189 | 2,027 chars | the fix's own diff |
 
-Those resolve at 19/33 (58 %), the others at 18/44 (41 %): the hint helps without deciding — 5 of 11 models still fail `sympy__sympy-18189` with its diff in hand.
+The ablation removes them: `ministral-14b-2512` resolves 16/21 without, 16/21 with (p = 1.00).
 
 No run fetched anything from outside its task; one `git log --all …` (`stealth/space-bunny-alpha`) found nothing.
 
 ## Summary
 
-| Model | SWE-bench (/7) | MBPP (/11) | Total | Cells with no data |
+| Model | SWE-bench (/7) | MBPP (/10) | Total | Cells with no data |
 |---|---:|---:|---:|---:|
 | Prism-ML/Ternary-Bonsai-27B | 3 | 2 | **5** | — |
 | codestral-2508 | 2 | 7 | **9** | — |
@@ -59,11 +59,11 @@ No run fetched anything from outside its task; one `git log --all …` (`stealth
 | poolside/laguna-s-2.1:free | 2 | 9 | **11** | — |
 | qwen/qwen3.8-27b:free | 3 | 8 | **11** | 2 |
 | stealth/space-bunny-alpha | 4 | 9 | **13** | — |
-| **all** | | | **116 / 188** | 3 |
+| **all** | | | **116 / 187** | 3 |
 
 Models that left the catalogue during the campaign — withdrawn by their provider, beyond what the account could pay for, or moved to another provider. Their cells ran while they were catalogued, and are kept apart rather than dropped:
 
-| Model | SWE-bench (/7) | MBPP (/11) | Total | Cells with no data |
+| Model | SWE-bench (/7) | MBPP (/10) | Total | Cells with no data |
 |---|---:|---:|---:|---:|
 | nex-agi/nex-n2.5-mini:free | 1 | 9 | **10** | 3 |
 | qwen/qwen3.8-27b | 2 | 10 | **12** | 5 |
@@ -77,7 +77,7 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 | Model | Runs | Avg response | Retries | Cells with data |
 |---|---:|---:|---:|---:|
 | Prism-ML/Ternary-Bonsai-27B | 17 | 10179 ms | 0 | 17/17 |
-| codestral-2508 | 18 | 1752 ms | 0 | 18/18 |
+| codestral-2508 | 17 | 1756 ms | 0 | 17/17 |
 | dots-studio/dots-3-note-preview:free | 17 | 5263 ms | 39 | 17/17 |
 | google/gemma-4-31b-it:free | 17 | 66485 ms | 0 | 17/17 |
 | ministral-14b-2512 | 17 | 2233 ms | 0 | 17/17 |
@@ -224,7 +224,6 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 | codestral-2508 | 418 | pass | 2 | 1,040 | 54 | 1.1s | solved | [`codestral-2508__mbpp-418.json`](runs/codestral-2508/mbpp_task/codestral-2508__mbpp-418.json) |
 | codestral-2508 | 444 | fail | 5 | 5,035 | 135 | 2.7s | Iterations limit reached | [`codestral-2508__mbpp-444.json`](runs/codestral-2508/mbpp_task/codestral-2508__mbpp-444.json) |
 | codestral-2508 | 75 | pass | 2 | 1,174 | 114 | 1.4s | solved | [`codestral-2508__mbpp-75.json`](runs/codestral-2508/mbpp_task/codestral-2508__mbpp-75.json) |
-| codestral-2508 | 95 | not judged | 2 | 1,080 | 142 | 3.2s | solved | [`mbpp_solution.json`](runs/mbpp_solution.json) |
 | dots-studio/dots-3-note-preview:free | 103 | fail | 1 | 471 | 1,500 | 21.4s | Output token limit reached | [`dots-studio-dots-3-note-preview:free__mbpp-103.json`](runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-103.json) |
 | dots-studio/dots-3-note-preview:free | 11 | fail | 1 | 472 | 1,500 | 20.3s | Output token limit reached | [`dots-studio-dots-3-note-preview:free__mbpp-11.json`](runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-11.json) |
 | dots-studio/dots-3-note-preview:free | 135 | pass | 2 | 972 | 392 | 10.5s | solved | [`dots-studio-dots-3-note-preview:free__mbpp-135.json`](runs/dots-studio-dots-3-note-preview:free/mbpp_task/dots-studio-dots-3-note-preview:free__mbpp-135.json) |
@@ -458,48 +457,35 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 
 </details>
 
-## Ablation: the agent reading its test results
+## Ablation
 
-**Before**, a large test log never reached the agent: `run_tests` came back as a timeout. **After**, the agent reads its test results. Same models, same tasks, temperature 0; the 6 cells whose re-run produced no data are left out.
+`ministral-14b-2512` on the 7 SWE-bench tasks, 3 runs each, variants interleaved, temperature 0 — each variant changes one line, and every run is judged by the moulinette. Resolved: Wilson interval. Against the baseline: Fisher's exact test, Holm-corrected over the 3 comparisons. Δ: median per-task difference, bootstrap interval over tasks (10,000 resamples, seed 42).
 
-| | Before | After |
-|---|---:|---:|
-| Cells resolved (of 17) | 11 | 10 |
-| Gained / lost | | +3 / −4 |
-| Median input tokens | 53,494 | 148,911 |
-| Median iterations | 16 | 7 |
-| Stopped on the input budget | 0 | 4 |
+| Variant | Changed | Resolved | 95 % CI | p (Holm) | Δ iterations [95 % CI] | Δ tokens [95 % CI] |
+|---|---|---:|---|---:|---:|---:|
+| baseline | nothing — the agent as shipped | 16/21 | 55% – 89% |  |  |  |
+| no-reasoning-guide | no `REASONING_GUIDE` in the system prompt | 6/21 | 14% – 50% | 0.014 | +16.0 [+7.0, +22.7] | -57,837 [-103,956, +26,644] |
+| fewer-tools | `find_references`, `list_files`, `run_command` hidden | 19/21 | 71% – 97% | 0.820 | +0.0 [+0.0, +1.7] | +6,333 [-315, +42,943] |
+| no-hints | no `hints_text` in the task prompt | 16/21 | 55% – 89% | 1.000 | -0.3 [-6.7, +4.7] | -1,217 [-4,964, +41,839] |
 
-Reading its tests let the agent solve 3 cells it had failed blind, but the full log, resent on every turn, tripled its input and cost 4 cells on the input budget. Test feedback helps only once it is summarised.
+- **no-reasoning-guide changes the outcome**: 6/21 against 16/21 (p = 0.014), +16 iterations at the median.
+- **fewer-tools: no effect detected** (19/21, p = 0.82).
+- **no-hints: no effect detected** (16/21, p = 1.00).
+
+The baseline itself splits on 3 of 7 tasks across its repetitions, which is why only a large effect shows at this scale: *no effect detected* is not *no effect*.
 
 <details>
-<summary>Per cell, with both solution.json files</summary>
+<summary>Resolved per task and variant</summary>
 
-| Model | Task | Before | After | Input tokens | Stopped because | Evidence |
-|---|---|---|---|---:|---|---|
-| codestral-2508 | scikit-learn__scikit-learn-13439 | fail | fail | 166,619 → 130,685 | Iterations limit reached | [before](ablation/pipe_deadlock/before/codestral-2508__scikit-learn__scikit-learn-13439.json) · [after](runs/codestral-2508/codestral-2508__scikit-learn__scikit-learn-13439.json) |
-| codestral-2508 | sympy__sympy-13480 | pass | fail | 53,494 → 148,612 | Input token limit reached | [before](ablation/pipe_deadlock/before/codestral-2508__sympy__sympy-13480.json) · [after](runs/codestral-2508/codestral-2508__sympy__sympy-13480.json) |
-| codestral-2508 | sympy__sympy-18189 | pass | fail | 55,618 → 186,910 | Input token limit reached | [before](ablation/pipe_deadlock/before/codestral-2508__sympy__sympy-18189.json) · [after](runs/codestral-2508/codestral-2508__sympy__sympy-18189.json) |
-| dots-studio-dots-3-note-preview:free | scikit-learn__scikit-learn-13439 | fail | pass | 151,436 → 193,123 | solved | [before](ablation/pipe_deadlock/before/dots-studio-dots-3-note-preview:free__scikit-learn__scikit-learn-13439.json) · [after](runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__scikit-learn__scikit-learn-13439.json) |
-| dots-studio-dots-3-note-preview:free | sympy__sympy-13480 | pass | fail | 18,485 → 151,467 | Input token limit reached | [before](ablation/pipe_deadlock/before/dots-studio-dots-3-note-preview:free__sympy__sympy-13480.json) · [after](runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__sympy__sympy-13480.json) |
-| dots-studio-dots-3-note-preview:free | sympy__sympy-18189 | pass | fail | 193,802 → 189,785 | Input token limit reached | [before](ablation/pipe_deadlock/before/dots-studio-dots-3-note-preview:free__sympy__sympy-18189.json) · [after](runs/dots-studio-dots-3-note-preview:free/dots-studio-dots-3-note-preview:free__sympy__sympy-18189.json) |
-| google-gemma-4-31b-it:free | scikit-learn__scikit-learn-13439 | fail | fail | 50,237 → 9,307 | Empty final answer | [before](ablation/pipe_deadlock/before/google-gemma-4-31b-it:free__scikit-learn__scikit-learn-13439.json) · [after](runs/google-gemma-4-31b-it:free/google-gemma-4-31b-it:free__scikit-learn__scikit-learn-13439.json) |
-| ministral-14b-2512 | scikit-learn__scikit-learn-13439 | pass | pass | 42,798 → 285,039 | solved | [before](ablation/pipe_deadlock/before/ministral-14b-2512__scikit-learn__scikit-learn-13439.json) · [after](runs/ministral-14b-2512/ministral-14b-2512__scikit-learn__scikit-learn-13439.json) |
-| ministral-14b-2512 | sympy__sympy-13480 | pass | pass | 32,285 → 148,748 | solved | [before](ablation/pipe_deadlock/before/ministral-14b-2512__sympy__sympy-13480.json) · [after](runs/ministral-14b-2512/ministral-14b-2512__sympy__sympy-13480.json) |
-| ministral-14b-2512 | sympy__sympy-18189 | pass | pass | 78,723 → 241,718 | solved | [before](ablation/pipe_deadlock/before/ministral-14b-2512__sympy__sympy-18189.json) · [after](runs/ministral-14b-2512/ministral-14b-2512__sympy__sympy-18189.json) |
-| ministral-3b-2512 | django__django-17029 | pass | pass | 62,020 → 77,424 | solved | [before](ablation/pipe_deadlock/before/ministral-3b-2512__django__django-17029.json) · [after](runs/ministral-3b-2512/ministral-3b-2512__django__django-17029.json) |
-| ministral-3b-2512 | sympy__sympy-13480 | fail | fail | 16,260 → 67,201 | Iterations limit reached | [before](ablation/pipe_deadlock/before/ministral-3b-2512__sympy__sympy-13480.json) · [after](runs/ministral-3b-2512/ministral-3b-2512__sympy__sympy-13480.json) |
-| ministral-8b-2512 | pydata__xarray-4629 | pass | pass | 35,346 → 24,554 | solved | [before](ablation/pipe_deadlock/before/ministral-8b-2512__pydata__xarray-4629.json) · [after](runs/ministral-8b-2512/ministral-8b-2512__pydata__xarray-4629.json) |
-| ministral-8b-2512 | scikit-learn__scikit-learn-13439 | fail | pass | 122,125 → 172,702 | solved | [before](ablation/pipe_deadlock/before/ministral-8b-2512__scikit-learn__scikit-learn-13439.json) · [after](runs/ministral-8b-2512/ministral-8b-2512__scikit-learn__scikit-learn-13439.json) |
-| ministral-8b-2512 | sympy__sympy-13480 | pass | pass | 43,440 → 148,911 | solved | [before](ablation/pipe_deadlock/before/ministral-8b-2512__sympy__sympy-13480.json) · [after](runs/ministral-8b-2512/ministral-8b-2512__sympy__sympy-13480.json) |
-| ministral-8b-2512 | sympy__sympy-18189 | pass | pass | 50,336 → 196,326 | solved | [before](ablation/pipe_deadlock/before/ministral-8b-2512__sympy__sympy-18189.json) · [after](runs/ministral-8b-2512/ministral-8b-2512__sympy__sympy-18189.json) |
-| nex-agi-nex-n2.5-mini:free | scikit-learn__scikit-learn-13439 | — | — | — | excluded: the re-run produced no data | [before](ablation/pipe_deadlock/before/nex-agi-nex-n2.5-mini:free__scikit-learn__scikit-learn-13439.json) |
-| nex-agi-nex-n2.5-mini:free | sympy__sympy-13480 | — | — | — | excluded: the re-run produced no data | [before](ablation/pipe_deadlock/before/nex-agi-nex-n2.5-mini:free__sympy__sympy-13480.json) |
-| nex-agi-nex-n2.5-mini:free | sympy__sympy-18189 | — | — | — | excluded: the re-run produced no data | [before](ablation/pipe_deadlock/before/nex-agi-nex-n2.5-mini:free__sympy__sympy-18189.json) |
-| openai-gpt-oss-120b | sympy__sympy-13480 | — | — | — | excluded: the re-run produced no data | [before](ablation/pipe_deadlock/before/openai-gpt-oss-120b__sympy__sympy-13480.json) |
-| poolside-laguna-s-2.1:free | sympy__sympy-13480 | fail | pass | 153,337 → 140,001 | solved | [before](ablation/pipe_deadlock/before/poolside-laguna-s-2.1:free__sympy__sympy-13480.json) · [after](runs/poolside-laguna-s-2.1:free/poolside-laguna-s-2.1:free__sympy__sympy-13480.json) |
-| qwen-qwen3.8-27b | sympy__sympy-13480 | — | — | — | excluded: the re-run produced no data | [before](ablation/pipe_deadlock/before/qwen-qwen3.8-27b__sympy__sympy-13480.json) |
-| qwen-qwen3.8-27b | sympy__sympy-18189 | — | — | — | excluded: the re-run produced no data | [before](ablation/pipe_deadlock/before/qwen-qwen3.8-27b__sympy__sympy-18189.json) |
+| Task | baseline | no-reasoning-guide | fewer-tools | no-hints |
+|---|---:|---:|---:|---:|
+| django__django-11066 | 3/3 | 0/3 | 3/3 | 3/3 |
+| django__django-17029 | 3/3 | 0/3 | 3/3 | 3/3 |
+| pydata__xarray-4629 | 3/3 | 2/3 | 3/3 | 3/3 |
+| scikit-learn__scikit-learn-13439 | 1/3 | 0/3 | 2/3 | 3/3 |
+| sympy__sympy-13480 | 3/3 | 1/3 | 3/3 | 2/3 |
+| sympy__sympy-14711 | 2/3 | 0/3 | 3/3 | 2/3 |
+| sympy__sympy-18189 | 1/3 | 3/3 | 2/3 | 0/3 |
 
 </details>
 
@@ -508,4 +494,6 @@ Reading its tests let the agent solve 3 cells it had failed blind, but the full 
 - **Selected: `ministral-8b-2512`** (15/17), with `ministral-14b-2512` for SWE-bench (7/7) — the best scores, on a provider with no cell lost. They are the agent's defaults.
 - **Disregarded**: below the median, `google/gemma-4-31b-it:free` (9/17), `codestral-2508` (9/17), `ministral-3b-2512` (9/17), `Prism-ML/Ternary-Bonsai-27B` (5/17); and the 3 models no longer served.
 - **`success` is not a verdict**: 39 resolutions claimed on SWE-bench, 37 confirmed by the moulinette.
+- **What the agent needs** (ablation): the reasoning guide — without it, 10 of 21 runs are lost; not the three rarely used tools nor the hints, no effect detected.
+- **One run per cell is not a measure**: `ministral-14b-2512` resolved 7/7 SWE-bench tasks in the campaign, 16/21 over three repetitions.
 - **Free tiers move**: 3 models left the catalogue in three days. Cells with no data: 1 on Groq Console, 2 on Open Router, none on Mistral Studio, Together.
