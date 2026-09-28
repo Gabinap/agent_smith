@@ -1,9 +1,3 @@
-# Every callable injected into the namespace is defined in this file, so
-# `injected.__globals__` hands sandboxed code whatever sits here. Nothing
-# that grants a capability is bound at module level: the real open() and
-# __import__(), and every module, are imported inside the methods that
-# use them, where they live as locals out of reach. __build_class__ is
-# the exception, and a harmless one: SAFE_BUILTINS grants it anyway.
 from builtins import __build_class__
 from collections.abc import Callable
 from multiprocessing.connection import Connection
@@ -117,6 +111,7 @@ class Sandbox:
         """
         self.config = config if config is not None else SandboxConfig()
         self.mcp_client = mcp_client
+        self._tool_conn: Connection | None = None
         self.namespace: dict[str, Any] = {}
         self.tools: list[dict[str, Any]] = []
         self.final_answer_value: Any | None = None
@@ -284,17 +279,46 @@ class Sandbox:
 
         def create_wrapper(tool_name: str) -> Callable[..., Any]:
             def tool_wrapper(**kwargs: Any) -> Any:
-                if self.mcp_client is None:
-                    return None
-                res = self.mcp_client.call_tool(tool_name, kwargs)
-                result = res.get("result", {}) if res else {}
-                content = result.get("content", [])
-                return content[0].get("text", "") if content else ""
+                if self._tool_conn is None:
+                    return self._call_tool(tool_name, kwargs)
+                return self._call_tool_through_parent(tool_name, kwargs)
             return tool_wrapper
 
         for tool in tools:
             t_name = tool["name"]
             self.namespace[t_name] = create_wrapper(t_name)
+
+    def _call_tool(self, name: str, args: dict[str, Any]) -> str:
+        """Call an MCP tool from this process and return its text."""
+        if self.mcp_client is None:
+            return ""
+        res = self.mcp_client.call_tool(name, args)
+        result = res.get("result", {}) if res else {}
+        content = result.get("content", [])
+        return str(content[0].get("text", "")) if content else ""
+
+    def _call_tool_through_parent(self, name: str,
+                                  args: dict[str, Any]) -> str:
+        """Have the parent make the MCP call, from inside the child.
+
+        MCP tools act outside the sandbox: the child has no network, so a
+        call made from here worked only while the connection opened
+        before the fork stayed alive, and an HTTP server drops an idle one
+        after a few seconds. The sandbox timeout is paused meanwhile —
+        a tool's own run time is not the sandboxed code's.
+        """
+        import signal
+        assert self._tool_conn is not None
+        paused = signal.alarm(0)
+        try:
+            self._tool_conn.send({"__tool__": name, "args": args})
+            reply: dict[str, Any] = self._tool_conn.recv()
+        finally:
+            if paused:
+                signal.alarm(paused)
+        if "error" in reply:
+            raise RuntimeError(reply["error"])
+        return str(reply["result"])
 
     def list_tools(self) -> list[dict[str, Any]]:
         """Return the discovered MCP tool specs, or [] if none."""
@@ -392,6 +416,7 @@ class Sandbox:
         try:
             self._limit_resource()
             self._block_network()
+            self._tool_conn = conn
 
             tree = _reject_escapes(code)
             compiled_code = compile(tree, filename="<sandbox>", mode="exec")
@@ -491,28 +516,40 @@ class Sandbox:
 
         child_conn.close()
 
-        answered = parent_conn.poll(
-            timeout=(self.config.max_execution_time_seconds
-                     + TIMEOUT_REPORT_GRACE_SECONDS))
-
-        if answered:
+        import time
+        deadline = time.monotonic() + (self.config.max_execution_time_seconds
+                                       + TIMEOUT_REPORT_GRACE_SECONDS)
+        res_dict = None
+        while parent_conn.poll(timeout=max(deadline - time.monotonic(), 0)):
             try:
                 # recv() drains the whole message however large, which
                 # unblocks the child's send()
-                res_dict = parent_conn.recv()
+                message = parent_conn.recv()
             except EOFError:
-                res_dict = None
-            if res_dict is not None:
-                process.join(timeout=TIMEOUT_REPORT_GRACE_SECONDS)
-                if process.is_alive():
-                    process.terminate()
-                    process.join(timeout=5)
-                control = res_dict.get("__control__")
-                if control == "SystemExit":
-                    raise SystemExit(res_dict.get("code"))
-                if control == "KeyboardInterrupt":
-                    raise KeyboardInterrupt()
-                return SandboxResult.model_validate(res_dict)
+                break
+            if "__tool__" not in message:
+                res_dict = message
+                break
+            started = time.monotonic()
+            try:
+                reply = {"result": self._call_tool(message["__tool__"],
+                                                   message["args"])}
+            except Exception as e:
+                reply = {"error": f"{type(e).__name__}: {e!s}"}
+            parent_conn.send(reply)
+            deadline += time.monotonic() - started
+
+        if res_dict is not None:
+            process.join(timeout=TIMEOUT_REPORT_GRACE_SECONDS)
+            if process.is_alive():
+                process.terminate()
+                process.join(timeout=5)
+            control = res_dict.get("__control__")
+            if control == "SystemExit":
+                raise SystemExit(res_dict.get("code"))
+            if control == "KeyboardInterrupt":
+                raise KeyboardInterrupt()
+            return SandboxResult.model_validate(res_dict)
 
         if process.is_alive():
             process.terminate()
