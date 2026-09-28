@@ -91,9 +91,6 @@ def launch_agent(profile: Profile, console: Console,
         env_keys=profile.keys,
         console=console,
         client=mcp_client,
-        # Subject limits for SWE-bench: 30 iterations, 900s. The time
-        # budget leaves room for the iteration already in flight, which
-        # the guard cannot interrupt once started.
         max_iteration=30,
         max_time_seconds=840,
         max_input_tokens=300_000,
