@@ -56,10 +56,11 @@ def main() -> None:
         profile = Profile("SWEBench", args.provider_url, args.model_name,
                           choose=args.choose)
 
-        console.print("Starting MCP server")
         if args.http:
+            console.print("Creating MCP Client in HTTP")
             spec = McpSpec(transport="http", url="http://localhost:8000")
         else:
+            console.print("Starting MCP server in STDIO")
             spec = McpSpec(
                 transport="stdio",
                 command=shlex.join(
@@ -69,7 +70,7 @@ def main() -> None:
                 env={**os.environ, "SWE_TASK_FILE": str(task_file)},
             )
         mcp_client = create_mcp_client(spec)
-        console.print(f"MCP {spec.transport} server Started")
+        console.print(f"MCP {spec.transport} Started")
 
         launch_agent(profile, console, args, mcp_client)
 
