@@ -10,6 +10,9 @@ from pydantic import ValidationError
 from sandbox.mcp_client import McpClient, create_mcp_client
 from sandbox.sandbox import Sandbox
 
+import os
+import select
+import codeop
 
 class CLI_Sandbox:
     """Parse CLI args and drive an interactive Sandbox REPL."""
@@ -92,41 +95,81 @@ class CLI_Sandbox:
             return McpSpec(transport="stdio", command=args.mcp_stdio)
         return None
 
+    @staticmethod
+    def _is_complete(source: str) -> bool:
+        """True if source is a complete statement, like Python's REPL."""
+        try:
+            return codeop.compile_command(source, "<sandbox>", "single") is not None
+        except (SyntaxError, ValueError, OverflowError):
+            return True  # invalid: let the sandbox report the real error
+
+    def _run(self, source: str) -> None:
+        result: SandboxResult = self.sandbox.execute(source)
+        if result.output:
+            print(f"\n{result.output}", end="")
+        if result.error:
+            print(f"Error: {result.error}")
+        if result.finished:
+            print(f"Final Answer: {result.final_answer}")
+        if not (result.output or result.error or result.finished):
+            print("(no output)")
+
+    def _drain_pasted(self) -> str:
+        """Return the lines already waiting on stdin (a paste), else ''."""
+        if not sys.stdin.isatty():
+            return ""
+        fd = sys.stdin.fileno()
+        chunks: list[bytes] = []
+        while select.select([fd], [], [], 0.05)[0]:
+            data = os.read(fd, 65536)
+            if not data:
+                break
+            chunks.append(data)
+        return b"".join(chunks).decode(errors="replace")
+
     def execute(self) -> None:
-        """Run the read-eval-print loop until 'exit' or EOF/Ctrl-C."""
-        # Whatever server was connected, say what it brought: the
-        # manual is generated from its schemas, not hardcoded here.
         print("Available tools:")
         print(self.sandbox.manual())
         print("Type 'manual' to print this again, 'exit' to leave.\n")
+        buffer: list[str] = []
         try:
             while True:
                 try:
-                    command = input("Sandbox> ")
-                    if command == "manual":
-                        print(self.sandbox.manual())
+                    line = input("" if buffer else
+                                 "Sandbox>").replace("\xa0", " ")
+                    pasted = self._drain_pasted()
+                    if pasted or "\n" in line:
+                        source = "\n".join(buffer + [line]) + ("\n" + pasted if pasted else "")
+                        buffer.clear()
+                        self._run(source.rstrip("\n") + "\n")
                         continue
-                    if command == "exit":
-                        break
-                    if not command.strip():
-                        continue
-
-                    result: SandboxResult = self.sandbox.execute(command)
-                    if result.output:
-                        print(result.output, end="")
-                    if result.error:
-                        print(f"Error: {result.error}")
-                    if result.finished:
-                        print(f"Final Answer: {result.final_answer}")
-                    if not (result.output or result.error or result.finished):
-                        print("(no output)")
-                except (KeyboardInterrupt, EOFError):
+                except EOFError:
+                    if buffer:                      # flush the last block
+                        self._run("\n".join(buffer))
                     print("\nExit the sandbox.")
                     break
+                except KeyboardInterrupt:
+                    print("\nExit the sandbox.")
+                    break
+
+                if not buffer:                      # only at a fresh prompt
+                    if line.strip() == "manual":
+                        print(self.sandbox.manual())
+                        continue
+                    if line.strip() == "exit":
+                        break
+                    if not line.strip() or line.lstrip().startswith("#"):
+                        continue
+
+                buffer.append(line)
+                source = "\n".join(buffer)
+                if not self._is_complete(source):
+                    continue                        # wait for more lines
+                buffer.clear()
+                self._run(f"{source}")
         finally:
             if self.mcp_client:
                 self.mcp_client.close()
-
 
 def main() -> None:
     manual_sandbox = CLI_Sandbox()

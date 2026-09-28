@@ -48,7 +48,7 @@ DENIED_ATTRS = frozenset({
 # DENIED_ATTRS that are also usable bare (`__builtins__`, `__import__`,
 # `__class__`). __name__ is deliberately absent: class bodies read it.
 DENIED_NAMES = frozenset({
-    "eval", "exec", "compile", "globals", "locals", "vars", "dir",
+    "eval", "exec", "compile", "globals", "locals", "vars",
     "getattr", "setattr", "delattr", "breakpoint",
 }) | DENIED_ATTRS
 
@@ -97,6 +97,12 @@ SAFE_BUILTINS = {
     "IndexError": IndexError, "ZeroDivisionError": ZeroDivisionError,
     "AttributeError": AttributeError, "StopIteration": StopIteration,
     "RuntimeError": RuntimeError, "AssertionError": AssertionError,
+    "ImportError": ImportError,
+    "ModuleNotFoundError": ModuleNotFoundError,
+    "FileNotFoundError": FileNotFoundError,
+    "PermissionError": PermissionError,
+    "OSError": OSError,
+    "dir": dir
 }
 
 
@@ -122,6 +128,32 @@ class Sandbox:
         self._setup_namespace()
         if self.mcp_client:
             self._bind_mcp_tools()
+        self._base_keys = set(self.namespace)
+        self._persist_src: list[str] = []
+
+    def _export_state(self) -> dict[str, Any]:
+        """Variables créées par le code utilisateur et transmissibles."""
+        import pickle
+        state: dict[str, Any] = {}
+        for key, value in self.namespace.items():
+            if key in self._base_keys:
+                continue
+            try:
+                pickle.dumps(value)
+            except Exception:
+                continue
+            state[key] = value
+        return state
+
+    def _remember(self, code: str) -> None:
+        """Retient les définitions top-level pour les rejouer ensuite."""
+        import ast
+        for node in ast.parse(code).body:
+            if isinstance(node, (ast.Import, ast.ImportFrom,
+                                 ast.FunctionDef, ast.ClassDef)):
+                segment = ast.get_source_segment(code, node)
+                if segment:
+                    self._persist_src.append(segment)
 
     def _is_import_allowed(self, name: str) -> bool:
         """
@@ -420,8 +452,9 @@ class Sandbox:
 
             tree = _reject_escapes(code)
             compiled_code = compile(tree, filename="<sandbox>", mode="exec")
+            for src in self._persist_src:
+                exec(compile(src, "<sandbox>", "exec"), self.namespace)
             signal.signal(signal.SIGALRM, _timeout_handler)
-            signal.alarm(self.config.max_execution_time_seconds)
             try:
                 exec(compiled_code, self.namespace)
             finally:
@@ -433,6 +466,7 @@ class Sandbox:
                 "error": None,
                 "final_answer": self.final_answer_value,
                 "finished": self.has_finished,
+                "state": self._export_state()
             })
         except SystemExit as e:
             conn.send({"__control__": "SystemExit", "code": e.code})
@@ -549,7 +583,13 @@ class Sandbox:
                 raise SystemExit(res_dict.get("code"))
             if control == "KeyboardInterrupt":
                 raise KeyboardInterrupt()
-            return SandboxResult.model_validate(res_dict)
+            state = res_dict.pop("state", None)     # avant model_validate
+            result = SandboxResult.model_validate(res_dict)
+            if result.success:
+                if state:
+                    self.namespace.update(state)
+                self._remember(code)
+            return result
 
         if process.is_alive():
             process.terminate()
