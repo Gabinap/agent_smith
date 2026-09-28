@@ -142,7 +142,6 @@ make bench                    # every catalogued model on the SWE-bench set
 make bench-mbpp               # the same, on the MBPP set
 make bench MODELS="codestral-2508,ministral-8b-2512"
 make validate                 # the moulinette's verdict on every run
-make graph                    # success rate per model, in the terminal
 make report                   # writes BENCHMARK_REPORT.md from runs/
 ```
 
@@ -228,8 +227,7 @@ srcs/
 ├── cli_agent/           terminal display
 ├── code_extract.py      code extraction from model replies
 ├── bench_matrix.py      benchmark runner, and the task set it runs
-├── bench_report.py      report tables derived from the runs
-└── build_graph.py       success-rate graph
+└── bench_report.py      report tables derived from the runs
 ```
 
 `cache/` holds what goes into a run and `runs/` everything a run puts
@@ -566,7 +564,9 @@ holds:
 - **results** per model and per cell, each row linked to the
   `solution.json` behind it, every verdict the moulinette's;
 - **provider reliability** and the **intermediary metrics**;
-- **an ablation** of the sandbox pipe fix, before and after, on the
-  same cells;
+- **a systematic ablation** — the reasoning guide, the rarely used
+  tools and the hints, each removed on its own and run three times per
+  task — with confidence intervals and significance tests; its runs and
+  verdicts are under `ablation/`;
 - **conclusions**, and the model the data would lead us to choose.
 
