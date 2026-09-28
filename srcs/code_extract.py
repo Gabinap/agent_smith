@@ -4,7 +4,7 @@ A model that forgets the closing fence, tags its block ```py, or drops
 the tag altogether has still written usable code. Throwing it away
 costs an iteration and teaches the model nothing. The subject asks for
 the opposite: interpret the malformed block, and explain how it was
-interpreted — so the next answer comes back well formed.
+interpreted so the next answer comes back well formed.
 
 Every repair is checked with ast.parse before being accepted, which
 tells us the text is Python without running a line of it.
@@ -20,9 +20,6 @@ UNCLOSED = re.compile(r"```[a-zA-Z]*\s*(.*)", re.DOTALL)
 NO_CODE = ("No python code found in your answer. Reply with a single "
            "```python ... ``` block containing one step.")
 
-# Calling final_answer with nothing is not finishing: at temperature 0
-# a model reliably submits an empty patch on its first turn if nothing
-# stops it.
 EMPTY_ANSWER = ("Your final answer was empty, so nothing was submitted. "
                 "Do the work first, then call final_answer with the "
                 "result.")
@@ -44,7 +41,7 @@ def extract_python(text: str | None) -> tuple[str, str]:
 
     The note is empty when the block was well formed, and is meant to
     be handed back to the model otherwise. An empty code means nothing
-    could be recovered — the caller should then send `NO_CODE`.
+    could be recovered the caller should then send `NO_CODE`.
     """
     if not text:
         return "", ""
@@ -58,14 +55,14 @@ def extract_python(text: str | None) -> tuple[str, str]:
         tag = tagged.group(1) or "nothing"
         return tagged.group(2), (
             f"Note: your code block was tagged `{tag}` instead of "
-            "`python`. It was run anyway — use ```python next time."
+            "`python`. It was run anyway use ```python next time."
         )
 
     unclosed = UNCLOSED.search(text)
     if unclosed and is_python(unclosed.group(1)):
         return unclosed.group(1), (
             "Note: your code block was never closed. Everything after "
-            "the opening fence was run — close it with ``` next time."
+            "the opening fence was run close it with ``` next time."
         )
 
     if is_python(text):

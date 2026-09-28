@@ -146,7 +146,7 @@ test_list={self.task.test_list}))"
         A forecast, like the input-token guard, and for the same reason:
         checking the elapsed time alone lets the iteration it admits run
         past the budget by its own duration. Capping the call is not
-        enough — the sandbox runs after it — so the last measured
+        enough the sandbox runs after it so the last measured
         iteration is what decides whether another one fits.
         """
         spent = time.perf_counter() - start
@@ -162,7 +162,7 @@ test_list={self.task.test_list}))"
         total: the whole conversation is resent every turn, so the next
         call always costs more than the last and a check made after the
         fact comes one call too late. The forecast is the last call
-        plus the growth measured between the last two — real data
+        plus the growth measured between the last two real data
         rather than a safety factor. Output grows linearly, one code
         block per turn, so the last turn is estimate enough.
         """

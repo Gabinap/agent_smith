@@ -65,7 +65,7 @@ class LLM:
 
         Read back from the conversation rather than rebuilt: the field
         exists for provenance, so it has to show what left the process
-        — not what calling the builder a second time would produce.
+         not what calling the builder a second time would produce.
         """
         first = self.messages[0] if self.messages else {}
         if isinstance(first, dict) and first.get("role") == "system":
@@ -78,7 +78,7 @@ class LLM:
         The rotation wraps and is counted per call, not per run: a
         provider answers "temporarily rate-limited upstream" on its
         free pool, which is transient and hits some keys and not
-        others — measured with one key answering while two others
+        others measured with one key answering while two others
         refused in the same second. Walking forward once per run
         instead spent the whole rotation on the first bad minute and
         left the run with no key to fall back on.
@@ -103,7 +103,7 @@ class LLM:
 
         Returns the completion and the retries it cost: one per
         rejected attempt, for this API call only. The counter is local,
-        so it starts back at zero on the next call — unlike the key
+        so it starts back at zero on the next call, unlike the key
         index, which keeps moving forward.
         """
         tuning: dict[str, Any] = ({} if self.temperature is None
@@ -148,7 +148,7 @@ class LLM:
             max_tokens: Ceiling for this generation. The loop guard
                 only runs between iterations, so without it a single
                 reasoning model can spend the whole output budget in
-                one call — 15 273 tokens measured against a cap of
+                one call 15 273 tokens measured against a cap of
                 1 500, for a 235-character answer.
             timeout: Seconds this one call may take, overriding the
                 client's. For the same reason as `max_tokens`: the

@@ -58,11 +58,9 @@ def run_tests(code: str, test_list: list[str]) -> str:
 
 def main() -> None:
     """Load the task and start serving (blocks until the client
-    disconnects) — kept out of module scope so importing this file
+    disconnects) kept out of module scope so importing this file
     never touches MBPP_TASK_FILE or starts the server."""
     global task
-    # `task_definition`, not `task_id`: a solution.json carries a
-    # task_id too, and cache/ holds some of those.
     with open(find_task("MBPP_TASK_FILE", "task_definition")) as f:
         task = MBPPTaskInput.model_validate_json(f.read())
     transport: Literal["stdio", "streamable-http"] = (

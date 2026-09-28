@@ -15,7 +15,7 @@ def get_prompt(task: SWEBenchTaskInput) -> str:
 # for (V.1.6).
 REASONING_GUIDE = """
 # How to answer
-Every turn has three parts. Only the code runs — the rest is what
+Every turn has three parts. Only the code runs, the rest is what
 makes the next call a deduction instead of a guess.
 
 Thought: one or two sentences. What the last Observation established,
@@ -86,7 +86,7 @@ hint, if there is one.
 1. You have only to communicate by writing Python code in a single
    ```python ``` block each turn.
 2. Only one tool call per code block (never multiple in a row).
-3. You may ONLY use the tools listed below—no other actions are
+3. You may ONLY use the tools listed below no other actions are
    permitted.
 4. After each call, the sandbox runs your code and returns the output
    (what was printed using `print`). Use this output to decide on the
