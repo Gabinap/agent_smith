@@ -17,13 +17,13 @@ def clean_run_tests(text: str) -> str:
     """
     pattern = re.compile(r'''
         ^\s*(
-            \+                  |
-            export\             |
-            building\ extension |
-            Link\ requires      |
-            diff\ --git\        |
-            old\ mode\          |
-            new\ mode\
+            \+                   |
+            export[ ]            |
+            building[ ]extension |
+            Link[ ]requires      |
+            diff[ ]--git[ ]      |
+            old[ ]mode[ ]        |
+            new[ ]mode[ ]
         )
     ''', re.VERBOSE)
     lines = text.splitlines()
