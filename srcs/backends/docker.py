@@ -11,6 +11,7 @@ import time
 from typing import Any
 
 import docker
+import os
 
 from srcs.models import CommandResult
 
@@ -18,7 +19,8 @@ from srcs.models import CommandResult
 class DockerExecBackend:
     """Run commands and read/write files inside a Docker container."""
 
-    def __init__(self, image_name: str, root: str = "/") -> None:
+    def __init__(self, image_name: str, root: str = "/",
+                 host_dir: str | None = None) -> None:
         """Prepare the Docker backend for a fresh run.
 
         Resolves `image_name`, purges orphaned containers from a
@@ -34,11 +36,17 @@ class DockerExecBackend:
         except docker.errors.ImageNotFound:
             client.images.pull(image_name)
 
+        host_dir = os.environ.get("TESTBED_PATH")
+        volumes = None
+        if host_dir:
+            volumes = {os.path.abspath(host_dir): {"bind": root, "mode": "rw"}}
+
         self.container = client.containers.run(
             image_name,
             command="sleep infinity",
             detach=True,
             labels={"agent-smith": "true"},
+            volumes=volumes,
         )
         atexit.register(self._cleanup)
         self._clean = False

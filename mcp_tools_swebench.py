@@ -109,8 +109,16 @@ def main() -> None:
     with open(find_task("SWE_TASK_FILE", "instance_id")) as f:
         task = SWEBenchTaskInput.model_validate_json(f.read())
 
-    root = os.environ.get("TESTBED_PATH", "/testbed")
-    backend = DockerExecBackend(task.docker_image, root=root)
+    root = "/testbed"
+    host_dir: str | None = None
+    env_path = os.environ.get("TESTBED_PATH")
+    if env_path:
+        if os.path.isdir(env_path):
+            host_dir = os.path.abspath(env_path)
+        else:
+            root = env_path
+    backend = DockerExecBackend(
+        task.docker_image, root=root, host_dir=host_dir)
 
     transport: Literal["stdio", "streamable-http"] = (
         "streamable-http" if "--http" in sys.argv else "stdio")
