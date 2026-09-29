@@ -23,7 +23,7 @@ class CLI_Sandbox:
         if len(sys.argv) > 4:
             print("Error: Too many arguments passed", file=sys.stderr)
             sys.exit(1)
-            
+
         self.mcp_spec = self._get_mcp_spec(self.args)
         self._get_sandbox_config(self.args)
         self.mcp_client: McpClient | None = None

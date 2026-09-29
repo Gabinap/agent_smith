@@ -187,8 +187,10 @@ class Sandbox:
         from builtins import __import__ as real_import
 
         if not self._is_import_allowed(name):
-            raise ImportError("Import forbidden by sandbox"
-                                f" policy: '{name}'")
+            raise ImportError(
+                "Import forbidden by sandbox"
+                f" policy: '{name}'"
+                )
         return real_import(name, globals, locals, fromlist, level)
 
     def _is_open_allowed(self, filepath: str) -> bool:
