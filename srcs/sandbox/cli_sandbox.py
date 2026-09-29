@@ -1,6 +1,9 @@
 """Interactive CLI for the sandbox REPL (uv run sandbox)."""
 
 import argparse
+import codeop
+import os
+import select
 import sys
 
 from models.internal import McpSpec
@@ -10,9 +13,6 @@ from pydantic import ValidationError
 from sandbox.mcp_client import McpClient, create_mcp_client
 from sandbox.sandbox import Sandbox
 
-import os
-import select
-import codeop
 
 class CLI_Sandbox:
     """Parse CLI args and drive an interactive Sandbox REPL."""
@@ -22,7 +22,8 @@ class CLI_Sandbox:
         self.args = self._sandbox_cli_parsing()
         if len(sys.argv) > 4:
             print("Error: Too many arguments passed", file=sys.stderr)
-            return
+            sys.exit(1)
+            
         self.mcp_spec = self._get_mcp_spec(self.args)
         self._get_sandbox_config(self.args)
         self.mcp_client: McpClient | None = None
@@ -31,9 +32,8 @@ class CLI_Sandbox:
             self.sandbox = Sandbox(
                 mcp_client=self.mcp_client,
                 config=self.config
-                )
+            )
         except (RuntimeError, OSError) as error:
-            # A server that will not start is no reason to lose the REPL
             print(f"Warning: MCP server unavailable ({error}). "
                   "Continuing without tools.", file=sys.stderr)
             self.mcp_client = None
@@ -66,9 +66,9 @@ class CLI_Sandbox:
         """Read a SandboxConfig from a JSON file."""
         from pathlib import Path
         path = Path(config_file)
-        with (open(path, "r") as file):
-            json = file.read()
-            return SandboxConfig.model_validate_json(json)
+        with open(path, "r", encoding="utf-8") as file:
+            json_str = file.read()
+            return SandboxConfig.model_validate_json(json_str)
 
     def _get_sandbox_config(self, args: argparse.Namespace) -> None:
         """Load the sandbox config from a file, or use the defaults."""
@@ -91,7 +91,7 @@ class CLI_Sandbox:
         """Build the McpSpec from --mcp-stdio/--mcp-server, or None."""
         if args.mcp_server:
             return McpSpec(transport="http", url=args.mcp_server)
-        elif args.mcp_stdio:
+        if args.mcp_stdio:
             return McpSpec(transport="stdio", command=args.mcp_stdio)
         return None
 
@@ -99,14 +99,17 @@ class CLI_Sandbox:
     def _is_complete(source: str) -> bool:
         """True if source is a complete statement, like Python's REPL."""
         try:
-            return codeop.compile_command(source, "<sandbox>", "single") is not None
+            return codeop.compile_command(
+                source, "", "single"
+            ) is not None
         except (SyntaxError, ValueError, OverflowError):
-            return True  # invalid: let the sandbox report the real error
+            return True
 
     def _run(self, source: str) -> None:
+        """Execute a block of source code in the sandbox and print output."""
         result: SandboxResult = self.sandbox.execute(source)
         if result.output:
-            print(f"\n{result.output}", end="")
+            print(result.output, end="")
         if result.error:
             print(f"Error: {result.error}")
         if result.finished:
@@ -114,7 +117,8 @@ class CLI_Sandbox:
         if not (result.output or result.error or result.finished):
             print("(no output)")
 
-    def _drain_pasted(self) -> str:
+    @staticmethod
+    def _drain_pasted() -> str:
         """Return the lines already waiting on stdin (a paste), else ''."""
         if not sys.stdin.isatty():
             return ""
@@ -128,52 +132,55 @@ class CLI_Sandbox:
         return b"".join(chunks).decode(errors="replace")
 
     def execute(self) -> None:
-        print("Available tools:")
-        print(self.sandbox.manual())
-        print("Type 'manual' to print this again, 'exit' to leave.\n")
-        buffer: list[str] = []
-        try:
-            while True:
-                try:
-                    line = input("" if buffer else
-                                 "Sandbox>").replace("\xa0", " ")
-                    pasted = self._drain_pasted()
-                    if pasted or "\n" in line:
-                        source = "\n".join(buffer + [line]) + ("\n" + pasted if pasted else "")
-                        buffer.clear()
-                        self._run(source.rstrip("\n") + "\n")
-                        continue
-                except EOFError:
-                    if buffer:                      # flush the last block
-                        self._run("\n".join(buffer))
-                    print("\nExit the sandbox.")
-                    break
-                except KeyboardInterrupt:
-                    print("\nExit the sandbox.")
-                    break
+        """Run execution loop or process redirected stdin completely."""
+        # for command like cat, pipe, etc
+        if not sys.stdin.isatty():
+            code = sys.stdin.read()
+            if code.strip():
+                self._run(code)
+            return
 
-                if not buffer:                      # only at a fresh prompt
-                    if line.strip() == "manual":
-                        print(self.sandbox.manual())
-                        continue
-                    if line.strip() == "exit":
-                        break
-                    if not line.strip() or line.lstrip().startswith("#"):
-                        continue
+        # interactive REPL
+        tools_manual = self.sandbox.manual()
+        if tools_manual:
+            print("Available tools:")
+            print(tools_manual)
+            print()
+
+        buffer: list[str] = []
+        while True:
+            try:
+                prompt = "Sandbox> " if not buffer else "... "
+                line = input(prompt)
+
+                if not buffer and line.strip() == "exit":
+                    break
+                if not buffer and line.strip() == "manual":
+                    print(self.sandbox.manual())
+                    continue
 
                 buffer.append(line)
-                source = "\n".join(buffer)
-                if not self._is_complete(source):
-                    continue                        # wait for more lines
-                buffer.clear()
-                self._run(f"{source}")
-        finally:
-            if self.mcp_client:
-                self.mcp_client.close()
+
+                # Complet the buffer if pasted text
+                pasted = self._drain_pasted()
+                if pasted:
+                    buffer.extend(pasted.splitlines())
+
+                code_block = "\n".join(buffer)
+
+                # verify if the code is complete
+                if self._is_complete(code_block):
+                    self._run(code_block)
+                    buffer = []
+
+            except (EOFError, KeyboardInterrupt):
+                print()
+                break
+
 
 def main() -> None:
-    manual_sandbox = CLI_Sandbox()
-    manual_sandbox.execute()
+    cli = CLI_Sandbox()
+    cli.execute()
 
 
 if __name__ == "__main__":
