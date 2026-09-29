@@ -25,7 +25,7 @@ def main() -> None:
         parser = argparse.ArgumentParser()
         parser.add_argument(
             "--task-file",
-            default=str(PROJECT_ROOT / "moulinette" / "task.json"),
+            default=str(PROJECT_ROOT / "cache" / "swebench_task.json"),
         )
         parser.add_argument(
             "--output",
