@@ -612,16 +612,29 @@ def ablation_section() -> str:
                 f"- **{variant}: no effect detected** ({r['k']}/{r['n']}, "
                 f"p = {r['p']:.2f}).")
 
+    legend = "\n".join([
+        f"- **Resolved**: runs the moulinette validated, out of "
+        f"{len(tasks)} tasks × {reps} runs.",
+        "- **95 % CI**: where the true pass rate lies, with 95 % "
+        "confidence (Wilson interval). Widely overlapping intervals "
+        "mean the data cannot tell two variants apart.",
+        "- **p (Holm)**: the chance of a gap at least this large if "
+        "removing the component changed nothing (Fisher's exact test), "
+        f"corrected for making {len(results) - 1} comparisons at once "
+        "(Holm). Below 0.05, the difference is significant.",
+        "- **Δ iterations, Δ tokens**: median per-task change against "
+        "the baseline, positive when the variant costs more, with its "
+        f"95 % bootstrap interval ({BOOTSTRAP_RESAMPLES:,} resamples of "
+        "the tasks). An interval that excludes 0 is a real change.",
+    ])
+
     return "\n\n".join([
         f"`{ABLATION_MODEL}` on the {len(tasks)} SWE-bench tasks, "
-        f"{reps} runs each, variants interleaved, temperature 0 — each "
-        "variant changes one line, and every run is judged by the "
-        "moulinette. Resolved: Wilson interval. Against the baseline: "
-        "Fisher's exact test, Holm-corrected over the "
-        f"{len(results) - 1} comparisons. Δ: median per-task difference, "
-        f"bootstrap interval over tasks ({BOOTSTRAP_RESAMPLES:,} "
-        f"resamples, seed {BOOTSTRAP_SEED}).",
+        f"{reps} runs each, variants interleaved, temperature 0. Each "
+        "variant removes one component, and every run is judged by the "
+        "moulinette.",
         "\n".join(rows),
+        legend,
         "\n".join(findings),
         f"The baseline itself splits on {len(split)} of {len(tasks)} "
         "tasks across its repetitions, which is why only a large effect "
