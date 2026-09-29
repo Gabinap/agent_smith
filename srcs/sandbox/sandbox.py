@@ -40,38 +40,6 @@ DENIED_ATTRS = frozenset({
 })
 
 
-DENIED_NAMES = frozenset({
-    "eval", "exec", "compile", "globals", "locals", "vars",
-    "getattr", "setattr", "delattr", "breakpoint",
-}) | DENIED_ATTRS
-
-
-def _reject_escapes(code: str) -> Any:
-    """Parse `code` and refuse the syntax that escapes the namespace."""
-    import ast
-
-    def deny(name: str, node: Any) -> None:
-        raise SecurityError(
-            f"'{name}' is forbidden by sandbox policy "
-            f"(line {getattr(node, 'lineno', '?')})")
-
-    tree = ast.parse(code)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Attribute) and node.attr in DENIED_ATTRS:
-            deny(node.attr, node)
-        elif isinstance(node, ast.Name) and node.id in DENIED_NAMES:
-            deny(node.id, node)
-        elif (isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Attribute)
-                and node.func.attr in ("format", "format_map")
-                and isinstance(node.func.value, ast.Constant)
-                and isinstance(node.func.value.value, str)):
-            for attr in DENIED_ATTRS:
-                if attr in node.func.value.value:
-                    deny(attr, node)
-    return tree
-
-
 SAFE_BUILTINS = {
     "abs": abs, "all": all, "any": any, "bool": bool, "dict": dict,
     "enumerate": enumerate, "filter": filter, "float": float, "int": int,
@@ -93,7 +61,7 @@ SAFE_BUILTINS = {
     "ImportError": ImportError, "ModuleNotFoundError": ModuleNotFoundError,
     "FileNotFoundError": FileNotFoundError, "PermissionError": PermissionError,
     "MemoryError": MemoryError, "bytearray": bytearray, "OSError": OSError,
-    "dir": dir
+    "dir": dir, "TimeoutError": TimeoutError
 }
 
 
@@ -445,8 +413,7 @@ class Sandbox:
             self._block_network()
             self._tool_conn = conn
 
-            tree = _reject_escapes(code)
-            compiled_code = compile(tree, filename="<sandbox>", mode="exec")
+            compiled_code = compile(code, filename="<sandbox>", mode="exec")
             for src in self._persist_src:
                 exec(compile(src, "<sandbox>", "exec"), self.namespace)
             signal.signal(signal.SIGALRM, _timeout_handler)

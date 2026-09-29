@@ -150,7 +150,7 @@ class CLI_Sandbox:
         buffer: list[str] = []
         while True:
             try:
-                prompt = "Sandbox> " if not buffer else "... "
+                prompt = "Sandbox> " if not buffer else "........"
                 line = input(prompt)
 
                 if not buffer and line.strip() == "exit":
