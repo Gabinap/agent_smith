@@ -46,9 +46,14 @@ def extract_python(text: str | None) -> tuple[str, str]:
     if not text:
         return "", ""
 
-    canonical = CANONICAL.search(text)
+    canonical = CANONICAL.findall(text)
     if canonical:
-        return canonical.group(1), ""
+        if len(canonical) == 1:
+            return canonical[0], ""
+        return canonical[-1], (
+            f"Note: your answer had {len(canonical)} ```python blocks, "
+            "only the last one was run. Send exactly one next time."
+        )
 
     tagged = TAGGED.search(text)
     if tagged and is_python(tagged.group(2)):
