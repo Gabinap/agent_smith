@@ -125,6 +125,12 @@ class LLM:
                 if not self._next_key():
                     raise ValueError("Every API key is rate limited")
                 retries += 1
+            except APIStatusError as error:
+                if error.status_code != 402:
+                    raise ValueError(f"Api connection failed: {error}")
+                if not self._next_key():
+                    raise ValueError("Every API key is out of credit")
+                retries += 1
             except Exception as error:
                 raise ValueError(f"Api connection failed: {error}")
 

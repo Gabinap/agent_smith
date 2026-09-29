@@ -438,6 +438,8 @@ class Sandbox:
         """
         import signal
 
+        signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(self.config.max_execution_time_seconds)
         try:
             self._limit_resource()
             self._block_network()
