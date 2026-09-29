@@ -9,7 +9,7 @@ from models.sandbox import SandboxConfig, SandboxResult
 from sandbox.mcp_client import McpClient
 
 
-class SecurityError(PermissionError):
+class SecurityError(Exception):
     """Security Rules are not respected"""
 
 
@@ -27,12 +27,7 @@ CPU_GRACE_SECONDS = 5
 TIMEOUT_REPORT_GRACE_SECONDS = 1
 
 
-# Attributes that walk from any object back to the process (its classes,
-# the real builtins, a frame's globals). Blocked as a denylist so plain
-# dunders like __init__ or __str__ stay usable: x.__init__ passes,
-# x.__init__.__globals__ is stopped on the second hop.
 DENIED_ATTRS = frozenset({
-    # object-graph traversal
     "__globals__", "__class__", "__bases__", "__base__", "__subclasses__",
     "__mro__", "__code__", "__closure__", "__func__", "__self__", "__dict__",
     "__builtins__", "__getattribute__", "__reduce__", "__reduce_ex__",
@@ -44,9 +39,7 @@ DENIED_ATTRS = frozenset({
     "tb_frame", "tb_next",
 })
 
-# Names that grant execution or attribute access by string, plus the
-# DENIED_ATTRS that are also usable bare (`__builtins__`, `__import__`,
-# `__class__`). __name__ is deliberately absent: class bodies read it.
+
 DENIED_NAMES = frozenset({
     "eval", "exec", "compile", "globals", "locals", "vars",
     "getattr", "setattr", "delattr", "breakpoint",
@@ -97,11 +90,9 @@ SAFE_BUILTINS = {
     "IndexError": IndexError, "ZeroDivisionError": ZeroDivisionError,
     "AttributeError": AttributeError, "StopIteration": StopIteration,
     "RuntimeError": RuntimeError, "AssertionError": AssertionError,
-    "ImportError": ImportError,
-    "ModuleNotFoundError": ModuleNotFoundError,
-    "FileNotFoundError": FileNotFoundError,
-    "PermissionError": PermissionError,
-    "OSError": OSError,
+    "ImportError": ImportError, "ModuleNotFoundError": ModuleNotFoundError,
+    "FileNotFoundError": FileNotFoundError, "PermissionError": PermissionError,
+    "MemoryError": MemoryError, "bytearray": bytearray, "OSError": OSError,
     "dir": dir
 }
 
@@ -196,7 +187,7 @@ class Sandbox:
         from builtins import __import__ as real_import
 
         if not self._is_import_allowed(name):
-            raise SecurityError("Import forbidden by sandbox"
+            raise ImportError("Import forbidden by sandbox"
                                 f" policy: '{name}'")
         return real_import(name, globals, locals, fromlist, level)
 
