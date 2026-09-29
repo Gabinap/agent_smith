@@ -7,11 +7,10 @@ import io
 import posixpath
 import tarfile
 import time
-
+import uuid
 from typing import Any
 
 import docker
-import os
 
 from srcs.models import CommandResult
 
@@ -23,28 +22,28 @@ class DockerExecBackend:
                  host_dir: str | None = None) -> None:
         """Prepare the Docker backend for a fresh run.
 
-        Resolves `image_name`, purges orphaned containers from a
-        previous run, and starts a fresh container to work in.
+        Resolves `image_name` and starts a fresh container, named
+        agent-smith-<hash>, mounting `host_dir` on `root` if given.
+        Each backend removes its own container and no other: purging
+        every agent-smith container at startup killed the one of an
+        agent running at the same time.
         """
         client = docker.from_env()  # connect to the Docker daemon
-        for c in client.containers.list(
-                all=True, filters={"label": "agent-smith"}):
-            c.remove(force=True)
         self.root = root
         try:
             client.images.get(image_name)
         except docker.errors.ImageNotFound:
             client.images.pull(image_name)
 
-        host_dir = os.environ.get("TESTBED_PATH")
         volumes = None
         if host_dir:
-            volumes = {os.path.abspath(host_dir): {"bind": root, "mode": "rw"}}
+            volumes = {host_dir: {"bind": root, "mode": "rw"}}
 
         self.container = client.containers.run(
             image_name,
             command="sleep infinity",
             detach=True,
+            name=f"agent-smith-{uuid.uuid4().hex[:12]}",
             labels={"agent-smith": "true"},
             volumes=volumes,
         )

@@ -40,6 +40,39 @@ DENIED_ATTRS = frozenset({
 })
 
 
+def _reject_escapes(code: str) -> Any:
+    """Parse `code` and refuse the attributes that escape the namespace.
+
+    SAFE_BUILTINS alone is not enough: any object leads back to the
+    real builtins through its attributes, e.g.
+    ().__class__.__base__.__subclasses__()[i].__init__.__globals__.
+    Names such as eval need no check here: absent from SAFE_BUILTINS,
+    they raise a NameError the code can catch.
+    """
+    import ast
+
+    def deny(name: str, node: Any) -> None:
+        raise SecurityError(
+            f"'{name}' is forbidden by sandbox policy "
+            f"(line {getattr(node, 'lineno', '?')})")
+
+    tree = ast.parse(code)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and node.attr in DENIED_ATTRS:
+            deny(node.attr, node)
+        elif isinstance(node, ast.Name) and node.id in DENIED_ATTRS:
+            deny(node.id, node)
+        elif (isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr in ("format", "format_map")
+                and isinstance(node.func.value, ast.Constant)
+                and isinstance(node.func.value.value, str)):
+            for attr in DENIED_ATTRS:
+                if attr in node.func.value.value:
+                    deny(attr, node)
+    return tree
+
+
 SAFE_BUILTINS = {
     "abs": abs, "all": all, "any": any, "bool": bool, "dict": dict,
     "enumerate": enumerate, "filter": filter, "float": float, "int": int,
@@ -91,7 +124,7 @@ class Sandbox:
         self._persist_src: list[str] = []
 
     def _export_state(self) -> dict[str, Any]:
-        """Variables créées par le code utilisateur et transmissibles."""
+        """Variables the user code created that can be sent back."""
         import pickle
         state: dict[str, Any] = {}
         for key, value in self.namespace.items():
@@ -105,7 +138,7 @@ class Sandbox:
         return state
 
     def _remember(self, code: str) -> None:
-        """Retient les définitions top-level pour les rejouer ensuite."""
+        """Keep the top-level definitions, to replay them next time."""
         import ast
         for node in ast.parse(code).body:
             if isinstance(node, (ast.Import, ast.ImportFrom,
@@ -413,7 +446,8 @@ class Sandbox:
             self._block_network()
             self._tool_conn = conn
 
-            compiled_code = compile(code, filename="<sandbox>", mode="exec")
+            tree = _reject_escapes(code)
+            compiled_code = compile(tree, filename="<sandbox>", mode="exec")
             for src in self._persist_src:
                 exec(compile(src, "<sandbox>", "exec"), self.namespace)
             signal.signal(signal.SIGALRM, _timeout_handler)
@@ -545,7 +579,7 @@ class Sandbox:
                 raise SystemExit(res_dict.get("code"))
             if control == "KeyboardInterrupt":
                 raise KeyboardInterrupt()
-            state = res_dict.pop("state", None)     # avant model_validate
+            state = res_dict.pop("state", None)     # before model_validate
             result = SandboxResult.model_validate(res_dict)
             if result.success:
                 if state:
