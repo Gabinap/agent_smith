@@ -27,7 +27,7 @@ def main() -> None:
 
         parser.add_argument(
             "--task-file",
-            default="../moulinette/task.json",
+            default="../cache/mbpp_task.json",
         )
         parser.add_argument(
             "--output",
