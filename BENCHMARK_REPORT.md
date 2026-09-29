@@ -459,7 +459,7 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 
 ## Ablation
 
-`ministral-14b-2512` on the 7 SWE-bench tasks, 3 runs each, variants interleaved, temperature 0 — each variant changes one line, and every run is judged by the moulinette. Resolved: Wilson interval. Against the baseline: Fisher's exact test, Holm-corrected over the 3 comparisons. Δ: median per-task difference, bootstrap interval over tasks (10,000 resamples, seed 42).
+`ministral-14b-2512` on the 7 SWE-bench tasks, 3 runs each, variants interleaved, temperature 0. Each variant removes one component, and every run is judged by the moulinette.
 
 | Variant | Changed | Resolved | 95 % CI | p (Holm) | Δ iterations [95 % CI] | Δ tokens [95 % CI] |
 |---|---|---:|---|---:|---:|---:|
@@ -467,6 +467,21 @@ Models that left the catalogue during the campaign — withdrawn by their provid
 | no-reasoning-guide | no `REASONING_GUIDE` in the system prompt | 6/21 | 14% – 50% | 0.014 | +16.0 [+7.0, +22.7] | -57,837 [-103,956, +26,644] |
 | fewer-tools | `find_references`, `list_files`, `run_command` hidden | 19/21 | 71% – 97% | 0.820 | +0.0 [+0.0, +1.7] | +6,333 [-315, +42,943] |
 | no-hints | no `hints_text` in the task prompt | 16/21 | 55% – 89% | 1.000 | -0.3 [-6.7, +4.7] | -1,217 [-4,964, +41,839] |
+
+- **Resolved**: runs the moulinette validated, out of 7 tasks × 3 runs.
+- **95 % CI**: where the true pass rate lies, with 95 % confidence (Wilson interval). Widely overlapping intervals mean the data cannot tell two variants apart. With k passes out of n runs, $\hat p = k/n$ and $z = 1.96$:
+
+  $$\frac{\hat p + \frac{z^2}{2n} \pm z\sqrt{\frac{\hat p(1-\hat p)}{n} + \frac{z^2}{4n^2}}}{1 + \frac{z^2}{n}}$$
+
+- **p (Holm)**: the chance of a gap at least this large if removing the component changed nothing (Fisher's exact test), corrected for making 3 comparisons at once (Holm). Below 0.05, the difference is significant. Fisher keeps the totals fixed (N runs, K passes, $n_b$ of the runs in the baseline) and adds up the probability of every split at most as likely as the one observed, $k_b$ baseline passes:
+
+  $$P(x) = \frac{\binom{K}{x}\binom{N-K}{n_b-x}}{\binom{N}{n_b}} \qquad p = \sum_{P(x) \le P(k_b)} P(x)$$
+
+  Holm then sorts the m p-values, $p_{(1)} \le \dots \le p_{(m)}$, and scales each by the tests still left:
+
+  $$\tilde p_{(i)} = \max_{j \le i} \min\bigl(1,\ (m - j + 1)\, p_{(j)}\bigr)$$
+
+- **Δ iterations, Δ tokens**: median per-task change against the baseline, positive when the variant costs more, with its 95 % bootstrap interval (10,000 resamples of the tasks). An interval that excludes 0 is a real change.
 
 - **no-reasoning-guide changes the outcome**: 6/21 against 16/21 (p = 0.014), +16 iterations at the median.
 - **fewer-tools: no effect detected** (19/21, p = 0.82).

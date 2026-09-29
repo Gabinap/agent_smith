@@ -617,11 +617,29 @@ def ablation_section() -> str:
         f"{len(tasks)} tasks × {reps} runs.",
         "- **95 % CI**: where the true pass rate lies, with 95 % "
         "confidence (Wilson interval). Widely overlapping intervals "
-        "mean the data cannot tell two variants apart.",
+        "mean the data cannot tell two variants apart. With k passes "
+        "out of n runs, $\\hat p = k/n$ and $z = 1.96$:",
+        "",
+        r"  $$\frac{\hat p + \frac{z^2}{2n} \pm z\sqrt{\frac{\hat p"
+        r"(1-\hat p)}{n} + \frac{z^2}{4n^2}}}{1 + \frac{z^2}{n}}$$",
+        "",
         "- **p (Holm)**: the chance of a gap at least this large if "
         "removing the component changed nothing (Fisher's exact test), "
         f"corrected for making {len(results) - 1} comparisons at once "
-        "(Holm). Below 0.05, the difference is significant.",
+        "(Holm). Below 0.05, the difference is significant. Fisher "
+        "keeps the totals fixed (N runs, K passes, $n_b$ of the runs "
+        "in the baseline) and adds up the probability of every split "
+        "at most as likely as the one observed, $k_b$ baseline passes:",
+        "",
+        r"  $$P(x) = \frac{\binom{K}{x}\binom{N-K}{n_b-x}}"
+        r"{\binom{N}{n_b}} \qquad p = \sum_{P(x) \le P(k_b)} P(x)$$",
+        "",
+        "  Holm then sorts the m p-values, $p_{(1)} \\le \\dots \\le "
+        "p_{(m)}$, and scales each by the tests still left:",
+        "",
+        r"  $$\tilde p_{(i)} = \max_{j \le i} \min\bigl(1,\ "
+        r"(m - j + 1)\, p_{(j)}\bigr)$$",
+        "",
         "- **Δ iterations, Δ tokens**: median per-task change against "
         "the baseline, positive when the variant costs more, with its "
         f"95 % bootstrap interval ({BOOTSTRAP_RESAMPLES:,} resamples of "
