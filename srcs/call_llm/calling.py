@@ -5,7 +5,7 @@ import time
 from typing import Any
 
 from dotenv import load_dotenv
-from openai import OpenAI, RateLimitError
+from openai import APIStatusError, OpenAI, RateLimitError
 from openai.types.chat import ChatCompletion
 
 REQUEST_TIMEOUT = 120.0
