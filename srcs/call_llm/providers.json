@@ -12,11 +12,12 @@
       "OPEN_ROUTER_8"
     ],
     "model": [
+      "deepseek/deepseek-v4-flash-0731",
       "google/gemma-4-31b-it:free",
       "dots-studio/dots-3-note-preview:free",
       "poolside/laguna-s-2.1:free",
       "qwen/qwen3.8-27b:free",
-      "stealth/space-bunny-alpha"
+      "stealth/space-bunny-alpha:free"
     ]
   },
   "Mistral Studio": {
